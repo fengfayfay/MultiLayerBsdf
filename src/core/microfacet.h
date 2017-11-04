@@ -56,11 +56,13 @@ class MicrofacetDistribution {
         return 1 / (1 + Lambda(w));
     }
     virtual Float G(const Vector3f &wo, const Vector3f &wi) const {
-        return 1 / (1 + Lambda(wo) + Lambda(wi));
+        //return 1 / (1 + Lambda(wo) + Lambda(wi));
+        return G1(wo) * G1(wi);
     }
     virtual Vector3f Sample_wh(const Vector3f &wo, const Point2f &u) const = 0;
     Float Pdf(const Vector3f &wo, const Vector3f &wh) const;
     virtual std::string ToString() const = 0;
+    virtual float getRoughness() const {return 0;} 
 
   protected:
     // MicrofacetDistribution Protected Methods
@@ -77,7 +79,7 @@ inline std::ostream &operator<<(std::ostream &os,
     return os;
 }
 
-class BeckmannDistribution : public MicrofacetDistribution {
+class  BeckmannDistribution : public MicrofacetDistribution {
   public:
     // BeckmannDistribution Public Methods
     static Float RoughnessToAlpha(Float roughness) {
@@ -111,12 +113,19 @@ class TrowbridgeReitzDistribution : public MicrofacetDistribution {
     Vector3f Sample_wh(const Vector3f &wo, const Point2f &u) const;
     std::string ToString() const;
 
+    //actually getting alpha for now--- Feng
+    float getRoughness() const { return (alphax + alphay) * .5; }
+
   private:
     // TrowbridgeReitzDistribution Private Methods
     Float Lambda(const Vector3f &w) const;
 
     // TrowbridgeReitzDistribution Private Data
     const Float alphax, alphay;
+
+    bool isConserving;
+
+    static float *E_mu, *E_ave;
 };
 
 // MicrofacetDistribution Inline Methods

@@ -54,7 +54,6 @@ class BSSRDF {
   public:
     // BSSRDF Public Methods
     BSSRDF(const SurfaceInteraction &po, Float eta) : po(po), eta(eta) {}
-    virtual ~BSSRDF() {}
 
     // BSSRDF Interface
     virtual Spectrum S(const SurfaceInteraction &pi, const Vector3f &wi) = 0;

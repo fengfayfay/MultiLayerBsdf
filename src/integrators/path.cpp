@@ -112,7 +112,8 @@ Spectrum PathIntegrator::Li(const RayDifferential &r, const Scene &scene,
             continue;
         }
 
-        const Distribution1D *distrib = lightDistribution->Lookup(isect.p);
+        const Distribution1D *distrib = NULL;
+        //lightDistribution->Lookup(isect.p);
 
         // Sample illumination from lights to find path contribution.
         // (But skip this for perfectly specular BSDFs.)
@@ -131,7 +132,8 @@ Spectrum PathIntegrator::Li(const RayDifferential &r, const Scene &scene,
         Vector3f wo = -ray.d, wi;
         Float pdf;
         BxDFType flags;
-        Spectrum f = isect.bsdf->Sample_f(wo, &wi, sampler.Get2D(), &pdf,
+        //Spectrum f = isect.bsdf->Sample_f(wo, &wi, sampler.Get2D(), &pdf,
+        Spectrum f = isect.bsdf->Sample_f(wo, &wi, sampler, &pdf,
                                           BSDF_ALL, &flags);
         VLOG(2) << "Sampled BSDF, f = " << f << ", pdf = " << pdf;
         if (f.IsBlack() || pdf == 0.f) break;
@@ -148,6 +150,9 @@ Spectrum PathIntegrator::Li(const RayDifferential &r, const Scene &scene,
             etaScale *= (Dot(wo, isect.n) > 0) ? (eta * eta) : 1 / (eta * eta);
         }
         ray = isect.SpawnRay(wi);
+
+        /*****
+        **** skip bssrdf for now ***
 
         // Account for subsurface scattering, if applicable
         if (isect.bssrdf && (flags & BSDF_TRANSMISSION)) {
@@ -172,6 +177,9 @@ Spectrum PathIntegrator::Li(const RayDifferential &r, const Scene &scene,
             specularBounce = (flags & BSDF_SPECULAR) != 0;
             ray = pi.SpawnRay(wi);
         }
+        **** skip bssrdf for now ***
+        ***/
+
 
         // Possibly terminate the path with Russian roulette.
         // Factor out radiance scaling due to refraction in rrBeta.

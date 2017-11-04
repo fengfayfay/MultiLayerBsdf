@@ -538,11 +538,11 @@ BDPTIntegrator *CreateBDPTIntegrator(const ParamSet &params,
     bool visualizeStrategies = params.FindOneBool("visualizestrategies", false);
     bool visualizeWeights = params.FindOneBool("visualizeweights", false);
 
-    if ((visualizeStrategies || visualizeWeights) && maxDepth > 5) {
+    if ((visualizeStrategies || visualizeWeights) && maxDepth > 15) {
         Warning(
             "visualizestrategies/visualizeweights was enabled, limiting "
-            "maxdepth to 5");
-        maxDepth = 5;
+            "maxdepth to 15");
+        maxDepth = 15;
     }
     int np;
     const int *pb = params.FindInt("pixelbounds", &np);

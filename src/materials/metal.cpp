@@ -76,7 +76,9 @@ void MetalMaterial::ComputeScatteringFunctions(SurfaceInteraction *si,
                                                          k->Evaluate(*si));
     MicrofacetDistribution *distrib =
         ARENA_ALLOC(arena, TrowbridgeReitzDistribution)(uRough, vRough);
-    si->bsdf->Add(ARENA_ALLOC(arena, MicrofacetReflection)(1., distrib, frMf));
+    //si->bsdf->Add(ARENA_ALLOC(arena, MicrofacetReflection)(1., distrib, frMf));
+    //si->bsdf->Add(ARENA_ALLOC(arena, MicrofacetReflection)(k->Evaluate(*si), distrib, NULL));
+    si->bsdf->Add(ARENA_ALLOC(arena, MicrofacetReflection)(1., distrib, NULL));
 }
 
 const int CopperSamples = 56;

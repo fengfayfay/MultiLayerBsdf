@@ -181,6 +181,10 @@ class BSDF {
     Spectrum Sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &u,
                       Float *pdf, BxDFType type = BSDF_ALL,
                       BxDFType *sampledType = nullptr) const;
+    
+    Spectrum Sample_f(const Vector3f &wo, Vector3f *wi, Sampler& sampler,
+                      Float *pdf, BxDFType type = BSDF_ALL,
+                      BxDFType *sampledType = nullptr) const;
     Float Pdf(const Vector3f &wo, const Vector3f &wi,
               BxDFType flags = BSDF_ALL) const;
     std::string ToString() const;
@@ -426,6 +430,9 @@ class OrenNayar : public BxDF {
     Float A, B;
 };
 
+#define E_TABLE_SIZE 32
+#define E_AVE_TABLE_SIZE 32
+
 class MicrofacetReflection : public BxDF {
   public:
     // MicrofacetReflection Public Methods
@@ -441,11 +448,21 @@ class MicrofacetReflection : public BxDF {
     Float Pdf(const Vector3f &wo, const Vector3f &wi) const;
     std::string ToString() const;
 
+    static bool readIntegralTables();
   private:
     // MicrofacetReflection Private Data
     const Spectrum R;
     const MicrofacetDistribution *distribution;
     const Fresnel *fresnel;
+
+    bool isConserving;
+    static Vector3<Float> E_mu[E_TABLE_SIZE][E_TABLE_SIZE];
+    static Vector2<Float> E_ave[E_AVE_TABLE_SIZE];
+
+    static float Compute_f_ms(const float mu_o, const float mu_i, const float alpha);
+    static float GetE_mu(const float mu, const float alpha);
+    static float GetE_ave(const float alpha);
+
 };
 
 class MicrofacetTransmission : public BxDF {

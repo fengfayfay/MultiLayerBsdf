@@ -100,7 +100,8 @@ Spectrum UniformSampleOneLight(const Interaction &it, const Scene &scene,
     }
     const std::shared_ptr<Light> &light = scene.lights[lightNum];
     Point2f uLight = sampler.Get2D();
-    Point2f uScattering = sampler.Get2D();
+    //Point2f uScattering = sampler.Get2D();
+    Point2f uScattering; //not to be used
     return EstimateDirect(it, uScattering, *light, uLight,
                           scene, sampler, arena, handleMedia) / lightPdf;
 }
@@ -171,11 +172,13 @@ Spectrum EstimateDirect(const Interaction &it, const Point2f &uScattering,
             // Sample scattered direction for surface interactions
             BxDFType sampledType;
             const SurfaceInteraction &isect = (const SurfaceInteraction &)it;
-            f = isect.bsdf->Sample_f(isect.wo, &wi, uScattering, &scatteringPdf,
+            //f = isect.bsdf->Sample_f(isect.wo, &wi, uScattering, &scatteringPdf,
+            f = isect.bsdf->Sample_f(isect.wo, &wi, sampler, &scatteringPdf,
                                      bsdfFlags, &sampledType);
             f *= AbsDot(wi, isect.shading.n);
             sampledSpecular = (sampledType & BSDF_SPECULAR) != 0;
         } else {
+            //will not be used in this test-- Feng
             // Sample scattered direction for medium interactions
             const MediumInteraction &mi = (const MediumInteraction &)it;
             Float p = mi.phase->Sample_p(mi.wo, &wi, uScattering);
@@ -197,6 +200,8 @@ Spectrum EstimateDirect(const Interaction &it, const Point2f &uScattering,
             SurfaceInteraction lightIsect;
             Ray ray = it.SpawnRay(wi);
             Spectrum Tr(1.f);
+
+            handleMedia = false; //feng hack to disable volumes
             bool foundSurfaceInteraction =
                 handleMedia ? scene.IntersectTr(ray, sampler, &lightIsect, &Tr)
                             : scene.Intersect(ray, &lightIsect);

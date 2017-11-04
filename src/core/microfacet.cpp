@@ -34,6 +34,8 @@
 #include "microfacet.h"
 #include "reflection.h"
 
+#include <stdio.h>
+
 namespace pbrt {
 
 // Microfacet Utility Functions
@@ -342,5 +344,6 @@ Float MicrofacetDistribution::Pdf(const Vector3f &wo,
     else
         return D(wh) * AbsCosTheta(wh);
 }
+
 
 }  // namespace pbrt

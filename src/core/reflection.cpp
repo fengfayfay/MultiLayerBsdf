@@ -223,17 +223,6 @@ std::string OrenNayar::ToString() const {
            StringPrintf(" A: %f B: %f ]", A, B);
 }
 
-Spectrum MicrofacetReflection::f(const Vector3f &wo, const Vector3f &wi) const {
-    Float cosThetaO = AbsCosTheta(wo), cosThetaI = AbsCosTheta(wi);
-    Vector3f wh = wi + wo;
-    // Handle degenerate cases for microfacet reflection
-    if (cosThetaI == 0 || cosThetaO == 0) return Spectrum(0.);
-    if (wh.x == 0 && wh.y == 0 && wh.z == 0) return Spectrum(0.);
-    wh = Normalize(wh);
-    Spectrum F = fresnel->Evaluate(Dot(wi, wh));
-    return R * distribution->D(wh) * distribution->G(wo, wi) * F /
-           (4 * cosThetaI * cosThetaO);
-}
 
 std::string MicrofacetReflection::ToString() const {
     return std::string("[ MicrofacetReflection R: ") + R.ToString() +
@@ -701,6 +690,14 @@ Spectrum BSDF::rho(const Vector3f &wo, int nSamples, const Point2f *samples,
 }
 
 Spectrum BSDF::Sample_f(const Vector3f &woWorld, Vector3f *wiWorld,
+                        Sampler &sampler, Float *pdf, BxDFType type,
+                                                BxDFType *sampledType) const {
+                                                
+    return Sample_f(woWorld, wiWorld, sampler.Get2D(), pdf, type, sampledType);
+
+}
+
+Spectrum BSDF::Sample_f(const Vector3f &woWorld, Vector3f *wiWorld,
                         const Point2f &u, Float *pdf, BxDFType type,
                         BxDFType *sampledType) const {
     ProfilePhase pp(Prof::BSDFSampling);
@@ -789,6 +786,110 @@ std::string BSDF::ToString() const {
     for (int i = 0; i < nBxDFs; ++i)
         s += StringPrintf("\n  bxdfs[%d]: ", i) + bxdfs[i]->ToString();
     return s + std::string(" ]");
+}
+
+Vector3<float> MicrofacetReflection::E_mu[E_TABLE_SIZE][E_TABLE_SIZE];
+Vector2<float> MicrofacetReflection::E_ave[E_TABLE_SIZE];
+
+bool MicrofacetReflection::readIntegralTables() {
+    
+    printf("trying read integral tables\n");
+    fflush(stdout);
+    FILE *ifile = fopen("/Users/feng/work/MaterialTables/E_mu_32.txt", "r"); 
+    if (!ifile) {
+        printf("file not found\n");
+        return false;
+    }
+    for (int i = 0; i < E_TABLE_SIZE; i++) {
+        for (int j = 0; j < E_TABLE_SIZE; j++) {
+            Vector3<Float>& v = E_mu[i][j];
+            fscanf(ifile, "%f %f %f", &(v[0]), &(v[1]), &(v[2]));
+            printf("%f %f %f\n", v[0], v[1], v[2]);
+        }
+    }    
+    ifile = fopen("/Users/feng/work/MaterialTables/E_ave_32.txt", "r"); 
+    for (int i = 0; i < E_AVE_TABLE_SIZE; i++) {
+        Vector2<Float>& v = E_ave[i];
+        fscanf(ifile, "%f %f", &(v[0]), &(v[1]));
+    }
+    printf("read integral tables\n");
+    fflush(stdout);
+    return true;
+}
+
+float MicrofacetReflection::GetE_mu(const float mu, const float alpha){
+
+    float alpha_min = .001;
+    float alpha_max = 1;
+    float a_interval = (alpha_max-alpha_min)/(E_TABLE_SIZE-1);
+    int i_min = (alpha-alpha_min)/a_interval;
+    if (i_min < 0) i_min = 0;
+    if (i_min > E_TABLE_SIZE - 1) i_min = E_TABLE_SIZE-1;
+    int i_max = i_min + 1;
+    if (i_max > E_TABLE_SIZE - 1) i_max = E_TABLE_SIZE-1;
+    
+    float mu_min = .001;
+    float mu_max = 1;
+    float mu_interval = (mu_max-mu_min)/(E_TABLE_SIZE - 1);
+    int j_min = (mu-mu_min)/mu_interval;
+    if (j_min < 0) j_min = 0;
+    if (j_min > E_TABLE_SIZE - 1) j_min = E_TABLE_SIZE-1;
+    int j_max = j_min + 1;
+    if (j_max > E_TABLE_SIZE - 1) j_max = E_TABLE_SIZE-1;
+    
+    float mu_int = (mu-E_mu[i_min][j_min][1])/mu_interval;
+    float mu_i_min = E_mu[i_min][j_min][2] * (1.0 - mu_int) + E_mu[i_min][j_max][2] * mu_int;
+    assert(mu_i_min >= E_mu[i_min][j_min][2] && mu_i_min <= E_mu[i_min][j_max][2]);
+    float mu_i_max = E_mu[i_max][j_min][2] * (1.0 - mu_int) + E_mu[i_max][j_max][2] * mu_int;
+    assert(mu_i_max >= E_mu[i_max][j_min][2] && mu_i_max <= E_mu[i_max][j_max][2]);
+    float a_int = (alpha-E_mu[i_min][j_min][0])/a_interval;
+    float e_mu = mu_i_min *(1.0 -a_int) + mu_i_max * a_int;
+    return e_mu;
+    //return E_mu[i_min][j_min][2];
+
+}
+
+float MicrofacetReflection::GetE_ave(const float alpha) {
+    float alpha_min = .001;
+    float alpha_max = 1;
+    float a_interval = (alpha_max-alpha_min)/(E_AVE_TABLE_SIZE-1);
+    int i_min = (alpha-alpha_min)/a_interval;
+    if (i_min < 0) i_min = 0;
+    if (i_min > E_AVE_TABLE_SIZE - 1) i_min = E_AVE_TABLE_SIZE-1;
+    int i_max = i_min + 1;
+    if (i_max > E_AVE_TABLE_SIZE - 1) i_max = E_AVE_TABLE_SIZE-1;
+    float a_int = (alpha-E_ave[i_min][0])/a_interval;
+    float e_ave = E_ave[i_min][1] *(1.0 -a_int) + E_ave[i_max][1] * a_int;
+    return e_ave;
+}
+
+float MicrofacetReflection::Compute_f_ms(const float mu_o, const float mu_i, 
+                                        const float alpha){
+
+    float e_mu_o = 1.0 - GetE_mu(mu_o, alpha);
+    float e_mu_i = 1.0 - GetE_mu(mu_i, alpha);
+    float e_ave = Pi *(1.0 - GetE_ave(alpha) * 2.0);
+    float f_ms =  e_mu_o * e_mu_i /e_ave; 
+    return f_ms;
+}
+
+Spectrum MicrofacetReflection::f(const Vector3f &wo, const Vector3f &wi) const {
+    Float cosThetaO = AbsCosTheta(wo), cosThetaI = AbsCosTheta(wi);
+    Vector3f wh = wi + wo;
+    // Handle degenerate cases for microfacet reflection
+    if (cosThetaI == 0 || cosThetaO == 0) return Spectrum(0.);
+    if (wh.x == 0 && wh.y == 0 && wh.z == 0) return Spectrum(0.);
+    wh = Normalize(wh);
+    Spectrum F (1);
+    if (fresnel) F =  fresnel->Evaluate(Dot(wi, wh));
+    F *= R;
+    F *= distribution->D(wh);
+    F *= distribution->G(wo, wi);
+
+    float f_ms = Compute_f_ms(cosThetaO, cosThetaI, distribution->getRoughness());
+    return F/ (4 * cosThetaI * cosThetaO) + f_ms;
+    //return R * distribution->D(wh) * distribution->G(wo, wi) * F /
+    //       (4 * cosThetaI * cosThetaO);
 }
 
 }  // namespace pbrt
