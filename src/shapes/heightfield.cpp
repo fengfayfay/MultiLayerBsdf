@@ -53,13 +53,16 @@ std::vector<std::shared_ptr<Shape>> CreateHeightfield(
     std::unique_ptr<int[]> indices(new int[3 * ntris]);
     std::unique_ptr<Point3f[]> P(new Point3f[nx * ny]);
     std::unique_ptr<Point2f[]> uvs(new Point2f[nx * ny]);
+    // for vertex normal
+    std::unique_ptr<Normal3f[]> N(new Normal3f[nx*ny]);
     int nverts = nx * ny;
     // Compute heightfield vertex positions
     int pos = 0;
+    float domain = 200;
     for (int y = 0; y < ny; ++y) {
         for (int x = 0; x < nx; ++x) {
-            P[pos].x = uvs[pos].x = (float)x / (float)(nx - 1);
-            P[pos].y = uvs[pos].y = (float)y / (float)(ny - 1);
+            P[pos].x = uvs[pos].x = (float)x / (float)(nx - 1)*domain-domain/2;
+            P[pos].y = uvs[pos].y = (float)y / (float)(ny - 1)*domain-domain/2;
             P[pos].z = z[pos];
             ++pos;
         }
@@ -67,6 +70,10 @@ std::vector<std::shared_ptr<Shape>> CreateHeightfield(
 
     // Fill in heightfield vertex offset array
     int *vp = indices.get();
+    int count[nitems] = {0};
+    Point3f p0, p1, p2;
+    Vector3f dp02, dp12;
+    Normal3f normal1,normal2;
     for (int y = 0; y < ny - 1; ++y) {
         for (int x = 0; x < nx - 1; ++x) {
 #define VERT(x, y) ((x) + (y)*nx)
@@ -77,13 +84,50 @@ std::vector<std::shared_ptr<Shape>> CreateHeightfield(
             *vp++ = VERT(x, y);
             *vp++ = VERT(x + 1, y + 1);
             *vp++ = VERT(x, y + 1);
+
+	    // calculate vertex normals for normal interpolation
+	    // surface normal
+	    p0 = P[VERT(x, y)];
+	    p1 = P[VERT(x + 1, y)];
+	    p2 = P[VERT(x + 1, y + 1)];
+	    dp02 = p0 - p2;
+	    dp12 = p1 - p2;
+	    normal1 = Normal3f(Normalize(Cross(dp02, dp12)));
+
+	    p0 = P[VERT(x, y)];
+	    p1 = P[VERT(x + 1, y+1)];
+	    p2 = P[VERT(x, y + 1)];
+	    dp02 = p0 - p2;
+	    dp12 = p1 - p2;
+	    normal2 = Normal3f(Normalize(Cross(dp02, dp12)));
+	    N[VERT(x, y)] += normal1 + normal2; 
+	    N[VERT(x + 1, y)] += normal1;
+	    N[VERT(x + 1, y + 1)] += normal1 + normal2;
+	    N[VERT(x, y + 1)] += normal2;
+	    // increment # of contribution
+	    count[VERT(x, y)] += 2;
+	    count[VERT(x+1, y)]++;
+	    count[VERT(x+1, y+1)] += 2;
+	    count[VERT(x, y+1)]++;
+	    
         }
 #undef VERT
     }
 
+    // average vertex normal
+    pos = 0;
+    for (int y = 0; y<ny; ++y){
+      for (int x = 0; x<nx; ++x){
+    	N[pos] /= count[pos];
+    	++pos;
+      }	
+    }
+    // return CreateTriangleMesh(ObjectToWorld, WorldToObject, reverseOrientation,
+    //                           ntris, indices.get(), nverts, P.get(), nullptr,
+    //                           nullptr, uvs.get(), nullptr, nullptr);
     return CreateTriangleMesh(ObjectToWorld, WorldToObject, reverseOrientation,
                               ntris, indices.get(), nverts, P.get(), nullptr,
-                              nullptr, uvs.get(), nullptr, nullptr);
+                              N.get(), uvs.get(), nullptr, nullptr);
 }
 
 }  // namespace pbrt

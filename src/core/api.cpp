@@ -29,7 +29,7 @@
     OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
  */
-
+#include <fstream>
 // core/api.cpp*
 #include "api.h"
 #include "parallel.h"
@@ -1464,46 +1464,150 @@ void pbrtWorldEnd() {
         std::unique_ptr<Integrator> integrator(renderOptions->MakeIntegrator());
         std::unique_ptr<Scene> scene(renderOptions->MakeScene());
 
-        // This is kind of ugly; we directly override the current profiler
-        // state to switch from parsing/scene construction related stuff to
-        // rendering stuff and then switch it back below. The underlying
-        // issue is that all the rest of the profiling system assumes
-        // hierarchical inheritance of profiling state; this is the only
-        // place where that isn't the case.
-        CHECK_EQ(CurrentProfilerState(), ProfToBits(Prof::SceneConstruction));
-        ProfilerState = ProfToBits(Prof::IntegratorRender);
+	// ray tracing test
+	float theta = M_PI/6;
+	int numrays = 1e6;
+	float height = 5.f;
+	Point3f center = Point3f(height/tan(theta), 0.f, height);
+	Vector3f dir = Normalize(Vector3f(-height/tan(theta), 0.f, -height));
+	float trand, urand;
+	float observe = 100;
+	int maxdepth = 5;
+	std::ofstream outputx, outputy, outputz, outputweight;
+	outputx.open("outputx.txt");
+	outputy.open("outputy.txt");
+	outputz.open("outputz.txt");
+	outputweight.open("outputweight.txt");
+	for (int i = 0; i<numrays; ++i){
+	  trand = 2 * M_PI * ((float) rand() / (RAND_MAX));
+	  urand = (float) rand() / (RAND_MAX);;
+	  Point3f ori = center + Point3f(10*sqrt(urand)*cos(trand), 10*sqrt(urand)*sin(trand), 0.f);
+	  // create a ray
+	  Ray ray = Ray(ori, dir);
+	  int depth = 0;
+	  int weight = 1;
+	  radiance(observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight);
+	}
+	outputx.close();
+	outputy.close();
+	outputz.close();
+	outputweight.close();
 
-        if (scene && integrator) integrator->Render(*scene);
+        // // This is kind of ugly; we directly override the current profiler
+        // // state to switch from parsing/scene construction related stuff to
+        // // rendering stuff and then switch it back below. The underlying
+        // // issue is that all the rest of the profiling system assumes
+        // // hierarchical inheritance of profiling state; this is the only
+        // // place where that isn't the case.
+        // CHECK_EQ(CurrentProfilerState(), ProfToBits(Prof::SceneConstruction));
+        // ProfilerState = ProfToBits(Prof::IntegratorRender);
 
-        CHECK_EQ(CurrentProfilerState(), ProfToBits(Prof::IntegratorRender));
-        ProfilerState = ProfToBits(Prof::SceneConstruction);
+        // if (scene && integrator) integrator->Render(*scene);
+
+        // CHECK_EQ(CurrentProfilerState(), ProfToBits(Prof::IntegratorRender));
+        // ProfilerState = ProfToBits(Prof::SceneConstruction);
     }
 
-    // Clean up after rendering. Do this before reporting stats so that
-    // destructors can run and update stats as needed.
-    graphicsState = GraphicsState();
-    transformCache.Clear();
-    currentApiState = APIState::OptionsBlock;
-    ImageTexture<Float, Float>::ClearCache();
-    ImageTexture<RGBSpectrum, Spectrum>::ClearCache();
+    // // Clean up after rendering. Do this before reporting stats so that
+    // // destructors can run and update stats as needed.
+    // graphicsState = GraphicsState();
+    // transformCache.Clear();
+    // currentApiState = APIState::OptionsBlock;
+    // ImageTexture<Float, Float>::ClearCache();
+    // ImageTexture<RGBSpectrum, Spectrum>::ClearCache();
 
-    if (!PbrtOptions.cat && !PbrtOptions.toPly) {
-        MergeWorkerThreadStats();
-        ReportThreadStats();
-        if (!PbrtOptions.quiet) {
-            PrintStats(stdout);
-            ReportProfilerResults(stdout);
-            ClearStats();
-            ClearProfiler();
-        }
-    }
+    // if (!PbrtOptions.cat && !PbrtOptions.toPly) {
+    //     MergeWorkerThreadStats();
+    //     ReportThreadStats();
+    //     if (!PbrtOptions.quiet) {
+    //         PrintStats(stdout);
+    //         ReportProfilerResults(stdout);
+    //         ClearStats();
+    //         ClearProfiler();
+    //     }
+    // }
 
-    for (int i = 0; i < MaxTransforms; ++i) curTransform[i] = Transform();
-    activeTransformBits = AllTransformsBits;
-    namedCoordinateSystems.erase(namedCoordinateSystems.begin(),
-                                 namedCoordinateSystems.end());
+    // for (int i = 0; i < MaxTransforms; ++i) curTransform[i] = Transform();
+    // activeTransformBits = AllTransformsBits;
+    // namedCoordinateSystems.erase(namedCoordinateSystems.begin(),
+    //                              namedCoordinateSystems.end());
 }
 
+
+  void radiance(float observe, const Ray &r, const Scene& scene, int weight, int depth, int maxdepth, std::ofstream &outputx, std::ofstream &outputy, std::ofstream &outputz, std::ofstream &outputweight){
+
+    float etaI = 1;
+    float etaT = 1.5;
+      // check intersection
+      SurfaceInteraction isect;
+      // if not intersect
+      if (!scene.Intersect(r, &isect)){ 
+	if (depth == 0){
+	  return;
+	}else{
+	  // check intersection with observing sphere
+	  float t = intersect(r, observe);
+	  Point3f inter = r.o + r.d * t;
+	  outputx << inter.x <<"\n";
+	  outputy << inter.y <<"\n";
+	  outputz << inter.z <<"\n";
+	  outputweight << weight <<"\n";
+	  return;
+	}
+      }
+
+      if (depth>maxdepth){
+	float random = ((float) rand() / (RAND_MAX));
+        if ((random)<1./6) weight *= 6;
+        else return;
+      }
+      bool entering = Dot(isect.n, isect.wo)>0;
+      Normal3f nl = entering?isect.n:-isect.n;
+      //std::cout<<"entering "<<entering<<" cur normal "<<nl;
+      // if (entering==false) {
+      // 	std::cout<<"depth "<<depth<<" cos "<<Dot(isect.n, isect.wo)<<" "<<isect.n<<" "<<isect.wo<<" "<<r.d<<std::endl;
+      // 	std::cin.ignore();
+      // }
+      Vector3f wi = Normalize(2*Dot(Vector3f(nl), isect.wo)*Vector3f(nl) - isect.wo);
+      // std::cout<<"depth "<<depth<<" wi "<<wi<<std::endl;
+      Point3f newstart = isect.p + 1e-5*Point3f(wi.x,wi.y,wi.z);
+      Ray reflRay = Ray(newstart, wi);
+
+      // mirror case
+      radiance(observe, reflRay, scene, weight, depth+1, maxdepth, outputx, outputy, outputz, outputweight);
+      return;
+
+      // bool entering = Dot(isect.n, isect.wo)>0;
+      // Normal3f nl = entering?isect.n:-isect.n;
+      // float cos = Dot(Vector3f(isect.n), isect.wo);
+      // float rprob = FrDielectric(cos, etaI, etaT);
+      // float rt = (float) rand() / (RAND_MAX);
+      // if (rt<=rprob){
+      // 	Vector3f wi = Normalize(2*Dot(Vector3f(nl), isect.wo)*Vector3f(nl) - isect.wo);
+      // 	if (wi.z>0) std::cout<<wi.z<<std::endl;
+      // 	Ray reflRay = Ray(isect.p, wi);
+      // 	radiance(observe, reflRay, scene, weight, depth+1, maxdepth, outputx, outputy, outputz, outputweight);
+      // 	return;
+      // }else{
+      // 	// transmission ray
+      // 	Vector3f tdir;
+      // 	float e = entering? etaI/etaT:etaT/etaI;
+      // 	bool tr = Refract(isect.wo, nl, e, &tdir);
+      // 	if (tr==false) std::cout<<"in transmission case but transmission is impossible, bug!"<<std::endl;
+      //   Ray tranRay = Ray(isect.p, tdir);
+      // 	radiance(observe, tranRay, scene, weight, depth+1, maxdepth, outputx, outputy, outputz, outputweight);
+      // 	return;
+      // }
+}
+  
+float intersect(const Ray &r, float observe){
+  // returns distance, 0 if nohit 
+  Vector3f op = Vector3f(r.o.x, r.o.y, r.o.z); // Solve t^2*d.d + 2*t*(o-p).d + (o-p).(o-p)-R^2 = 0
+  float t, eps = 1e-4, det = pow(Dot(op, r.d),2) - Dot(r.d, r.d)*(Dot(op,op) - pow(observe,2));
+  if (det<0) return 0; else det=sqrt(det);
+  return (-Dot(op, r.d) + det)/Dot(r.d, r.d);
+} 
+  
 Scene *RenderOptions::MakeScene() {
     std::shared_ptr<Primitive> accelerator =
         MakeAccelerator(AcceleratorName, primitives, AcceleratorParams);

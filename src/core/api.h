@@ -88,6 +88,10 @@ void pbrtObjectEnd();
 void pbrtObjectInstance(const std::string &name);
 void pbrtWorldEnd();
 
+// function used for my test
+float intersect(const Ray &ray, float observe);
+void radiance(float observe, const Ray &ray, const Scene& scene, int weight,int depth, int maxdepth, std::ofstream &outputx, std::ofstream &outputy, std::ofstream &outputz, std::ofstream &outputweight);
+
 }  // namespace pbrt
 
 #endif  // PBRT_CORE_API_H

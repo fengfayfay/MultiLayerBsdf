@@ -157,6 +157,6 @@ int main(int argc, char *argv[]) {
             if (!ParseFile(f))
                 Error("Couldn't open scene file \"%s\"", f.c_str());
     }
-    pbrtCleanup();
+    //pbrtCleanup();
     return 0;
 }
