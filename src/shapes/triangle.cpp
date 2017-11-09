@@ -338,11 +338,8 @@ bool Triangle::Intersect(const Ray &ray, Float *tHit, SurfaceInteraction *isect,
         Normal3f ns;
         if (mesh->n) {
             ns = (b0 * mesh->n[v[0]] + b1 * mesh->n[v[1]] + b2 * mesh->n[v[2]]);
-            if (ns.LengthSquared() > 0){
+            if (ns.LengthSquared() > 0)
                 ns = Normalize(ns);
-		// surface normal interpolation for gaussian random field test
-		isect->n = ns;
-	    }
             else
                 ns = isect->n;
         } else

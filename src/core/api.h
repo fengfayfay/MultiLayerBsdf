@@ -90,7 +90,7 @@ void pbrtWorldEnd();
 
 // function used for my test
 float intersect(const Ray &ray, float observe);
-void radiance(float observe, const Ray &ray, const Scene& scene, int weight,int depth, int maxdepth, std::ofstream &outputx, std::ofstream &outputy, std::ofstream &outputz, std::ofstream &outputweight);
+void radiance(float observe, const Ray &ray, const Scene& scene, int weight,int depth, int maxdepth, std::ofstream &outputx, std::ofstream &outputy, std::ofstream &outputz, std::ofstream &outputweight, std::ofstream &outputdepth);
 
 }  // namespace pbrt
 

@@ -58,7 +58,7 @@ std::vector<std::shared_ptr<Shape>> CreateHeightfield(
     int nverts = nx * ny;
     // Compute heightfield vertex positions
     int pos = 0;
-    float domain = 200;
+    float domain = 20;
     for (int y = 0; y < ny; ++y) {
         for (int x = 0; x < nx; ++x) {
             P[pos].x = uvs[pos].x = (float)x / (float)(nx - 1)*domain-domain/2;
