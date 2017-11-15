@@ -36,29 +36,48 @@
 #include "shapes/triangle.h"
 #include "paramset.h"
 
+#include <fstream>
+
 namespace pbrt {
 
 // Heightfield Definitions
 std::vector<std::shared_ptr<Shape>> CreateHeightfield(
     const Transform *ObjectToWorld, const Transform *WorldToObject,
     bool reverseOrientation, const ParamSet &params) {
+
+    // read Pz values from file 
+    const std::string filename = params.FindOneFilename("filename", "");
     int nx = params.FindOneInt("nu", -1);
     int ny = params.FindOneInt("nv", -1);
-    int nitems;
-    const Float *z = params.FindFloat("Pz", &nitems);
-    CHECK_EQ(nitems, nx * ny);
+    int nitems = nx * ny;
+    float* z = new float[nitems];
+    std::fstream myfile(filename, std::ios_base::in);
+    float a;
+    int co = 0;
+    while (myfile >> a){
+      //printf("%f ", a);
+      z[co] = a;
+      co++;
+    }  
+    
+    
+    // int nx = params.FindOneInt("nu", -1);
+    // int ny = params.FindOneInt("nv", -1);
+    // int nitems;
+    // const Float *z = params.FindFloat("Pz", &nitems);
+    // CHECK_EQ(nitems, nx * ny);
     CHECK(nx != -1 && ny != -1 && z != nullptr);
 
     int ntris = 2 * (nx - 1) * (ny - 1);
     std::unique_ptr<int[]> indices(new int[3 * ntris]);
     std::unique_ptr<Point3f[]> P(new Point3f[nx * ny]);
     std::unique_ptr<Point2f[]> uvs(new Point2f[nx * ny]);
-    // for vertex normal
+//     for vertex normal
     std::unique_ptr<Normal3f[]> N(new Normal3f[nx*ny]);
     int nverts = nx * ny;
     // Compute heightfield vertex positions
     int pos = 0;
-    float domain = 20;
+    float domain = 80;
     for (int y = 0; y < ny; ++y) {
         for (int x = 0; x < nx; ++x) {
             P[pos].x = uvs[pos].x = (float)x / (float)(nx - 1)*domain-domain/2;
@@ -68,9 +87,9 @@ std::vector<std::shared_ptr<Shape>> CreateHeightfield(
         }
     }
 
-    // Fill in heightfield vertex offset array
+//     Fill in heightfield vertex offset array
     int *vp = indices.get();
-    int count[nitems] = {0};
+    int* count = new int[nitems];
     Point3f p0, p1, p2;
     Vector3f dp02, dp12;
     Normal3f normal1,normal2;
@@ -114,7 +133,7 @@ std::vector<std::shared_ptr<Shape>> CreateHeightfield(
 #undef VERT
     }
 
-    // average vertex normal
+//     // average vertex normal
     pos = 0;
     for (int y = 0; y<ny; ++y){
       for (int x = 0; x<nx; ++x){
@@ -122,9 +141,14 @@ std::vector<std::shared_ptr<Shape>> CreateHeightfield(
     	++pos;
       }	
     }
+
+    delete[] z;
+    delete[] count;
+    
     // return CreateTriangleMesh(ObjectToWorld, WorldToObject, reverseOrientation,
     //                           ntris, indices.get(), nverts, P.get(), nullptr,
     //                           nullptr, uvs.get(), nullptr, nullptr);
+    std::cout<<"finish heightfield -> triangle"<<std::endl;
     return CreateTriangleMesh(ObjectToWorld, WorldToObject, reverseOrientation,
                               ntris, indices.get(), nverts, P.get(), nullptr,
                               N.get(), uvs.get(), nullptr, nullptr);

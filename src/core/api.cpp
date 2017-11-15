@@ -1473,8 +1473,9 @@ void pbrtWorldEnd() {
 	Point3f center = Point3f(height*tan(theta), 0.f, height);
 	Vector3f dir = Normalize(Vector3f(-height*tan(theta), 0.f, -height));
 	float trand, urand;
-	float observe = 1000;
+	float observe = 6000;
 	int maxdepth = 10;
+	float radius = 30;
 	std::ofstream outputx, outputy, outputz, outputweight, outputdepth;
 	outputx.open("outputx.txt");
 	outputy.open("outputy.txt");
@@ -1483,8 +1484,10 @@ void pbrtWorldEnd() {
 	outputdepth.open("outputdepth.txt");
 	for (int i = 0; i<numrays; ++i){
 	  trand = 2 * M_PI * ((float) rand() / (RAND_MAX));
+	  //trand = (float) rand() / (RAND_MAX);
 	  urand = (float) rand() / (RAND_MAX);
-	  Point3f ori = center + Point3f(5*sqrt(urand)*cos(trand), 5*sqrt(urand)*sin(trand), 0.f);
+	  Point3f ori = center + Point3f(radius*sqrt(urand)*cos(trand), radius*sqrt(urand)*sin(trand), 0.f);
+	  //Point3f ori = center + Point3f(radius*trand-radius/2, radius*urand-radius/2, 0.f);
 	  // create a ray
 	  Ray ray = Ray(ori, dir);
 	  int depth = 0;
@@ -1543,7 +1546,7 @@ void pbrtWorldEnd() {
       // check intersection
       SurfaceInteraction isect;
       // if not intersect
-      if (!scene.Intersect(r, &isect)){ 
+      if (!scene.Intersect(r, &isect)){
 	if (depth == 0){
 	  return;
 	}else{
@@ -1555,7 +1558,6 @@ void pbrtWorldEnd() {
 	  outputz << inter.z <<"\n";
 	  outputweight << weight <<"\n";
 	  outputdepth << depth <<"\n";
-	  
 	  return;
 	}
       }
@@ -1565,59 +1567,74 @@ void pbrtWorldEnd() {
         if ((random)<1./6) weight *= 6;
         else return;
       }
-      bool entering = Dot(isect.shading.n, isect.wo)>0;
-      Normal3f nl = entering?isect.shading.n:-isect.shading.n;      
-      Vector3f wi = Normalize(2*Dot(Vector3f(nl), isect.wo)*Vector3f(nl) - isect.wo);
 
+      Normal3f normal = isect.shading.n;
+      bool entering = Dot(normal, isect.wo)>0;
+      // check for bad rays
       if (Dot(isect.n, isect.wo) * Dot(isect.shading.n, isect.wo)<=0){
 	count++;
+	// change to surface normal
+	normal = isect.n;
+	entering = Dot(normal, isect.wo)>0;
       }
+      Normal3f nl = entering?normal:-normal;
+      Vector3f wi = Normalize(2*Dot(Vector3f(nl), isect.wo)*Vector3f(nl) - isect.wo);
+
+      // Vector3f tdir;
+      // float e = entering? etaI/etaT:etaT/etaI;
+      // bool tr = Refract(isect.wo, nl, e, &tdir);
+      // // check bad rays
+      // if ((Dot(isect.n, wi) * Dot(normal, wi)<=0) || (Dot(isect.n, tdir) * Dot(normal, tdir)<=0)){
+      // 	  count++;
+      // 	  // change to surface normal
+      // 	  normal = isect.n;
+      // 	  nl = entering?normal:-normal;
+      // 	  wi = Normalize(2*Dot(Vector3f(nl), isect.wo)*Vector3f(nl) - isect.wo);
+      // 	  e = entering? etaI/etaT:etaT/etaI;
+      // 	  tr = Refract(isect.wo, nl, e, &tdir);
+      // }
 
       // reflection ray
       RayDifferential reflRay = isect.SpawnRay(wi);
+      // // transmission ray
+      // RayDifferential tranRay = isect.SpawnRay(tdir);
 
-      // // mirror case
-      //  // keep track of bad rays
-      // if (Dot(isect.n, wi) * Dot(isect.shading.n, wi)<=0) {
-      // 	count++;
-      // }
-      // radiance(observe, reflRay, scene, weight, depth+1, maxdepth, outputx, outputy, outputz, outputweight, outputdepth);
-      // return;
-
-      // specular reflection + specular refraction
-      float cos = Dot(Vector3f(isect.shading.n), isect.wo);
-      float rprob = FrDielectric(cos, etaI, etaT);
-      float rt = (float) rand() / (RAND_MAX);
-      if (rt<=rprob){
-	if (Dot(isect.n, wi) * Dot(isect.shading.n, wi)<=0) {
-	  count++;
-	}
-      	radiance(observe, reflRay, scene, weight, depth+1, maxdepth, outputx, outputy, outputz, outputweight, outputdepth);
-      	return;
-      }else{
-      	// transmission ray
-      	Vector3f tdir;
-      	float e = entering? etaI/etaT:etaT/etaI;
-      	bool tr = Refract(isect.wo, nl, e, &tdir);
-      	if (tr==false) std::cout<<"in transmission case but transmission is impossible, error!"<<std::endl;
-	RayDifferential tranRay = isect.SpawnRay(tdir);
-	if (Dot(isect.n, tdir) * Dot(isect.shading.n, tdir)<=0) {
-	  count++;
-	}
-      	radiance(observe, tranRay, scene, weight, depth+1, maxdepth, outputx, outputy, outputz, outputweight, outputdepth);
-      	return;
+      // mirror case
+       // keep track of bad rays
+      if (Dot(isect.n, wi) * Dot(normal, wi)<=0) {
+      	count++;
+      	// normal = isect.n;
+      	// entering = Dot(normal, isect.wo)>0;
+      	// nl = entering?normal:-normal;
+      	// wi = Normalize(2*Dot(Vector3f(nl), isect.wo)*Vector3f(nl) - isect.wo);
+      	// reflRay = isect.SpawnRay(wi);
       }
+      radiance(observe, reflRay, scene, weight, depth+1, maxdepth, outputx, outputy, outputz, outputweight, outputdepth);
+      return;
+
+      // // specular reflection + specular refraction
+      // float cos = Dot(Vector3f(normal), isect.wo);
+      // float rprob = FrDielectric(cos, etaI, etaT);
+      // float rt = (float) rand() / (RAND_MAX);
+      // if (rt<=rprob){
+      // 	radiance(observe, reflRay, scene, weight, depth+1, maxdepth, outputx, outputy, outputz, outputweight, outputdepth);
+      // 	return;
+      // }else{
+      // 	// transmission ray
+      // 	if (tr==false) std::cout<<"in transmission case but transmission is impossible, error!"<<std::endl;
+      // 	radiance(observe, tranRay, scene, weight, depth+1, maxdepth, outputx, outputy, outputz, outputweight, outputdepth);
+      // 	return;
+      // }
 }
-  
+
 float intersect(const Ray &r, float observe){
-  // returns distance, 0 if nohit 
+  // returns distance, 0 if nohit
   Vector3f op = Vector3f(r.o.x, r.o.y, r.o.z); // Solve t^2*d.d + 2*t*(o-p).d + (o-p).(o-p)-R^2 = 0
   float t, eps = 1e-4, det = pow(Dot(op, r.d),2) - Dot(r.d, r.d)*(Dot(op,op) - pow(observe,2));
   if (det<0) return 0; else det=sqrt(det);
   return (-Dot(op, r.d) + det)/Dot(r.d, r.d);
-} 
-  
-  
+}
+
 Scene *RenderOptions::MakeScene() {
     std::shared_ptr<Primitive> accelerator =
         MakeAccelerator(AcceleratorName, primitives, AcceleratorParams);
