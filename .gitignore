@@ -1,4 +1,7 @@
+git rm -r --cached /build
+build
 *~
+*.txt
 src/build
 src/bin
 src/objs
