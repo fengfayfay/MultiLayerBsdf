@@ -1483,7 +1483,7 @@ namespace pbrt {
       float trand, urand;
       float observe = 6000;
       int maxdepth = 10;
-      float radius = 20;
+      float radius = 10;
       std::ofstream outputx, outputy, outputz, outputweight, outputdepth;
 
       std::ostringstream oss1;
