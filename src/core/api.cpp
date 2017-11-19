@@ -1479,9 +1479,9 @@ namespace pbrt {
       Point3f center = Point3f(height*tan(theta), 0.f, height);
       Vector3f dir = Normalize(Vector3f(-height*tan(theta), 0.f, -height));
       float trand, urand;
-      float observe = 10000;
+      float observe = 6000;
       int maxdepth = 10;
-      float radius = 50;
+      float radius = 20;
       std::ofstream outputx, outputy, outputz, outputweight, outputdepth;
 
       std::ostringstream oss1;
