@@ -118,9 +118,7 @@
 #include <map>
 #include <stdio.h>
 
-int count1 = 0;
-int count2 = 0;
-int count3 = 0;
+int count = 0;
 int count_goout = 0;
 
 namespace pbrt {
@@ -1481,9 +1479,9 @@ namespace pbrt {
       Point3f center = Point3f(height*tan(theta), 0.f, height);
       Vector3f dir = Normalize(Vector3f(-height*tan(theta), 0.f, -height));
       float trand, urand;
-      float observe = 6000;
+      float observe = 10000;
       int maxdepth = 10;
-      float radius = 20;
+      float radius = 50;
       std::ofstream outputx, outputy, outputz, outputweight, outputdepth;
 
       std::ostringstream oss1;
@@ -1520,17 +1518,14 @@ namespace pbrt {
         Ray ray = Ray(ori, dir);
         int depth = 0;
         int weight = 1;
-        radiance(observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth);
+        SingleLayerGlass(observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth);
       }
       outputx.close();
       outputy.close();
       outputz.close();
       outputweight.close();
       outputdepth.close();
-      // std::cout<<"bad rays "<<count1+count2+count3<<std::endl;
-      // std::cout<<"bad normals: "<<count1<<std::endl;
-      // std::cout<<"bad reflection dir: "<<count2<<std::endl;
-      // std::cout<<"bad refraction dir: "<<count3<<std::endl;
+      std::cout<<"bad rays "<<count<<std::endl;
       std::cout<<"rays that go out: "<<count_goout<<std::endl;
 
       // original rendering process
@@ -1570,9 +1565,67 @@ namespace pbrt {
     // ImageTexture<Float, Float>::ClearCache();
     // ImageTexture<RGBSpectrum, Spectrum>::ClearCache();
   }
+void SingleLayerMirror(float observe, const Ray &r, const Scene& scene, int weight, int depth, int maxdepth, std::ofstream &outputx, std::ofstream &outputy, std::ofstream &outputz, std::ofstream &outputweight, std::ofstream &outputdepth){
+    // check intersection
+    SurfaceInteraction isect;
+    // if not intersect
+    if (!scene.Intersect(r, &isect)){
+      if (depth == 0){
+        return;
+      }else{
 
-  void radiance(float observe, const Ray &r, const Scene& scene, int weight, int depth, int maxdepth, std::ofstream &outputx, std::ofstream &outputy, std::ofstream &outputz, std::ofstream &outputweight, std::ofstream &outputdepth){
+        if((isect.p.z>0 && r.d.z<0)||(isect.p.z<0 && r.d.z>0)){
+          count_goout++;
+        }
 
+        // check intersection with observing sphere
+        float t = intersect(r, observe);
+        Point3f inter = r.o + r.d * t;
+        outputx << inter.x <<"\n";
+        outputy << inter.y <<"\n";
+        outputz << inter.z <<"\n";
+        outputweight << weight <<"\n";
+        outputdepth << depth <<"\n";
+        return;
+      }
+    }
+
+    if (depth>maxdepth){
+      float random = ((float) rand() / (RAND_MAX));
+      if ((random)<1./6) weight *= 6;
+      else return;
+    }
+
+    Normal3f normal = isect.shading.n;
+    bool entering = Dot(normal, isect.wo)>0;
+    // check for bad rays
+    if (Dot(isect.n, isect.wo) * Dot(isect.shading.n, isect.wo)<=0){
+      count++;
+      // change to surface normal
+      normal = isect.n;
+      entering = Dot(normal, isect.wo)>0;
+    }
+    Normal3f nl = entering?normal:-normal;
+    Vector3f wi = Normalize(2*Dot(Vector3f(nl), isect.wo)*Vector3f(nl) - isect.wo);
+
+    // reflection ray
+    RayDifferential reflRay = isect.SpawnRay(wi);
+
+    // mirror case
+    // keep track of bad rays
+    if (Dot(isect.n, wi) * Dot(normal, wi)<=0) {
+    	count++;
+    	normal = isect.n;
+    	entering = Dot(normal, isect.wo)>0;
+    	nl = entering?normal:-normal;
+    	wi = Normalize(2*Dot(Vector3f(nl), isect.wo)*Vector3f(nl) - isect.wo);
+    	reflRay = isect.SpawnRay(wi);
+    }
+    SingleLayerMirror(observe, reflRay, scene, weight, depth+1, maxdepth, outputx, outputy, outputz, outputweight, outputdepth);
+    return;
+}
+
+void SingleLayerGlass(float observe, const Ray &r, const Scene& scene, int weight, int depth, int maxdepth, std::ofstream &outputx, std::ofstream &outputy, std::ofstream &outputz, std::ofstream &outputweight, std::ofstream &outputdepth){
     float etaI = 1;
     float etaT = 1.5;
 
@@ -1606,22 +1659,11 @@ namespace pbrt {
       else return;
     }
 
-
-    // // for multilayer
-    // float etaI, etaT;
-    // if (isect.p.z>-2){
-    //   etaI = 1;
-    //   etaT = 1.5;
-    // }else{
-    //   etaI = 1.5;
-    //   etaT = 2;
-    // }
-
     Normal3f normal = isect.shading.n;
     bool entering = Dot(normal, isect.wo)>0;
     // check for bad rays
     if (Dot(isect.n, isect.wo) * Dot(isect.shading.n, isect.wo)<=0){
-      count1++;
+      count++;
       // change to surface normal
       normal = isect.n;
       entering = Dot(normal, isect.wo)>0;
@@ -1633,18 +1675,8 @@ namespace pbrt {
     float e = entering? etaI/etaT:etaT/etaI;
     bool tr = Refract(isect.wo, nl, e, &tdir);
     // check bad rays
-    if ((Dot(isect.n, wi) * Dot(normal, wi)<=0)){
-      count2++;
-      // change to surface normal
-      normal = isect.n;
-      nl = entering?normal:-normal;
-      wi = Normalize(2*Dot(Vector3f(nl), isect.wo)*Vector3f(nl) - isect.wo);
-      e = entering? etaI/etaT:etaT/etaI;
-      tr = Refract(isect.wo, nl, e, &tdir);
-    }
-
-    if (Dot(isect.n, tdir) * Dot(normal, tdir)<=0){
-      count3++;
+    if ((Dot(isect.n, wi) * Dot(normal, wi)<=0) || Dot(isect.n, tdir) * Dot(normal, tdir)<=0){
+      count++;
       // change to surface normal
       normal = isect.n;
       nl = entering?normal:-normal;
@@ -1658,18 +1690,94 @@ namespace pbrt {
     // transmission ray
     RayDifferential tranRay = isect.SpawnRay(tdir);
 
-    // // mirror case
-    //  // keep track of bad rays
-    // if (Dot(isect.n, wi) * Dot(normal, wi)<=0) {
-    // 	count++;
-    // 	// normal = isect.n;
-    // 	// entering = Dot(normal, isect.wo)>0;
-    // 	// nl = entering?normal:-normal;
-    // 	// wi = Normalize(2*Dot(Vector3f(nl), isect.wo)*Vector3f(nl) - isect.wo);
-    // 	// reflRay = isect.SpawnRay(wi);
-    // }
-    // radiance(observe, reflRay, scene, weight, depth+1, maxdepth, outputx, outputy, outputz, outputweight, outputdepth);
-    // return;
+    // specular reflection + specular refraction
+    float cos = Dot(Vector3f(normal), isect.wo);
+    float rprob = FrDielectric(cos, etaI, etaT);
+    float rt = (float) rand() / (RAND_MAX);
+    if (rt<=rprob){
+      // refelctance ray
+      SingleLayerGlass(observe, reflRay, scene, weight, depth+1, maxdepth, outputx, outputy, outputz, outputweight, outputdepth);
+      return;
+    }else{
+      // transmission ray
+      if (tr==false) std::cout<<"in transmission case but transmission is impossible, error!"<<std::endl;
+      SingleLayerGlass(observe, tranRay, scene, weight, depth+1, maxdepth, outputx, outputy, outputz, outputweight, outputdepth);
+      return;
+    }
+}
+
+void DoubleLayerHeightfield(float observe, const Ray &r, const Scene& scene, int weight, int depth, int maxdepth, std::ofstream &outputx, std::ofstream &outputy, std::ofstream &outputz, std::ofstream &outputweight, std::ofstream &outputdepth){
+    // check intersection
+    SurfaceInteraction isect;
+    // if not intersect
+    if (!scene.Intersect(r, &isect)){
+      if (depth == 0){
+        return;
+      }else{
+
+        if((isect.p.z>0 && r.d.z<0)||(isect.p.z<0 && r.d.z>0)){
+          count_goout++;
+        }
+
+        // check intersection with observing sphere
+        float t = intersect(r, observe);
+        Point3f inter = r.o + r.d * t;
+        outputx << inter.x <<"\n";
+        outputy << inter.y <<"\n";
+        outputz << inter.z <<"\n";
+        outputweight << weight <<"\n";
+        outputdepth << depth <<"\n";
+        return;
+      }
+    }
+
+    if (depth>maxdepth){
+      float random = ((float) rand() / (RAND_MAX));
+      if ((random)<1./6) weight *= 6;
+      else return;
+    }
+
+
+    // for doublelayer
+    float etaI, etaT;
+    if (isect.p.z>-2){
+      etaI = 1;
+      etaT = 1.5;
+    }else{
+      etaI = 1.5;
+      etaT = 2;
+    }
+
+    Normal3f normal = isect.shading.n;
+    bool entering = Dot(normal, isect.wo)>0;
+    // check for bad rays
+    if (Dot(isect.n, isect.wo) * Dot(isect.shading.n, isect.wo)<=0){
+      count++;
+      // change to surface normal
+      normal = isect.n;
+      entering = Dot(normal, isect.wo)>0;
+    }
+    Normal3f nl = entering?normal:-normal;
+    Vector3f wi = Normalize(2*Dot(Vector3f(nl), isect.wo)*Vector3f(nl) - isect.wo);
+
+    Vector3f tdir;
+    float e = entering? etaI/etaT:etaT/etaI;
+    bool tr = Refract(isect.wo, nl, e, &tdir);
+    // check bad rays
+    if ((Dot(isect.n, wi) * Dot(normal, wi)<=0) || Dot(isect.n, tdir) * Dot(normal, tdir)<=0){
+      count++;
+      // change to surface normal
+      normal = isect.n;
+      nl = entering?normal:-normal;
+      wi = Normalize(2*Dot(Vector3f(nl), isect.wo)*Vector3f(nl) - isect.wo);
+      e = entering? etaI/etaT:etaT/etaI;
+      tr = Refract(isect.wo, nl, e, &tdir);
+    }
+
+    // reflection ray
+    RayDifferential reflRay = isect.SpawnRay(wi);
+    // transmission ray
+    RayDifferential tranRay = isect.SpawnRay(tdir);
 
     // specular reflection + specular refraction
     float cos = Dot(Vector3f(normal), isect.wo);
@@ -1677,12 +1785,12 @@ namespace pbrt {
     float rt = (float) rand() / (RAND_MAX);
     if (rt<=rprob){
       // refelctance ray
-      radiance(observe, reflRay, scene, weight, depth+1, maxdepth, outputx, outputy, outputz, outputweight, outputdepth);
+      DoubleLayerHeightfield(observe, reflRay, scene, weight, depth+1, maxdepth, outputx, outputy, outputz, outputweight, outputdepth);
       return;
     }else{
       // transmission ray
       if (tr==false) std::cout<<"in transmission case but transmission is impossible, error!"<<std::endl;
-      radiance(observe, tranRay, scene, weight, depth+1, maxdepth, outputx, outputy, outputz, outputweight, outputdepth);
+      DoubleLayerHeightfield(observe, tranRay, scene, weight, depth+1, maxdepth, outputx, outputy, outputz, outputweight, outputdepth);
       return;
     }
   }

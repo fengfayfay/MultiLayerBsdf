@@ -90,7 +90,11 @@ void pbrtWorldEnd();
 
 // function used for my test
 float intersect(const Ray &ray, float observe);
-void radiance(float observe, const Ray &ray, const Scene& scene, int weight,int depth, int maxdepth, std::ofstream &outputx, std::ofstream &outputy, std::ofstream &outputz, std::ofstream &outputweight, std::ofstream &outputdepth);
+void SingleLayerMirror(float observe, const Ray &ray, const Scene& scene, int weight,int depth, int maxdepth, std::ofstream &outputx, std::ofstream &outputy, std::ofstream &outputz, std::ofstream &outputweight, std::ofstream &outputdepth);
+
+void SingleLayerGlass(float observe, const Ray &ray, const Scene& scene, int weight,int depth, int maxdepth, std::ofstream &outputx, std::ofstream &outputy, std::ofstream &outputz, std::ofstream &outputweight, std::ofstream &outputdepth);
+
+void DoubleLayerHeightfield(float observe, const Ray &ray, const Scene& scene, int weight,int depth, int maxdepth, std::ofstream &outputx, std::ofstream &outputy, std::ofstream &outputz, std::ofstream &outputweight, std::ofstream &outputdepth);
 
 }  // namespace pbrt
 
