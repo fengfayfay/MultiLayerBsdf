@@ -1,27 +1,28 @@
 close all
 cd('/Users/mandy/Github/MultiLayerBsdf/build');
-alpha = 0.4;
-filename = ['outputx_', num2str(alpha),'.txt'];
+alpha = 0.5;
+angle = 60;
+filename = [num2str(angle), 'outputx_', num2str(alpha),'.txt'];
 fileID = fopen(filename);
 C1 = textscan(fileID,'%f');
 fclose(fileID);
 
-filename = ['outputy_', num2str(alpha),'.txt'];
+filename = [num2str(angle),'outputy_', num2str(alpha),'.txt'];
 fileID = fopen(filename);
 C2 = textscan(fileID,'%f');
 fclose(fileID);
 
-filename = ['outputz_', num2str(alpha),'.txt'];
+filename = [num2str(angle),'outputz_', num2str(alpha),'.txt'];
 fileID = fopen(filename);
 C3 = textscan(fileID,'%f');
 fclose(fileID);
 
-filename = ['outputweight_', num2str(alpha),'.txt'];
+filename = [num2str(angle),'outputweight_', num2str(alpha),'.txt'];
 fileID = fopen(filename);
 C4 = textscan(fileID,'%f');
 fclose(fileID);
 
-filename = ['outputdepth_', num2str(alpha),'.txt'];
+filename = [num2str(angle),'outputdepth_', num2str(alpha),'.txt'];
 fileID = fopen(filename);
 C5 = textscan(fileID,'%f');
 fclose(fileID);
@@ -33,13 +34,14 @@ z = C3{1};
 weight = C4{1};
 depth = C5{1};
 
-% figure
-% scatter3(x,y,z)
+figure
+scatter3(x,y,z)
 
 % parameter for gaussian heightfield test
 N = 4800;
 len = 40;
 observe = 6000;
+numray = 1e7;
 
 % visualization parameters
 munum = 100;
@@ -85,7 +87,7 @@ for i = 1:length(x)
     end
 end
 figure
-imagesc(result)
+imagesc(result/numray)
 title('reflection lobe')
 xlabel('mu_o')
 ylabel('phi_o')
@@ -111,7 +113,7 @@ for i = 1:length(x)
             end
         end
         result2(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) = result2(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) + weight(i);
-        if depth(i)<=1
+        if depth(i)<=2
             result2_d1(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) = result2_d1(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) + weight(i);
         else
             result2_d2(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) = result2_d2(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) + weight(i);
@@ -119,7 +121,7 @@ for i = 1:length(x)
     end
 end
 figure
-imagesc(result2)
+imagesc(result2/numray)
 title('transmission lobe')
 xlabel('mu_o')
 ylabel('phi_o')
@@ -136,51 +138,49 @@ colorbar
 % fclose(fid)
 
 cd('/Users/mandy/Github/pixar/ritest');
-filename = ['reflect_', num2str(alpha),'.txt'];
+filename = [num2str(angle),'reflect_', num2str(alpha),'.txt'];
 fid = fopen(filename,'w');
 fprintf(fid,'%6f\n',result);
 fclose(fid);
 
-filename = ['transmit_', num2str(alpha),'.txt'];
+filename = [num2str(angle),'transmit_', num2str(alpha),'.txt'];
 fid = fopen(filename,'w');
 fprintf(fid,'%6f\n',result2);
 fclose(fid);
 
-filename = ['reflect1_', num2str(alpha),'.txt'];
+filename = [num2str(angle),'reflect1_', num2str(alpha),'.txt'];
 fid = fopen(filename,'w');
 fprintf(fid,'%6f\n',result_d1);
 fclose(fid);
 
-filename = ['reflect2_', num2str(alpha),'.txt'];
+filename = [num2str(angle),'reflect2_', num2str(alpha),'.txt'];
 fid = fopen(filename,'w');
 fprintf(fid,'%6f\n',result_d2);
 fclose(fid);
 
-filename = ['transmit1_', num2str(alpha),'.txt'];
+filename = [num2str(angle),'transmit1_', num2str(alpha),'.txt'];
 fid = fopen(filename,'w');
 fprintf(fid,'%6f\n',result2_d1);
 fclose(fid);
 
-filename = ['transmit2_', num2str(alpha),'.txt'];
+filename = [num2str(angle),'transmit2_', num2str(alpha),'.txt'];
 fid = fopen(filename,'w');
 fprintf(fid,'%6f\n',result2_d2);
 fclose(fid);
 
-% reflect=[reflect result];
-% transmit = [transmit result2];
 
-% depth_r = depth(z>0);
-% depth_t = depth(z<0);
-% yt = 0:0.1:1;
-% figure
-% histogram(depth,'Normalization','cdf');
-% title('accumulated energy percentage from reflectance & transmission, alpha = 0.1')
-% set(gca, 'YTick', yt);
-% figure
-% histogram(depth_r,'Normalization','cdf');
-% title('accumulated energy percentage from reflectance, alpha = 0.1')
-% set(gca, 'YTick', yt);
-% figure
-% histogram(depth_t,'Normalization','cdf');
-% title('accumulated energy percentage from transmission, alpha = 0.1')
-% set(gca, 'YTick', yt);
+depth_r = depth(z>0);
+depth_t = depth(z<0);
+yt = 0:0.1:1;
+figure
+histogram(depth,'Normalization','cdf');
+title(['accumulated energy percentage from reflectance & transmission, alpha=', num2str(alpha)])
+set(gca, 'YTick', yt);
+figure
+histogram(depth_r,'Normalization','cdf');
+title(['accumulated energy percentage from reflectance, alpha =',num2str(alpha)])
+set(gca, 'YTick', yt);
+figure
+histogram(depth_t,'Normalization','cdf');
+title(['accumulated energy percentage from transmission, alpha =',num2str(alpha)])
+set(gca, 'YTick', yt);

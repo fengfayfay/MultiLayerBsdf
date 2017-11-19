@@ -90,6 +90,7 @@ namespace pbrt {
     int *vp = indices.get();
     // for vertex normal computation
     int* count = new int[nitems];
+    //std::unique_ptr<int[]> count(new int[nitems]);
     Point3f p0, p1, p2;
     Vector3f dp02, dp12;
     Normal3f normal1,normal2;

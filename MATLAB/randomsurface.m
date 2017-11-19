@@ -23,15 +23,13 @@ elseif nargin == 5
     
     % Gaussian filter
     F = exp(-(X.^2/(lx^2/2)+Y.^2/(ly^2/2)));
-    f = 2/sqrt(pi)*rL/N/sqrt(lx)/sqrt(ly)*ifft2(fft2(Z).*fft2(F))-2;
-    % second layer that is beneath the first one
-%     f = 2/sqrt(pi)*rL/N/sqrt(lx)/sqrt(ly)*ifft2(fft2(Z).*fft2(F))-1;
+    f = 2/sqrt(pi)*rL/N/sqrt(lx)/sqrt(ly)*ifft2(fft2(Z).*fft2(F));
     
 end
 % figure
 % surf(f)
 cd('/Users/mandy/Github/MultiLayerBsdf/build');
-filename = ['pz', num2str(h/lx), 'txt'];
+filename = ['pz', num2str(h/lx), '.txt'];
 pz = fopen(filename,'w');
 fprintf(pz,'%5f %5f %5f %5f %5f %5f %5f %5f\n',f);
 fclose(pz);

@@ -30,6 +30,7 @@
 
 */
 #include <fstream>
+#include <sstream>
 // core/api.cpp*
 #include "api.h"
 #include "parallel.h"
@@ -117,7 +118,10 @@
 #include <map>
 #include <stdio.h>
 
-int count = 0;
+int count1 = 0;
+int count2 = 0;
+int count3 = 0;
+int count_goout = 0;
 
 namespace pbrt {
 
@@ -1466,23 +1470,47 @@ namespace pbrt {
       //std::unique_ptr<Integrator>integrator(renderOptions->MakeIntegrator());
       std::unique_ptr<Scene> scene(renderOptions->MakeScene());
 
-      std::cout<<"start Gaussian field experiment"<<std::endl;
+      std::cout<<"start Gaussian heightfield experiment"<<std::endl;
       // ray tracing test
-      float theta = M_PI/3;
+      float angle = 60;
+      float theta = angle*180.f/M_PI;
+      float alpha = 0.5;
       int numrays = 1e7;
       float height = 5.f;
+      float dist = 5;
       Point3f center = Point3f(height*tan(theta), 0.f, height);
       Vector3f dir = Normalize(Vector3f(-height*tan(theta), 0.f, -height));
       float trand, urand;
       float observe = 6000;
       int maxdepth = 10;
-      float radius = 30;
+      float radius = 20;
       std::ofstream outputx, outputy, outputz, outputweight, outputdepth;
-      outputx.open("outputx.txt");
-      outputy.open("outputy.txt");
-      outputz.open("outputz.txt");
-      outputweight.open("outputweight.txt");
-      outputdepth.open("outputdepth.txt");
+
+      std::ostringstream oss1;
+      oss1 << angle << "outputx_" << alpha<<".txt";
+      std::string var1 = oss1.str();
+      outputx.open(var1);
+
+      std::ostringstream oss2;
+      oss2 << angle << "outputy_" << alpha<<".txt";
+      std::string var2 = oss2.str();
+      outputy.open(var2);
+
+      std::ostringstream oss3;
+      oss3 << angle << "outputz_" << alpha<<".txt";
+      std::string var3 = oss3.str();
+      outputz.open(var3);
+
+      std::ostringstream oss4;
+      oss4 << angle << "outputweight_" << alpha<<".txt";
+      std::string var4 = oss4.str();
+      outputweight.open(var4);
+
+      std::ostringstream oss5;
+      oss5 << angle << "outputdepth_" << alpha<<".txt";
+      std::string var5 = oss5.str();
+      outputdepth.open(var5);
+
       for (int i = 0; i<numrays; ++i){
         trand = 2 * M_PI * ((float) rand() / (RAND_MAX));
         //trand = (float) rand() / (RAND_MAX);
@@ -1499,7 +1527,11 @@ namespace pbrt {
       outputz.close();
       outputweight.close();
       outputdepth.close();
-      std::cout<<"bad rays"<<count<<std::endl;
+      // std::cout<<"bad rays "<<count1+count2+count3<<std::endl;
+      // std::cout<<"bad normals: "<<count1<<std::endl;
+      // std::cout<<"bad reflection dir: "<<count2<<std::endl;
+      // std::cout<<"bad refraction dir: "<<count3<<std::endl;
+      std::cout<<"rays that go out: "<<count_goout<<std::endl;
 
       // original rendering process
       // // This is kind of ugly; we directly override the current profiler
@@ -1541,6 +1573,9 @@ namespace pbrt {
 
   void radiance(float observe, const Ray &r, const Scene& scene, int weight, int depth, int maxdepth, std::ofstream &outputx, std::ofstream &outputy, std::ofstream &outputz, std::ofstream &outputweight, std::ofstream &outputdepth){
 
+    float etaI = 1;
+    float etaT = 1.5;
+
     // check intersection
     SurfaceInteraction isect;
     // if not intersect
@@ -1548,6 +1583,11 @@ namespace pbrt {
       if (depth == 0){
         return;
       }else{
+
+        if((isect.p.z>0 && r.d.z<0)||(isect.p.z<0 && r.d.z>0)){
+          count_goout++;
+        }
+
         // check intersection with observing sphere
         float t = intersect(r, observe);
         Point3f inter = r.o + r.d * t;
@@ -1566,21 +1606,22 @@ namespace pbrt {
       else return;
     }
 
-    // for multilayer
-    float etaI, etaT;
-    if (isect.p.z>-1){
-      etaI = 1;
-      etaT = 1.5;
-    }else{
-      etaI = 1.5;
-      etaT = 2;
-    }
+
+    // // for multilayer
+    // float etaI, etaT;
+    // if (isect.p.z>-2){
+    //   etaI = 1;
+    //   etaT = 1.5;
+    // }else{
+    //   etaI = 1.5;
+    //   etaT = 2;
+    // }
 
     Normal3f normal = isect.shading.n;
     bool entering = Dot(normal, isect.wo)>0;
     // check for bad rays
     if (Dot(isect.n, isect.wo) * Dot(isect.shading.n, isect.wo)<=0){
-      count++;
+      count1++;
       // change to surface normal
       normal = isect.n;
       entering = Dot(normal, isect.wo)>0;
@@ -1592,8 +1633,18 @@ namespace pbrt {
     float e = entering? etaI/etaT:etaT/etaI;
     bool tr = Refract(isect.wo, nl, e, &tdir);
     // check bad rays
-    if ((Dot(isect.n, wi) * Dot(normal, wi)<=0) || (Dot(isect.n, tdir) * Dot(normal, tdir)<=0)){
-      count++;
+    if ((Dot(isect.n, wi) * Dot(normal, wi)<=0)){
+      count2++;
+      // change to surface normal
+      normal = isect.n;
+      nl = entering?normal:-normal;
+      wi = Normalize(2*Dot(Vector3f(nl), isect.wo)*Vector3f(nl) - isect.wo);
+      e = entering? etaI/etaT:etaT/etaI;
+      tr = Refract(isect.wo, nl, e, &tdir);
+    }
+
+    if (Dot(isect.n, tdir) * Dot(normal, tdir)<=0){
+      count3++;
       // change to surface normal
       normal = isect.n;
       nl = entering?normal:-normal;
@@ -1625,6 +1676,7 @@ namespace pbrt {
     float rprob = FrDielectric(cos, etaI, etaT);
     float rt = (float) rand() / (RAND_MAX);
     if (rt<=rprob){
+      // refelctance ray
       radiance(observe, reflRay, scene, weight, depth+1, maxdepth, outputx, outputy, outputz, outputweight, outputdepth);
       return;
     }else{
