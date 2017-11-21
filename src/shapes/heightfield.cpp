@@ -76,7 +76,7 @@ namespace pbrt {
     int nverts = nx * ny;
     // Compute heightfield vertex positions
     int pos = 0;
-    float rL = 40;
+    float rL = 5;
     for (int y = 0; y < ny; ++y) {
       for (int x = 0; x < nx; ++x) {
         P[pos].x = uvs[pos].x = (float)x / (float)(nx - 1)*2*rL-rL;
@@ -94,6 +94,14 @@ namespace pbrt {
     Point3f p0, p1, p2;
     Vector3f dp02, dp12;
     Normal3f normal1,normal2;
+
+    std::ofstream slopefile;
+
+    std::ostringstream oss1;
+    oss1 <<"slope.txt";
+    std::string var1 = oss1.str();
+    slopefile.open(var1);
+
     for (int y = 0; y < ny - 1; ++y) {
       for (int x = 0; x < nx - 1; ++x) {
 #define VERT(x, y) ((x) + (y)*nx)
@@ -114,12 +122,30 @@ namespace pbrt {
         dp12 = p1 - p2;
         normal1 = Normal3f(Normalize(Cross(dp02, dp12)));
 
+        float costheta = Dot(normal1,Normal3f(0.f,0.f,1.f));
+        if (costheta<0){
+          std::cout<<"downside normal!"<<std::endl;
+        }
+        float sintheta = sqrt(1 - pow(costheta,2.f));
+        float slope = sintheta/costheta;
+
+        slopefile<<slope<<"\n";
+
         p0 = P[VERT(x, y)];
         p1 = P[VERT(x + 1, y+1)];
         p2 = P[VERT(x, y + 1)];
         dp02 = p0 - p2;
         dp12 = p1 - p2;
         normal2 = Normal3f(Normalize(Cross(dp02, dp12)));
+
+        costheta = Dot(normal2,Normal3f(0.f,0.f,1.f));
+        if (costheta<0){
+          std::cout<<"downside normal!"<<std::endl;
+        }
+        sintheta = sqrt(1 - pow(costheta,2.f));
+        slope = sintheta/costheta;
+        slopefile<<slope<<"\n";
+
         N[VERT(x, y)] += normal1 + normal2;
         N[VERT(x + 1, y)] += normal1;
         N[VERT(x + 1, y + 1)] += normal1 + normal2;
@@ -132,6 +158,8 @@ namespace pbrt {
       }
 #undef VERT
     }
+
+    slopefile.close();
 
    // average vertex normal
     pos = 0;

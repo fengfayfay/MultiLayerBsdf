@@ -1,4 +1,24 @@
-function [f,x,y] = randomsurface(N,rL,h,lx,ly)
+function [f,x,y] = randomsurface(N,rL,h,clx,cly)
+%
+% [f,x,y] = rsgeng2D(N,rL,h,clx,cly) 
+%
+% generates a square 2-dimensional random rough surface f(x,y) with NxN 
+% surface points. The surface has a Gaussian height distribution function 
+% and Gaussian autocovariance functions (in both x and y), where rL is the 
+% length of the surface side, h is the RMS height and clx and cly are the 
+% correlation lengths in x and y. Omitting cly makes the surface isotropic.
+%
+% Input:    N   - number of surface points (along square side)
+%           rL  - length of surface (along square side)
+%           h   - rms height
+%           clx, (cly)  - correlation lengths (in x and y)
+%
+% Output:   f  - surface heights
+%           x  - surface points
+%           y  - surface points
+%
+% Last updated: 2010-07-26 (David Bergström).  
+%
 
 format long;
 
@@ -12,24 +32,27 @@ Z = h.*randn(N,N); % uncorrelated Gaussian random rough surface distribution
 if nargin == 4
     
     % Gaussian filter
-    F = exp(-((X.^2+Y.^2)/(lx^2/2)));
+    F = exp(-((X.^2+Y.^2)/(clx^2/2)));
 
-    % correlation of surface including convolution, inverse
+    % correlation of surface including convolution (faltung), inverse
     % Fourier transform and normalizing prefactors
-    f = 2/sqrt(pi)*rL/N/lx*ifft2(fft2(Z).*fft2(F));
+    f = 1/sqrt(pi)*rL/N/clx*ifft2(fft2(Z).*fft2(F));
     
 % non-isotropic surface
 elseif nargin == 5
     
     % Gaussian filter
-    F = exp(-(X.^2/(lx^2/2)+Y.^2/(ly^2/2)));
-    f = 2/sqrt(pi)*rL/N/sqrt(lx)/sqrt(ly)*ifft2(fft2(Z).*fft2(F));
+    F = exp(-(X.^2/(clx^2/2)+Y.^2/(cly^2/2)));
+
+    % correlated surface generation including convolution (faltning) and inverse
+    % Fourier transform and normalizing prefactors
+    f = 2/sqrt(pi)*rL/N/sqrt(clx)/sqrt(cly)*ifft2(fft2(Z).*fft2(F));
     
 end
 % figure
 % surf(f)
 cd('/Users/mandy/Github/MultiLayerBsdf/build');
-filename = ['pz', num2str(h/lx), '.txt'];
+filename = ['pz', num2str(h/clx), '.txt'];
 pz = fopen(filename,'w');
 fprintf(pz,'%5f %5f %5f %5f %5f %5f %5f %5f\n',f);
 fclose(pz);
