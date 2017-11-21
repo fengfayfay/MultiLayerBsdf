@@ -40,7 +40,7 @@ scatter3(x,y,z)
 % parameter for gaussian heightfield test
 N = 4800;
 len = 100;
-observe = 10000;
+observe = 6000;
 numray = 1e7;
 
 % visualization parameters

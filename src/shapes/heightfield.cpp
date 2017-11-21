@@ -76,11 +76,11 @@ namespace pbrt {
     int nverts = nx * ny;
     // Compute heightfield vertex positions
     int pos = 0;
-    float domain = 80;
+    float rL = 40;
     for (int y = 0; y < ny; ++y) {
       for (int x = 0; x < nx; ++x) {
-        P[pos].x = uvs[pos].x = (float)x / (float)(nx - 1)*domain-domain/2;
-        P[pos].y = uvs[pos].y = (float)y / (float)(ny - 1)*domain-domain/2;
+        P[pos].x = uvs[pos].x = (float)x / (float)(nx - 1)*2*rL-rL;
+        P[pos].y = uvs[pos].y = (float)y / (float)(ny - 1)*2*rL-rL;
         P[pos].z = z[pos];
         ++pos;
       }

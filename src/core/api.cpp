@@ -1471,10 +1471,10 @@ namespace pbrt {
       std::cout<<"start Gaussian heightfield experiment"<<std::endl;
       // ray tracing test
       float angle = 60;
-      float theta = angle*180.f/M_PI;
+      float theta = angle*M_PI/180.f;
       float alpha = 0.5;
       int numrays = 1e7;
-      float height = 5.f;
+      float height = 1.f;
       float dist = 5;
       Point3f center = Point3f(height*tan(theta), 0.f, height);
       Vector3f dir = Normalize(Vector3f(-height*tan(theta), 0.f, -height));
@@ -1519,6 +1519,7 @@ namespace pbrt {
         int depth = 0;
         int weight = 1;
         SingleLayerGlass(observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth);
+        //DoubleLayerHeightfield(observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth);
       }
       outputx.close();
       outputy.close();
@@ -1664,9 +1665,10 @@ void SingleLayerGlass(float observe, const Ray &r, const Scene& scene, int weigh
     // check for bad rays
     if (Dot(isect.n, isect.wo) * Dot(isect.shading.n, isect.wo)<=0){
       count++;
-      // change to surface normal
-      normal = isect.n;
-      entering = Dot(normal, isect.wo)>0;
+      return;
+      // // change to surface normal
+      // normal = isect.n;
+      // entering = Dot(normal, isect.wo)>0;
     }
     Normal3f nl = entering?normal:-normal;
     Vector3f wi = Normalize(2*Dot(Vector3f(nl), isect.wo)*Vector3f(nl) - isect.wo);
@@ -1677,12 +1679,13 @@ void SingleLayerGlass(float observe, const Ray &r, const Scene& scene, int weigh
     // check bad rays
     if ((Dot(isect.n, wi) * Dot(normal, wi)<=0) || Dot(isect.n, tdir) * Dot(normal, tdir)<=0){
       count++;
-      // change to surface normal
-      normal = isect.n;
-      nl = entering?normal:-normal;
-      wi = Normalize(2*Dot(Vector3f(nl), isect.wo)*Vector3f(nl) - isect.wo);
-      e = entering? etaI/etaT:etaT/etaI;
-      tr = Refract(isect.wo, nl, e, &tdir);
+      return;
+      // // change to surface normal
+      // normal = isect.n;
+      // nl = entering?normal:-normal;
+      // wi = Normalize(2*Dot(Vector3f(nl), isect.wo)*Vector3f(nl) - isect.wo);
+      // e = entering? etaI/etaT:etaT/etaI;
+      // tr = Refract(isect.wo, nl, e, &tdir);
     }
 
     // reflection ray
@@ -1753,9 +1756,10 @@ void DoubleLayerHeightfield(float observe, const Ray &r, const Scene& scene, int
     // check for bad rays
     if (Dot(isect.n, isect.wo) * Dot(isect.shading.n, isect.wo)<=0){
       count++;
-      // change to surface normal
-      normal = isect.n;
-      entering = Dot(normal, isect.wo)>0;
+      return;
+      // // change to surface normal
+      // normal = isect.n;
+      // entering = Dot(normal, isect.wo)>0;
     }
     Normal3f nl = entering?normal:-normal;
     Vector3f wi = Normalize(2*Dot(Vector3f(nl), isect.wo)*Vector3f(nl) - isect.wo);
@@ -1766,12 +1770,13 @@ void DoubleLayerHeightfield(float observe, const Ray &r, const Scene& scene, int
     // check bad rays
     if ((Dot(isect.n, wi) * Dot(normal, wi)<=0) || Dot(isect.n, tdir) * Dot(normal, tdir)<=0){
       count++;
-      // change to surface normal
-      normal = isect.n;
-      nl = entering?normal:-normal;
-      wi = Normalize(2*Dot(Vector3f(nl), isect.wo)*Vector3f(nl) - isect.wo);
-      e = entering? etaI/etaT:etaT/etaI;
-      tr = Refract(isect.wo, nl, e, &tdir);
+      return;
+      // // change to surface normal
+      // normal = isect.n;
+      // nl = entering?normal:-normal;
+      // wi = Normalize(2*Dot(Vector3f(nl), isect.wo)*Vector3f(nl) - isect.wo);
+      // e = entering? etaI/etaT:etaT/etaI;
+      // tr = Refract(isect.wo, nl, e, &tdir);
     }
 
     // reflection ray
