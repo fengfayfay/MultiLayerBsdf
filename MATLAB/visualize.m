@@ -1,7 +1,7 @@
 close all
 cd('/Users/mandy/Github/MultiLayerBsdf/build');
 alpha = 0.5;
-angle = 60;
+angle = 30;
 filename = [num2str(angle), 'outputx_', num2str(alpha),'.txt'];
 fileID = fopen(filename);
 C1 = textscan(fileID,'%f');
@@ -126,6 +126,9 @@ title('transmission lobe')
 xlabel('mu_o')
 ylabel('phi_o')
 colorbar
+
+total = sum(weight);
+disp(total)
 
 % cd('/Users/mandy/Github/pixar/ritest');
 % fid = fopen('scatteredray.txt','w');

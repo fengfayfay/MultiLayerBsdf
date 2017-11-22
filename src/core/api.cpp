@@ -1470,7 +1470,7 @@ namespace pbrt {
 
       std::cout<<"start Gaussian heightfield experiment"<<std::endl;
       // ray tracing test
-      float angle = 60;
+      float angle = 30;
       float theta = angle*M_PI/180.f;
       float alpha = 0.5;
       int numrays = 1e7;
@@ -1481,7 +1481,7 @@ namespace pbrt {
       float trand, urand;
       float observe = 6000;
       int maxdepth = 10;
-      float radius = 2.5;
+      float radius = 5;
       std::ofstream outputx, outputy, outputz, outputweight, outputdepth;
 
       std::ostringstream oss1;
@@ -1518,8 +1518,8 @@ namespace pbrt {
         Ray ray = Ray(ori, dir);
         int depth = 0;
         int weight = 1;
-        SingleLayerGlass(observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth);
-        //DoubleLayerHeightfield(observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth);
+        //SingleLayerGlass(observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth);
+        DoubleLayerHeightfield(observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth);
       }
       outputx.close();
       outputy.close();
@@ -1574,10 +1574,6 @@ void SingleLayerMirror(float observe, const Ray &r, const Scene& scene, int weig
       if (depth == 0){
         return;
       }else{
-
-        if((isect.p.z>0 && r.d.z<0)||(isect.p.z<0 && r.d.z>0)){
-          count_goout++;
-        }
 
         // check intersection with observing sphere
         float t = intersect(r, observe);
@@ -1637,10 +1633,6 @@ void SingleLayerGlass(float observe, const Ray &r, const Scene& scene, int weigh
       if (depth == 0){
         return;
       }else{
-
-        if((isect.p.z>0 && r.d.z<0)||(isect.p.z<0 && r.d.z>0)){
-          count_goout++;
-        }
 
         // check intersection with observing sphere
         float t = intersect(r, observe);
@@ -1718,13 +1710,16 @@ void DoubleLayerHeightfield(float observe, const Ray &r, const Scene& scene, int
         return;
       }else{
 
-        if((isect.p.z>0 && r.d.z<0)||(isect.p.z<0 && r.d.z>0)){
-          count_goout++;
-        }
-
         // check intersection with observing sphere
         float t = intersect(r, observe);
         Point3f inter = r.o + r.d * t;
+
+        // check rays that go out
+        if (r.o.z>-2 && inter.z<=0){
+          count_goout++;
+          return;
+        }
+
         outputx << inter.x <<"\n";
         outputy << inter.y <<"\n";
         outputz << inter.z <<"\n";

@@ -76,7 +76,7 @@ namespace pbrt {
     int nverts = nx * ny;
     // Compute heightfield vertex positions
     int pos = 0;
-    float rL = 5;
+    float rL = 10;
     for (int y = 0; y < ny; ++y) {
       for (int x = 0; x < nx; ++x) {
         P[pos].x = uvs[pos].x = (float)x / (float)(nx - 1)*2*rL-rL;
