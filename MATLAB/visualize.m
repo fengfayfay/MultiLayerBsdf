@@ -1,6 +1,6 @@
 close all
 cd('/Users/mandy/Github/MultiLayerBsdf/build');
-alpha = 0.5;
+alpha = 0.9;
 angle = 30;
 filename = [num2str(angle), 'outputx_', num2str(alpha),'.txt'];
 fileID = fopen(filename);
@@ -113,7 +113,7 @@ for i = 1:length(x)
             end
         end
         result2(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) = result2(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) + weight(i);
-        if depth(i)<=2
+        if depth(i)<=1
             result2_d1(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) = result2_d1(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) + weight(i);
         else
             result2_d2(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) = result2_d2(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) + weight(i);
@@ -130,17 +130,6 @@ colorbar
 total = sum(weight);
 disp(total)
 
-% cd('/Users/mandy/Github/pixar/ritest');
-% fid = fopen('scatteredray.txt','w');
-% fprintf(fid,'%6f\n',result)
-% fclose(fid)
-
-% cd('/Users/mandy/Github/pixar/ritest');
-% fid = fopen('transmitray.txt','w');
-% fprintf(fid,'%6f\n',result2)
-% fclose(fid)
-
-cd('/Users/mandy/Github/pixar/ritest');
 filename = [num2str(angle),'reflect_', num2str(alpha),'.txt'];
 fid = fopen(filename,'w');
 fprintf(fid,'%6f\n',result);

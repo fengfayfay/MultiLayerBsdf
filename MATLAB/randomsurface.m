@@ -57,7 +57,6 @@ pz = fopen(filename,'w');
 fprintf(pz,'%5f %5f %5f %5f %5f %5f %5f %5f\n',f);
 fclose(pz);
 
-cd('/Users/mandy/Github/MultiLayerBsdf/build');
 filename = ['pz', num2str(h/clx), '_2.txt'];
 pz = fopen(filename,'w');
 fprintf(pz,'%5f %5f %5f %5f %5f %5f %5f %5f\n',f-5);

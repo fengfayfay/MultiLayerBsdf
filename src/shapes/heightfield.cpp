@@ -95,12 +95,12 @@ namespace pbrt {
     Vector3f dp02, dp12;
     Normal3f normal1,normal2;
 
-    std::ofstream slopefile;
+    // std::ofstream slopefile;
 
-    std::ostringstream oss1;
-    oss1 <<"slope.txt";
-    std::string var1 = oss1.str();
-    slopefile.open(var1);
+    // std::ostringstream oss1;
+    // oss1 <<"slope.txt";
+    // std::string var1 = oss1.str();
+    // slopefile.open(var1);
 
     for (int y = 0; y < ny - 1; ++y) {
       for (int x = 0; x < nx - 1; ++x) {
@@ -122,14 +122,14 @@ namespace pbrt {
         dp12 = p1 - p2;
         normal1 = Normal3f(Normalize(Cross(dp02, dp12)));
 
-        float costheta = Dot(normal1,Normal3f(0.f,0.f,1.f));
-        if (costheta<0){
-          std::cout<<"downside normal!"<<std::endl;
-        }
-        float sintheta = sqrt(1 - pow(costheta,2.f));
-        float slope = sintheta/costheta;
+        // float costheta = Dot(normal1,Normal3f(0.f,0.f,1.f));
+        // if (costheta<0){
+          // std::cout<<"downside normal!"<<std::endl;
+        // }
+        // float sintheta = sqrt(1 - pow(costheta,2.f));
+        // float slope = sintheta/costheta;
 
-        slopefile<<slope<<"\n";
+        // slopefile<<slope<<"\n";
 
         p0 = P[VERT(x, y)];
         p1 = P[VERT(x + 1, y+1)];
@@ -138,13 +138,13 @@ namespace pbrt {
         dp12 = p1 - p2;
         normal2 = Normal3f(Normalize(Cross(dp02, dp12)));
 
-        costheta = Dot(normal2,Normal3f(0.f,0.f,1.f));
-        if (costheta<0){
-          std::cout<<"downside normal!"<<std::endl;
-        }
-        sintheta = sqrt(1 - pow(costheta,2.f));
-        slope = sintheta/costheta;
-        slopefile<<slope<<"\n";
+        // costheta = Dot(normal2,Normal3f(0.f,0.f,1.f));
+        // if (costheta<0){
+          // std::cout<<"downside normal!"<<std::endl;
+        // }
+        // sintheta = sqrt(1 - pow(costheta,2.f));
+        // slope = sintheta/costheta;
+        // slopefile<<slope<<"\n";
 
         N[VERT(x, y)] += normal1 + normal2;
         N[VERT(x + 1, y)] += normal1;
@@ -159,7 +159,7 @@ namespace pbrt {
 #undef VERT
     }
 
-    slopefile.close();
+    // slopefile.close();
 
    // average vertex normal
     pos = 0;

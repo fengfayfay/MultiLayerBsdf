@@ -1518,8 +1518,9 @@ namespace pbrt {
         Ray ray = Ray(ori, dir);
         int depth = 0;
         int weight = 1;
+        SingleLayerMirror(observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth);
         //SingleLayerGlass(observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth);
-        DoubleLayerHeightfield(observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth);
+        //DoubleLayerHeightfield(observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth);
       }
       outputx.close();
       outputy.close();
@@ -1598,9 +1599,10 @@ void SingleLayerMirror(float observe, const Ray &r, const Scene& scene, int weig
     // check for bad rays
     if (Dot(isect.n, isect.wo) * Dot(isect.shading.n, isect.wo)<=0){
       count++;
-      // change to surface normal
-      normal = isect.n;
-      entering = Dot(normal, isect.wo)>0;
+      return;
+      // // change to surface normal
+      // normal = isect.n;
+      // entering = Dot(normal, isect.wo)>0;
     }
     Normal3f nl = entering?normal:-normal;
     Vector3f wi = Normalize(2*Dot(Vector3f(nl), isect.wo)*Vector3f(nl) - isect.wo);
