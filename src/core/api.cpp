@@ -1470,7 +1470,7 @@ namespace pbrt {
 
       std::cout<<"start Gaussian heightfield experiment"<<std::endl;
       // ray tracing test
-      float angle = 30;
+      float angle = 60;
       float theta = angle*M_PI/180.f;
       float alpha = 0.5;
       int numrays = 1e7;
@@ -1614,11 +1614,13 @@ void SingleLayerMirror(float observe, const Ray &r, const Scene& scene, int weig
     // keep track of bad rays
     if (Dot(isect.n, wi) * Dot(normal, wi)<=0) {
     	count++;
-    	normal = isect.n;
-    	entering = Dot(normal, isect.wo)>0;
-    	nl = entering?normal:-normal;
-    	wi = Normalize(2*Dot(Vector3f(nl), isect.wo)*Vector3f(nl) - isect.wo);
-    	reflRay = isect.SpawnRay(wi);
+      return;
+      // change to surface normal
+    	// normal = isect.n;
+    	// entering = Dot(normal, isect.wo)>0;
+    	// nl = entering?normal:-normal;
+    	// wi = Normalize(2*Dot(Vector3f(nl), isect.wo)*Vector3f(nl) - isect.wo);
+    	// reflRay = isect.SpawnRay(wi);
     }
     SingleLayerMirror(observe, reflRay, scene, weight, depth+1, maxdepth, outputx, outputy, outputz, outputweight, outputdepth);
     return;
