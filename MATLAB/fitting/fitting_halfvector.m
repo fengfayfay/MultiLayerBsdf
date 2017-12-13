@@ -15,36 +15,40 @@ for i = testafter+1:length(x)
         h = ([x(i),y(i),z(i)] + incident)/2;
         h = h/norm(h);
         
-        if abs(h(1))<epsilon && h(2)>=0
-            phi = pi/2;
-        elseif (abs(h(1))<epsilon && h(2)<0)
-            phi = 3*pi/2;
-        else
-            phi = atan(h(2)/h(1));
-            if h(1)< 0
-                phi = phi + pi;
-            else
-                if h(2) < 0
-                    phi = phi + 2*pi;
-                end
-            end
-        end
-        result(ceil(phi/phi_unit),ceil(acos(h(3))/theta_unit)) = result(ceil(phi/phi_unit),ceil(acos(h(3))/theta_unit)) + weight(i);
+        phi = atan2(h(2),h(1));
+        
+%         if abs(h(1))<epsilon && h(2)>=0
+%             phi = pi/2;
+%         elseif (abs(h(1))<epsilon && h(2)<0)
+%             phi = 3*pi/2;
+%         else
+%             phi = atan(h(2)/h(1));
+%             if h(1)< 0
+%                 phi = phi + pi;
+%             else
+%                 if h(2) < 0
+%                     phi = phi + 2*pi;
+%                 end
+%             end
+%         end
+%         result(ceil(phi/phi_unit),ceil(acos(h(3))/theta_unit)) = result(ceil(phi/phi_unit),ceil(acos(h(3))/theta_unit)) + weight(i);
+        result(ceil((phi+pi)/phi_unit),ceil(acos(h(3))/theta_unit)) = result(ceil((phi+pi)/phi_unit),ceil(acos(h(3))/theta_unit)) + weight(i);
     end
 end
 
+close all
 figure
 imagesc(result/generatenum)
 colorbar()
 title(['Energy of Gaussian Heightfiled, alpha=', num2str(alpha),' angle=',num2str(angle)])
-filename = [num2str(angle),'_alpha_',num2str(alpha), 'heightfield'];
+filename = ['half',num2str(angle),'_alpha_',num2str(alpha), 'heightfield'];
 saveas(gcf,[filename,'.jpeg'])
 
-figure
-plot(result(200,:)/generatenum, 'linewidth', 2)
-title(['Energy of Gaussian Heightfiled, alpha=', num2str(alpha),' angle=',num2str(angle)])
-filename = [num2str(angle),'_alpha_',num2str(alpha), 'heightfield_2D'];
-saveas(gcf,[filename,'.jpeg'])
+% figure
+% plot(result(200,:)/generatenum, 'linewidth', 2)
+% title(['Energy of Gaussian Heightfiled, alpha=', num2str(alpha),' angle=',num2str(angle)])
+% filename = [num2str(angle),'_alpha_',num2str(alpha), 'heightfield_2D'];
+% saveas(gcf,[filename,'.jpeg'])
 
 
 % close all
@@ -78,8 +82,10 @@ for j = 1:length(gaussiannumvec)
             end
             
             theta = acos(h(3));
-            phivec(i) = phi;
+%             phivec(i) = phi;
+            phivec(i) = atan2(h(2),h(1));
             thetavec(i) = theta;
+           
         end
     end
     train = [phivec, thetavec];
@@ -102,9 +108,12 @@ for j = 1:length(gaussiannumvec)
     predict= zeros(phinum,thetanum);
     count = 0;
     for i = 1:generatenum
-        if Y(i,1)>=0 && Y(i,1)<=2*pi && Y(i,2)>=0 && Y(i,2)<=pi/2
-            predict(ceil(Y(i,1)/phi_unit),ceil(Y(i,2)/theta_unit)) = ...
-                predict(ceil(Y(i,1)/phi_unit),ceil(Y(i,2)/theta_unit)) + 1;
+%         if Y(i,1)>=0 && Y(i,1)<=2*pi && Y(i,2)>=0 && Y(i,2)<=pi/2
+%             predict(ceil(Y(i,1)/phi_unit),ceil(Y(i,2)/theta_unit)) = ...
+%                 predict(ceil(Y(i,1)/phi_unit),ceil(Y(i,2)/theta_unit)) + 1;
+        if Y(i,1)>=-pi && Y(i,1)<=pi && Y(i,2)>=0 && Y(i,2)<=pi/2
+              predict(ceil((Y(i,1)+pi)/phi_unit),ceil(Y(i,2)/theta_unit)) = ...
+                predict(ceil((Y(i,1)+pi)/phi_unit),ceil(Y(i,2)/theta_unit)) + 1;
         else
             count = count +1;
         end
@@ -116,14 +125,14 @@ for j = 1:length(gaussiannumvec)
     imagesc(predict/(generatenum-count))
     colorbar()
     title(['Energy generated using GMM, alpha=', num2str(alpha),' angle=',num2str(angle),' #G=',num2str(numGaussian)])
-%     filename = [num2str(angle),'_alpha_',num2str(alpha), '_#G',num2str(numGaussian)];
-%     saveas(gcf,[filename,'.jpeg'])
-    
-    figure
-    plot(predict(phinum/2,:)/(generatenum-count), 'linewidth', 2)
-    title(['Energy generated using GMM, alpha=', num2str(alpha),' angle=',num2str(angle),' #G=',num2str(numGaussian)])
-    filename=[num2str(angle),'_alpha_',num2str(alpha), '_#G',num2str(numGaussian),'_2D'];
+    filename = ['half',num2str(angle),'_alpha_',num2str(alpha), '_#G',num2str(numGaussian)];
     saveas(gcf,[filename,'.jpeg'])
+    
+%     figure
+%     plot(predict(phinum/2,:)/(generatenum-count), 'linewidth', 2)
+%     title(['Energy generated using GMM, alpha=', num2str(alpha),' angle=',num2str(angle),' #G=',num2str(numGaussian)])
+%     filename=[num2str(angle),'_alpha_',num2str(alpha), '_#G',num2str(numGaussian),'_2D'];
+%     saveas(gcf,[filename,'.jpeg'])
     
     %% calculate error
     diff = predict/(generatenum-count)-result/generatenum;

@@ -50,12 +50,12 @@ for k = range
     
     cd('/Users/mandy/Github/MultiLayerBsdf/MATLAB/fitting');
     
-    % fitting using phi mu
-    gaussiannumvec = 2:5;
-    phinum = 400;
-    munum = 100;
-    fitting_phimu(dir,alpha,angle,x,y,z,weight,epsilon,testafter,trainnum,...
-      generatenum, gaussiannumvec, phinum, munum);
+%     % fitting using phi mu
+%     gaussiannumvec = 2:5;
+%     phinum = 400;
+%     munum = 100;
+%     fitting_phimu(dir,alpha,angle,x,y,z,weight,epsilon,testafter,trainnum,...
+%       generatenum, gaussiannumvec, phinum, munum);
     
 %     % fitting using tan(halfvector)
 %     gaussiannumvec = 1:5;
@@ -72,5 +72,13 @@ for k = range
 %     thetanum = 200;
 %     fitting_halfvector(dir,alpha,angle,x,y,z,weight,epsilon, testafter, trainnum, ...
 %     generatenum, gaussiannumvec, incident, phinum, thetanum);
+
+    % fitting using x,y of halfvector
+    gaussiannumvec = 1:5;
+    incident = [sin(angle*pi/180), 0, cos(angle*pi/180)];
+    xnum = 100;
+    ynum = 100;
+    fitting_halfvector_projected(dir,alpha,angle,x,y,z,weight,testafter, trainnum, ...
+    generatenum, gaussiannumvec, incident, xnum, ynum);
 end
 

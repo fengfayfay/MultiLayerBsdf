@@ -13,20 +13,20 @@ result = zeros(phinum,munum);
 for i = testafter+1:length(x)
     if z(i)>=0
         if abs(x(i))<epsilon && y(i)>=0
-            theta = pi/2;
+            phi = pi/2;
         elseif (abs(x(i))<epsilon && y(i)<0)
-            theta = 3*pi/2;
+            phi = 3*pi/2;
         else
-            theta = atan(y(i)/x(i));
+            phi = atan(y(i)/x(i));
             if x(i)< 0
-                theta = theta + pi;
+                phi = phi + pi;
             else
                 if y(i) < 0
-                    theta = theta + 2*pi;
+                    phi = phi + 2*pi;
                 end
             end
         end
-        result(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) = result(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) + weight(i);
+        result(ceil(phi/phi_unit),ceil(z(i)/mu_unit)) = result(ceil(phi/phi_unit),ceil(z(i)/mu_unit)) + weight(i);
     end
 end
 
@@ -38,29 +38,29 @@ end
 for j = 1:length(gaussiannumvec)
     %% fit mixture of Gaussians
     numGaussian = gaussiannumvec(j);
-    thetavec = zeros(trainnum,1);
+    phivec = zeros(trainnum,1);
     muvec = zeros(trainnum,1);
     for i = 1:trainnum
         if z(i)>=0
             if abs(x(i))<epsilon && y(i)>=0
-                theta = pi/2;
+                phi = pi/2;
             elseif (abs(x(i))<epsilon && y(i)<0)
-                theta = 3*pi/2;
+                phi = 3*pi/2;
             else
-                theta = atan(y(i)/x(i));
+                phi = atan(y(i)/x(i));
                 if x(i)< 0
-                    theta = theta + pi;
+                    phi = phi + pi;
                 else
                     if y(i) < 0
-                        theta = theta + 2*pi;
+                        phi = phi + 2*pi;
                     end
                 end
             end
-            thetavec(i) = theta;
+            phivec(i) = phi;
             muvec(i) = z(i);
         end
     end
-    train = [thetavec, muvec];
+    train = [phivec, muvec];
     options = statset('MaxIter',500, 'Display','final');
     obj = gmdistribution.fit(train,numGaussian,'Options',options);
     
@@ -123,10 +123,10 @@ for j = 1:length(gaussiannumvec)
     errvec(j) = err;
     countvec(j) = count;
     
-    %     % visualize pdf
-    %     figure
-    %     fsurf(@(x,y)pdf(obj,[x y]),[0 2*pi 0 1])
-    %     colorbar()
+        % visualize pdf
+        figure
+        fsurf(@(x,y)pdf(obj,[x y]),[0 2*pi 0 1])
+        colorbar()
     
 end
 % title(['Energy generated using GMM on phimu, alpha=', num2str(alpha),' angle=',num2str(angle),'compare'])
