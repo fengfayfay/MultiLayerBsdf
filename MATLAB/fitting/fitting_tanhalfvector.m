@@ -16,6 +16,7 @@ for i = testafter+1:length(x)
         h = h/norm(h);
 %         tancur(i-testafter) = sqrt((1-h(3)^2)/h(3)^2);
         tancur = sqrt((1-h(3)^2)/h(3)^2);
+        coscur = h(3);
         if ceil(tancur/thetaunit)==0
             index = 1;
         else

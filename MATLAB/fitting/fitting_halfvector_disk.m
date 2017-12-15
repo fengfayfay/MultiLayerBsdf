@@ -1,5 +1,5 @@
-function fitting_halfvector_projected(dir,alpha,angle,x,y,z,weight,...
-    testafter, trainnum, generatenum, gaussiannumvec, incident, xnum, ynum)
+function fitting_halfvector_disk(dir,alpha,angle,x,y,z,weight,...
+    testafter, trainnum, generatenum, gaussiannumvec, incident, xynum, znum)
 
 cd(dir)
 
@@ -7,14 +7,18 @@ errvec = zeros(1,length(gaussiannumvec));
 countvec = zeros(1,length(gaussiannumvec));
 
 % Energy value from data
-x_unit = 2/xnum;
-y_unit = 2/ynum;
+xy_unit = 2*sqrt(2)/xynum;
+z_unit = 2/znum;
 result = zeros(xnum,ynum);
 for i = testafter+1:length(x)
     if z(i)>=0
         h = ([x(i),y(i),z(i)] + incident)/2;
-        h = h/norm(h);  
-        result(ceil((h(1)+1)/x_unit),ceil((h(2)+1)/y_unit)) = result(ceil((h(1)+1)/x_unit),ceil((h(2)+1)/y_unit)) + weight(i);
+        h = h/norm(h);
+        
+        dim1 = sqrt(h(1)^2 + h(2)^2);
+        dim2 = h(3);
+        result(ceil((-dim1+sqrt(2))/xy_unit),ceil((dim2+1)/z_unit)) = result(ceil((-dim1+sqrt(2))/xy_unit),ceil((dim2+1)/z_unit)) + weight(i);
+        result(ceil((dim1+sqrt(2))/xy_unit),ceil((dim2+1)/z_unit)) = result(ceil((dim1+sqrt(2))/xy_unit),ceil((dim2+1)/z_unit)) + weight(i);
     end
 end
 
@@ -23,20 +27,8 @@ figure
 imagesc(result/generatenum)
 colorbar()
 title(['Energy of Gaussian Heightfiled, alpha=', num2str(alpha),' angle=',num2str(angle)])
-filename = ['halfprojected_cos',num2str(angle),'_alpha_',num2str(alpha), 'heightfield'];
+filename = ['halfprojected',num2str(angle),'_alpha_',num2str(alpha), 'heightfield'];
 saveas(gcf,[filename,'.jpeg'])
-
-xvec = zeros(trainnum,1);
-yvec = zeros(trainnum,1);
-for i = 1:trainnum
-    if z(i)>=0
-        h = ([x(i),y(i),z(i)] + incident)/2;
-        h = h/norm(h);
-        xvec(i) = h(1);
-        yvec(i) = h(2);
-    end
-end
-train = [xvec, yvec];
 
 
 % close all
@@ -47,13 +39,19 @@ for j = 1:length(gaussiannumvec)
     %% fit mixture of Gaussians using half vector
     numGaussian = gaussiannumvec(j);
 
-    options = statset('MaxIter',10000, 'Display','final');
-    try
-        obj = fitgmdist(train,numGaussian,'Options',options);
-    catch exception
-        disp('There was an error fitting the Gaussian mixture model')
-        error = exception.message
+    xvec = zeros(trainnum,1);
+    yvec = zeros(trainnum,1);
+    for i = 1:trainnum
+        if z(i)>=0
+            h = ([x(i),y(i),z(i)] + incident)/2;
+            h = h/norm(h);
+            xvec(i) = h(1);
+            yvec(i) = h(2);
+        end
     end
+    train = [xvec, yvec];
+    options = statset('MaxIter',10000, 'Display','final');
+    obj = gmdistribution.fit(train,numGaussian,'Options',options);
     
     filename = ['half_projected',num2str(angle),'_alpha_',num2str(alpha), '_#G',num2str(numGaussian),'.mat'];
     save(filename,'obj')
@@ -85,7 +83,7 @@ for j = 1:length(gaussiannumvec)
     imagesc(predict/(generatenum-count))
     colorbar()
     title(['Energy generated using GMM, alpha=', num2str(alpha),' angle=',num2str(angle),' #G=',num2str(numGaussian)])
-    filename = ['half_projected_cos',num2str(angle),'_alpha_',num2str(alpha), '_#G',num2str(numGaussian)];
+    filename = ['half_projected',num2str(angle),'_alpha_',num2str(alpha), '_#G',num2str(numGaussian)];
     saveas(gcf,[filename,'.jpeg'])
     
 %     figure

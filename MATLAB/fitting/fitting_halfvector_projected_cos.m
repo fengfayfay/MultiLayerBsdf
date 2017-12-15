@@ -1,4 +1,4 @@
-function fitting_halfvector_projected(dir,alpha,angle,x,y,z,weight,...
+function fitting_halfvector_projected_cos(dir,alpha,angle,x,y,z,weight,...
     testafter, trainnum, generatenum, gaussiannumvec, incident, xnum, ynum)
 
 cd(dir)
@@ -14,7 +14,7 @@ for i = testafter+1:length(x)
     if z(i)>=0
         h = ([x(i),y(i),z(i)] + incident)/2;
         h = h/norm(h);  
-        result(ceil((h(1)+1)/x_unit),ceil((h(2)+1)/y_unit)) = result(ceil((h(1)+1)/x_unit),ceil((h(2)+1)/y_unit)) + weight(i);
+        result(ceil((h(1)+1)/x_unit),ceil((h(2)+1)/y_unit)) = result(ceil((h(1)+1)/x_unit),ceil((h(2)+1)/y_unit)) + weight(i)*h(3)^4;
     end
 end
 
@@ -26,19 +26,32 @@ title(['Energy of Gaussian Heightfiled, alpha=', num2str(alpha),' angle=',num2st
 filename = ['halfprojected_cos',num2str(angle),'_alpha_',num2str(alpha), 'heightfield'];
 saveas(gcf,[filename,'.jpeg'])
 
-xvec = zeros(trainnum,1);
-yvec = zeros(trainnum,1);
+% generate new indices use cos^4 weights
+factor = zeros(trainnum,1);
 for i = 1:trainnum
     if z(i)>=0
         h = ([x(i),y(i),z(i)] + incident)/2;
+        h = h/norm(h); 
+        factor(i) = h(3)^4;
+    end
+end
+newindex = randsample((1:trainnum)',trainnum,true,weight(1:trainnum).*factor/sum(weight(1:trainnum).*factor));
+
+% generate training data
+xvec = zeros(trainnum,1);
+yvec = zeros(trainnum,1);
+for i = 1:trainnum
+    indexcur = newindex(i);
+    if z(indexcur)>=0
+        h = ([x(indexcur),y(indexcur),z(indexcur)] + incident)/2;
         h = h/norm(h);
         xvec(i) = h(1);
         yvec(i) = h(2);
     end
 end
 train = [xvec, yvec];
-
-
+% 
+% 
 % close all
 % figure
 % plot(result(xnum/2,:)/generatenum, 'linewidth', 2)
@@ -46,8 +59,8 @@ train = [xvec, yvec];
 for j = 1:length(gaussiannumvec)
     %% fit mixture of Gaussians using half vector
     numGaussian = gaussiannumvec(j);
-
-    options = statset('MaxIter',10000, 'Display','final');
+    
+    options = statset('MaxIter',500, 'Display','final');
     try
         obj = fitgmdist(train,numGaussian,'Options',options);
     catch exception
@@ -55,9 +68,12 @@ for j = 1:length(gaussiannumvec)
         error = exception.message
     end
     
-    filename = ['half_projected',num2str(angle),'_alpha_',num2str(alpha), '_#G',num2str(numGaussian),'.mat'];
+    filename = ['half_projected_cos',num2str(angle),'_alpha_',num2str(alpha), '_#G',num2str(numGaussian),'.mat'];
     save(filename,'obj')
-    
+
+%     filename = ['half_projected_cos',num2str(angle),'_alpha_',num2str(alpha), '_#G',num2str(numGaussian),'.mat'];
+%     load(filename)
+      
 %     %% visualize result
 %     figure
 %     scatter(train(:,1),train(:,2),10,'.')
@@ -109,11 +125,11 @@ end
 %     legendInfo{i+1} = [num2str(gaussiannumvec(i)),'G'];
 % end
 % legend(legendInfo)
-% filename=['half_projected',num2str(angle),'_alpha_',num2str(alpha),'_2Dcompare'];
+% filename=['half_projected_cos',num2str(angle),'_alpha_',num2str(alpha),'_2Dcompare'];
 % saveas(gcf,[filename,'.jpeg'])
 
-errvec_filename = ['half',num2str(angle),'_angle_',num2str(alpha),'_err.mat'];
-countvec_filename = ['half',num2str(angle),'_angle_',num2str(alpha),'_badcount.mat'];
-save(errvec_filename,'errvec')
-save(countvec_filename,'count')
+% errvec_filename = ['half_projected_cos',num2str(angle),'_angle_',num2str(alpha),'_err.mat'];
+% countvec_filename = ['half_projected_cos',num2str(angle),'_angle_',num2str(alpha),'_badcount.mat'];
+% save(errvec_filename,'errvec')
+% save(countvec_filename,'count')
 end

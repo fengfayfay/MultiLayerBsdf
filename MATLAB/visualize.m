@@ -1,7 +1,7 @@
 close all
 % cd('/Users/mandy/Github/MultiLayerBsdf/build');
-cd('/Users/mandy/Github/MultiLayerBsdf/build_clang')
-% cd('/Users/mandy/Github/pixar/ritest/GaussianHeightField/SingleLayer/pi:3/output')
+% cd('/Users/mandy/Github/MultiLayerBsdf/build_clang')
+cd('/Users/mandy/Github/pixar/ritest/GaussianHeightField/SingleLayer/pi:3/output')
 % cd('/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror/pi:3/output')
 alpha = 0.9;
 angle = 0;
