@@ -8,7 +8,7 @@ trainnum = 1e6;
 alphavec = [0.1, 0.2, 0.4, 0.5, 0.7, 0.9];
 range = 1:length(alphavec);
 figure
-for k = 6
+for k = range
     alpha = alphavec(k);
     filename = [num2str(angle), 'outputx_', num2str(alpha),'.txt'];
     fileID = fopen(filename);
@@ -86,7 +86,7 @@ gaussiannumvec = 1:5;
 incident = [sin(angle*pi/180), 0, cos(angle*pi/180)];
 xnum = 100;
 ynum = 100;
-fitting_halfvector_projected_compensate(dir,alpha,angle,x,y,z,weight,...
+fitting_halfvector_projected_cos(dir,alpha,angle,x,y,z,weight,...
     testafter, trainnum, generatenum, gaussiannumvec, incident, xnum, ynum)
 end
 
