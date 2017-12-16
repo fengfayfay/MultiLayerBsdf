@@ -30,6 +30,31 @@ for i = testafter+1:length(x)
     end
 end
 
+% training data
+phivec = zeros(trainnum,1);
+muvec = zeros(trainnum,1);
+for i = 1:trainnum
+    if z(i)>=0
+        if abs(x(i))<epsilon && y(i)>=0
+            phi = pi/2;
+        elseif (abs(x(i))<epsilon && y(i)<0)
+            phi = 3*pi/2;
+        else
+            phi = atan(y(i)/x(i));
+            if x(i)< 0
+                phi = phi + pi;
+            else
+                if y(i) < 0
+                    phi = phi + 2*pi;
+                end
+            end
+        end
+        phivec(i) = phi;
+        muvec(i) = z(i);
+    end
+end
+train = [phivec, muvec];
+
 
 % close all
 % figure
@@ -38,29 +63,7 @@ end
 for j = 1:length(gaussiannumvec)
     %% fit mixture of Gaussians
     numGaussian = gaussiannumvec(j);
-    phivec = zeros(trainnum,1);
-    muvec = zeros(trainnum,1);
-    for i = 1:trainnum
-        if z(i)>=0
-            if abs(x(i))<epsilon && y(i)>=0
-                phi = pi/2;
-            elseif (abs(x(i))<epsilon && y(i)<0)
-                phi = 3*pi/2;
-            else
-                phi = atan(y(i)/x(i));
-                if x(i)< 0
-                    phi = phi + pi;
-                else
-                    if y(i) < 0
-                        phi = phi + 2*pi;
-                    end
-                end
-            end
-            phivec(i) = phi;
-            muvec(i) = z(i);
-        end
-    end
-    train = [phivec, muvec];
+    
     options = statset('MaxIter',500, 'Display','final');
     obj = gmdistribution.fit(train,numGaussian,'Options',options);
     
@@ -123,10 +126,10 @@ for j = 1:length(gaussiannumvec)
     errvec(j) = err;
     countvec(j) = count;
     
-        % visualize pdf
-        figure
-        fsurf(@(x,y)pdf(obj,[x y]),[0 2*pi 0 1])
-        colorbar()
+%     % visualize pdf
+%     figure
+%     fsurf(@(x,y)pdf(obj,[x y]),[0 2*pi 0 1])
+%     colorbar()
     
 end
 % title(['Energy generated using GMM on phimu, alpha=', num2str(alpha),' angle=',num2str(angle),'compare'])

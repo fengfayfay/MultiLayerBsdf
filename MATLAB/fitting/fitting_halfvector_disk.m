@@ -30,6 +30,18 @@ title(['Energy of Gaussian Heightfiled, alpha=', num2str(alpha),' angle=',num2st
 filename = ['halfprojected',num2str(angle),'_alpha_',num2str(alpha), 'heightfield'];
 saveas(gcf,[filename,'.jpeg'])
 
+xvec = zeros(trainnum,1);
+yvec = zeros(trainnum,1);
+for i = 1:trainnum
+    if z(i)>=0
+        h = ([x(i),y(i),z(i)] + incident)/2;
+        h = h/norm(h);
+        xvec(i) = h(1);
+        yvec(i) = h(2);
+    end
+end
+train = [xvec, yvec];
+
 
 % close all
 % figure
@@ -38,18 +50,7 @@ saveas(gcf,[filename,'.jpeg'])
 for j = 1:length(gaussiannumvec)
     %% fit mixture of Gaussians using half vector
     numGaussian = gaussiannumvec(j);
-
-    xvec = zeros(trainnum,1);
-    yvec = zeros(trainnum,1);
-    for i = 1:trainnum
-        if z(i)>=0
-            h = ([x(i),y(i),z(i)] + incident)/2;
-            h = h/norm(h);
-            xvec(i) = h(1);
-            yvec(i) = h(2);
-        end
-    end
-    train = [xvec, yvec];
+    
     options = statset('MaxIter',10000, 'Display','final');
     obj = gmdistribution.fit(train,numGaussian,'Options',options);
     

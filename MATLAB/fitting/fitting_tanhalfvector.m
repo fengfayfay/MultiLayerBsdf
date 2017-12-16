@@ -41,6 +41,16 @@ end
 %     thetaresult(index) =  thetaresult(index)+weight(i);
 % end
 
+tantheta = zeros(trainnum,1);
+for i = 1:trainnum
+    if z(i)>=0
+        h = ([x(i),y(i),z(i)] + incident)/2;
+        h = h/norm(h);
+        tantheta(i) = sqrt((1-h(3)^2)/h(3)^2);
+    end
+end
+train = tantheta;
+
 close all
 figure
 hold on
@@ -48,15 +58,7 @@ plot(linspace(0,thetarange,thetanum),thetaresult/generatenum)
 for j = 1:length(gaussiannumvec)
     %% fit mixture of Gaussians using tan of half vector
     numGaussian = gaussiannumvec(j);
-    tantheta = zeros(trainnum,1);
-    for i = 1:trainnum
-        if z(i)>=0
-            h = ([x(i),y(i),z(i)] + incident)/2;
-            h = h/norm(h);
-            tantheta(i) = sqrt((1-h(3)^2)/h(3)^2);
-        end
-    end
-    train = tantheta;
+    
     options = statset('MaxIter',500, 'Display','final');
     obj = gmdistribution.fit(train,numGaussian,'Options',options);
   

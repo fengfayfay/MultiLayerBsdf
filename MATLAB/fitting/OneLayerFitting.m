@@ -81,12 +81,20 @@ for k = range
 %     fitting_halfvector_projected(dir,alpha,angle,x,y,z,weight,testafter, trainnum, ...
 %     generatenum, gaussiannumvec, incident, xnum, ynum);
 
-% fitting using x,y of halfvector
+% % fitting using x,y of halfvector, compensated by cos^4 factor
+% gaussiannumvec = 1:5;
+% incident = [sin(angle*pi/180), 0, cos(angle*pi/180)];
+% xnum = 100;
+% ynum = 100;
+% fitting_halfvector_projected_cos(dir,alpha,angle,x,y,z,weight,...
+%     testafter, trainnum, generatenum, gaussiannumvec, incident, xnum, ynum)
+    
+% fitting using x/z,y/z of halfvector
 gaussiannumvec = 1:5;
 incident = [sin(angle*pi/180), 0, cos(angle*pi/180)];
 xnum = 100;
 ynum = 100;
-fitting_halfvector_projected_cos(dir,alpha,angle,x,y,z,weight,...
+fitting_halfvector_z1(dir,alpha,angle,x,y,z,weight,...
     testafter, trainnum, generatenum, gaussiannumvec, incident, xnum, ynum)
 end
 
