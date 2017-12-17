@@ -1470,7 +1470,7 @@ namespace pbrt {
 
       std::cout<<"start Gaussian heightfield experiment"<<std::endl;
       // ray tracing test
-      float angle = 50;
+      float angle = (float) (PbrtOptions.theta_i);
       float theta = angle*M_PI/180.f;
       float alpha = 0.9;
       int numrays = 1e7;
