@@ -18,7 +18,7 @@ for i = testafter+1:length(x)
     end
 end
 
-close all
+% close all
 figure
 imagesc(result/generatenum)
 colorbar()
@@ -47,7 +47,7 @@ for j = 1:length(gaussiannumvec)
     %% fit mixture of Gaussians using half vector
     numGaussian = gaussiannumvec(j);
 
-    options = statset('MaxIter',10000, 'Display','final');
+    options = statset('MaxIter',500, 'Display','final');
     try
         obj = fitgmdist(train,numGaussian,'Options',options);
     catch exception

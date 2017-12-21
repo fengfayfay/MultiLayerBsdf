@@ -170,6 +170,8 @@ struct Options {
     bool cat = false, toPly = false;
     std::string imageFile;
     int theta_i = 60;
+    float alpha = 0.5;
+    int numrays = 1e6;
 };
 
 extern Options PbrtOptions;

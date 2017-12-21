@@ -1,0 +1,30 @@
+LookAt 0 10 100   0 -1 0 0 1 0
+Camera "perspective" "float fov" [30]
+PixelFilter "mitchell" "float xwidth" [2] "float ywidth" [2]
+Sampler "halton"
+Film "image" "string filename" ["simple.png"]
+     "integer xresolution" [200] "integer yresolution" [200]
+
+WorldBegin
+
+AttributeBegin
+  Texture "checks" "spectrum" "checkerboard"
+          "float uscale" [4] "float vscale" [4]
+          "rgb tex1" [1 0 0] "rgb tex2" [0 0 1]
+  Material "matte"
+           "texture Kd" "checks"
+  Shape "heightfield" "integer nu" [4000] "integer nv" [4000] "string filename" ["pz0.2.txt"]
+
+AttributeEnd
+
+#AttributeBegin
+#  Texture "checks" "spectrum" "checkerboard"
+#          "float uscale" [4] "float vscale" [4]
+#          "rgb tex1" [1 0 0] "rgb tex2" [0 0 1]
+#  Material "matte"
+#           "texture Kd" "checks"
+#  Shape "heightfield" "integer nu" [4000] "integer nv" [4000] "string filen#ame" ["pz0.9_2.txt"]
+
+#AttributeEnd
+
+WorldEnd

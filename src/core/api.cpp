@@ -1472,8 +1472,8 @@ namespace pbrt {
       // ray tracing test
       float angle = (float) (PbrtOptions.theta_i);
       float theta = angle*M_PI/180.f;
-      float alpha = 0.5;
-      int numrays = 1e7;
+      float alpha = (float) (PbrtOptions.alpha)/10;
+      int numrays = (int) (PbrtOptions.numrays);
       float height = 1.f;
       float dist = 5;
       Point3f center = Point3f(height*tan(theta), 0.f, height);
@@ -1518,8 +1518,8 @@ namespace pbrt {
         Ray ray = Ray(ori, dir);
         int depth = 0;
         int weight = 1;
-        //SingleLayerMirror(observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth);
-        SingleLayerGlass(observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth);
+        SingleLayerMirror(observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth);
+        //SingleLayerGlass(observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth);
         //DoubleLayerHeightfield(observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth);
       }
       outputx.close();

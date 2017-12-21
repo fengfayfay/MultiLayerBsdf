@@ -13,18 +13,18 @@ AttributeBegin
           "rgb tex1" [1 0 0] "rgb tex2" [0 0 1]
   Material "matte"
            "texture Kd" "checks"
-  Shape "heightfield" "integer nu" [4000] "integer nv" [4000] "string filename" ["pz0.5.txt"]
+  Shape "heightfield" "integer nu" [4000] "integer nv" [4000] "string filename" ["pz0.9.txt"]
 
 AttributeEnd
 
-AttributeBegin
-  Texture "checks" "spectrum" "checkerboard"
-          "float uscale" [4] "float vscale" [4]
-          "rgb tex1" [1 0 0] "rgb tex2" [0 0 1]
-  Material "matte"
-           "texture Kd" "checks"
-  Shape "heightfield" "integer nu" [4000] "integer nv" [4000] "string filename" ["pz0.5_2.txt"]
+#AttributeBegin
+#  Texture "checks" "spectrum" "checkerboard"
+#          "float uscale" [4] "float vscale" [4]
+#          "rgb tex1" [1 0 0] "rgb tex2" [0 0 1]
+#  Material "matte"
+#           "texture Kd" "checks"
+#  Shape "heightfield" "integer nu" [4000] "integer nv" [4000] "string filen#ame" ["pz0.9_2.txt"]
 
-AttributeEnd
+#AttributeEnd
 
 WorldEnd

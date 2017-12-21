@@ -135,121 +135,121 @@ colorbar
 
 
 
-result2 = zeros(phinum,munum);
-result2_d1 = zeros(phinum,munum);
-result2_d2 = zeros(phinum,munum);
-result2_d3 = zeros(phinum,munum);
-result2_d4 = zeros(phinum,munum);
-for i = 1:length(x)
-    if z(i)<0
-        if abs(x(i))<1e-6 && y(i)>=0
-            theta = pi/2;
-        elseif (abs(x(i))<1e-6 && y(i)<0)
-            theta = 3*pi/2;
-        else
-            theta = atan(y(i)/x(i));
-            if x(i)< 0 
-                theta = theta + pi;
-            else
-                if y(i) < 0
-                theta = theta + 2*pi;
-                end
-            end
-        end
-        result2(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) = result2(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) + weight(i);
-        if depth(i)<=1
-            result2_d1(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) = result2_d1(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) + weight(i);
+% result2 = zeros(phinum,munum);
+% result2_d1 = zeros(phinum,munum);
+% result2_d2 = zeros(phinum,munum);
+% result2_d3 = zeros(phinum,munum);
+% result2_d4 = zeros(phinum,munum);
+% for i = 1:length(x)
+%     if z(i)<0
+%         if abs(x(i))<1e-6 && y(i)>=0
+%             theta = pi/2;
+%         elseif (abs(x(i))<1e-6 && y(i)<0)
+%             theta = 3*pi/2;
 %         else
+%             theta = atan(y(i)/x(i));
+%             if x(i)< 0 
+%                 theta = theta + pi;
+%             else
+%                 if y(i) < 0
+%                 theta = theta + 2*pi;
+%                 end
+%             end
+%         end
+%         result2(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) = result2(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) + weight(i);
+%         if depth(i)<=1
+%             result2_d1(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) = result2_d1(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) + weight(i);
+% %         else
+% %             result2_d2(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) = result2_d2(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) + weight(i);
+%         elseif depth(i)==2
 %             result2_d2(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) = result2_d2(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) + weight(i);
-        elseif depth(i)==2
-            result2_d2(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) = result2_d2(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) + weight(i);
-        elseif depth(i)==3
-            result2_d3(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) = result2_d3(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) + weight(i);
-        elseif depth(i)==4
-            result2_d4(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) = result2_d4(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) + weight(i);
-        end
-    end
-end
-figure
-imagesc(result2/numray)
-title('transmission lobe')
-xlabel('mu_o')
-ylabel('phi_o')
-colorbar
-% 
+%         elseif depth(i)==3
+%             result2_d3(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) = result2_d3(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) + weight(i);
+%         elseif depth(i)==4
+%             result2_d4(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) = result2_d4(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) + weight(i);
+%         end
+%     end
+% end
 % figure
-% plot(result2_d1(200,:)/total, 'linewidth', 2)
-% title(['Incident angle=', num2str(angle),' alpha =',num2str(alpha), 't bounce1'])
-% filename = [num2str(angle),'_alpha_',num2str(alpha), 't_bounce1'];
-% saveas(gcf,[filename,'.jpeg'])
-% 
-% figure
-% plot(result2_d2(200,:)/total, 'linewidth', 2)
-% title(['Incident angle=', num2str(angle),' alpha =',num2str(alpha), 't bounce2'])
-% filename = [num2str(angle),'_alpha_',num2str(alpha), 't_bounce2'];
-% saveas(gcf,[filename,'.jpeg'])
-% 
-% figure
-% plot(result2_d3(200,:)/total, 'linewidth', 2)
-% title(['Incident angle=', num2str(angle),' alpha =',num2str(alpha), 't bounce3'])
-% filename = [num2str(angle),'_alpha_',num2str(alpha), 't_bounce3'];
-% saveas(gcf,[filename,'.jpeg'])
-% 
-% figure
-% plot(result2_d4(200,:)/total, 'linewidth', 2)
-% title(['Incident angle=', num2str(angle),' alpha =',num2str(alpha), 't bounce4'])
-% filename = [num2str(angle),'_alpha_',num2str(alpha), 't_bounce4'];
-% saveas(gcf,[filename,'.jpeg'])
-
-
-% filename = [num2str(angle),'reflect_', num2str(alpha),'.txt'];
-% fid = fopen(filename,'w');
-% fprintf(fid,'%6f\n',result);
-% fclose(fid);
-% 
-% filename = [num2str(angle),'transmit_', num2str(alpha),'.txt'];
-% fid = fopen(filename,'w');
-% fprintf(fid,'%6f\n',result2);
-% fclose(fid);
-% 
-% filename = [num2str(angle),'reflect1_', num2str(alpha),'.txt'];
-% fid = fopen(filename,'w');
-% fprintf(fid,'%6f\n',result_d1);
-% fclose(fid);
-% 
-% filename = [num2str(angle),'reflect2_', num2str(alpha),'.txt'];
-% fid = fopen(filename,'w');
-% fprintf(fid,'%6f\n',result_d2);
-% fclose(fid);
-% 
-% filename = [num2str(angle),'transmit1_', num2str(alpha),'.txt'];
-% fid = fopen(filename,'w');
-% fprintf(fid,'%6f\n',result2_d1);
-% fclose(fid);
-% 
-% filename = [num2str(angle),'transmit2_', num2str(alpha),'.txt'];
-% fid = fopen(filename,'w');
-% fprintf(fid,'%6f\n',result2_d2);
-% fclose(fid);
-
-
-% depth_r = depth(z>0);
-% depth_t = depth(z<0);
-% yt = 0:0.1:1;
-% figure
-% histogram(depth,'Normalization','cdf');
-% title(['accumulated energy percentage from reflectance, alpha=', num2str(alpha)])
-% % set(gca, 'YTick', yt);
-% filename = [num2str(angle),'_alpha_',num2str(alpha), 'mirror_hist'];
+% imagesc(result2/numray)
+% title('transmission lobe')
+% xlabel('mu_o')
+% ylabel('phi_o')
+% colorbar
+% % 
+% % figure
+% % plot(result2_d1(200,:)/total, 'linewidth', 2)
+% % title(['Incident angle=', num2str(angle),' alpha =',num2str(alpha), 't bounce1'])
+% % filename = [num2str(angle),'_alpha_',num2str(alpha), 't_bounce1'];
+% % saveas(gcf,[filename,'.jpeg'])
+% % 
+% % figure
+% % plot(result2_d2(200,:)/total, 'linewidth', 2)
+% % title(['Incident angle=', num2str(angle),' alpha =',num2str(alpha), 't bounce2'])
+% % filename = [num2str(angle),'_alpha_',num2str(alpha), 't_bounce2'];
+% % saveas(gcf,[filename,'.jpeg'])
+% % 
+% % figure
+% % plot(result2_d3(200,:)/total, 'linewidth', 2)
+% % title(['Incident angle=', num2str(angle),' alpha =',num2str(alpha), 't bounce3'])
+% % filename = [num2str(angle),'_alpha_',num2str(alpha), 't_bounce3'];
+% % saveas(gcf,[filename,'.jpeg'])
+% % 
+% % figure
+% % plot(result2_d4(200,:)/total, 'linewidth', 2)
+% % title(['Incident angle=', num2str(angle),' alpha =',num2str(alpha), 't bounce4'])
+% % filename = [num2str(angle),'_alpha_',num2str(alpha), 't_bounce4'];
 % % saveas(gcf,[filename,'.jpeg'])
 % 
-% figure
-% % histogram(depth_r,'Normalization','cdf');
-% histogram(depth_r);
-% title(['accumulated energy percentage from reflectance, alpha =',num2str(alpha)])
-% % set(gca, 'YTick', yt);
-% figure
-% % histogram(depth_t,'Normalization','cdf');
-% histogram(depth_t);
-% title(['accumulated energy percentage from transmission, alpha =',num2str(alpha)])
-% % set(gca, 'YTick', yt);
+% 
+% % filename = [num2str(angle),'reflect_', num2str(alpha),'.txt'];
+% % fid = fopen(filename,'w');
+% % fprintf(fid,'%6f\n',result);
+% % fclose(fid);
+% % 
+% % filename = [num2str(angle),'transmit_', num2str(alpha),'.txt'];
+% % fid = fopen(filename,'w');
+% % fprintf(fid,'%6f\n',result2);
+% % fclose(fid);
+% % 
+% % filename = [num2str(angle),'reflect1_', num2str(alpha),'.txt'];
+% % fid = fopen(filename,'w');
+% % fprintf(fid,'%6f\n',result_d1);
+% % fclose(fid);
+% % 
+% % filename = [num2str(angle),'reflect2_', num2str(alpha),'.txt'];
+% % fid = fopen(filename,'w');
+% % fprintf(fid,'%6f\n',result_d2);
+% % fclose(fid);
+% % 
+% % filename = [num2str(angle),'transmit1_', num2str(alpha),'.txt'];
+% % fid = fopen(filename,'w');
+% % fprintf(fid,'%6f\n',result2_d1);
+% % fclose(fid);
+% % 
+% % filename = [num2str(angle),'transmit2_', num2str(alpha),'.txt'];
+% % fid = fopen(filename,'w');
+% % fprintf(fid,'%6f\n',result2_d2);
+% % fclose(fid);
+% 
+% 
+% % depth_r = depth(z>0);
+% % depth_t = depth(z<0);
+% % yt = 0:0.1:1;
+% % figure
+% % histogram(depth,'Normalization','cdf');
+% % title(['accumulated energy percentage from reflectance, alpha=', num2str(alpha)])
+% % % set(gca, 'YTick', yt);
+% % filename = [num2str(angle),'_alpha_',num2str(alpha), 'mirror_hist'];
+% % % saveas(gcf,[filename,'.jpeg'])
+% % 
+% % figure
+% % % histogram(depth_r,'Normalization','cdf');
+% % histogram(depth_r);
+% % title(['accumulated energy percentage from reflectance, alpha =',num2str(alpha)])
+% % % set(gca, 'YTick', yt);
+% % figure
+% % % histogram(depth_t,'Normalization','cdf');
+% % histogram(depth_t);
+% % title(['accumulated energy percentage from transmission, alpha =',num2str(alpha)])
+% % % set(gca, 'YTick', yt);

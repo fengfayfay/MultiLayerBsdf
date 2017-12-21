@@ -14,7 +14,7 @@ xdividez = h(:,1)./h(:,3);
 ydividez = h(:,2)./h(:,3);
 xrange = max(max(xdividez),-min(xdividez));
 yrange = max(max(ydividez),-min(ydividez));
-range = max(xrange, yrange);
+range = 2*max(xrange, yrange);
 fprintf('range is %4.2f\n',range)
 x_unit = 2*range/xnum;
 y_unit = 2*range/ynum;
@@ -25,15 +25,15 @@ for i = testafter+1:length(x)
         result(ceil((xdividez(i)+range)/x_unit),ceil((ydividez(i)+range)/y_unit)) + weight(i);
 end
 
-% close all
+close all
 figure
 imagesc(result/generatenum)
 ylabel('x/z')
 xlabel('y/z')
 colorbar()
-title(['Energy of Gaussian Heightfiled, alpha=', num2str(alpha),' angle=',num2str(angle)])
-% filename = ['halfprojected_z1',num2str(angle),'_alpha_',num2str(alpha), 'heightfield'];
-% saveas(gcf,[filename,'.jpeg'])
+title(['Gaussian Heightfiled mirror ray distribution, alpha=', num2str(alpha),' angle=',num2str(angle)])
+filename = ['halfprojected_z1',num2str(angle),'_alpha_',num2str(alpha), 'heightfield'];
+saveas(gcf,[filename,'.jpeg'])
 
 %training data
 train = [xdividez(1:trainnum), ydividez(1:trainnum)];
@@ -48,7 +48,7 @@ for j = 1:length(gaussiannumvec)
 
     options = statset('MaxIter',500, 'Display','final','TolFun',1e-5);
     try
-        obj = fitgmdist(train,numGaussian,'Options',options);
+        obj = fitgmdist(train,numGaussian,'Options',options,'Start','customize');
     catch exception
         disp('There was an error fitting the Gaussian mixture model')
         error = exception.message
@@ -56,8 +56,8 @@ for j = 1:length(gaussiannumvec)
     
 %     disp(obj.mu)
 %     
-%     filename = ['half_projected_z1',num2str(angle),'_alpha_',num2str(alpha), '_#G',num2str(numGaussian),'.mat'];
-%     save(filename,'obj')
+    filename = ['half_projected_z1',num2str(angle),'_alpha_',num2str(alpha), '_#G',num2str(numGaussian),'.mat'];
+    save(filename,'obj')
     
 %     filename = ['half_projected_z1',num2str(angle),'_alpha_',num2str(alpha), '_#G',num2str(numGaussian),'.mat'];
 %     load(filename,'obj')
@@ -88,9 +88,9 @@ for j = 1:length(gaussiannumvec)
     figure
     imagesc(predict/(generatenum-count))
     colorbar()
-    title(['Energy generated using GMM, alpha=', num2str(alpha),' angle=',num2str(angle),' #G=',num2str(numGaussian)])
-%     filename = ['half_projected_z1',num2str(angle),'_alpha_',num2str(alpha), '_#G',num2str(numGaussian)];
-%     saveas(gcf,[filename,'.jpeg'])
+    title(['Mirror distribution generated using GMM, alpha=', num2str(alpha),' angle=',num2str(angle),' #G=',num2str(numGaussian)])
+    filename = ['half_projected_z1',num2str(angle),'_alpha_',num2str(alpha), '_#G',num2str(numGaussian)];
+    saveas(gcf,[filename,'.jpeg'])
     
 %     figure
 %     plot(predict(phinum/2,:)/(generatenum-count), 'linewidth', 2)
@@ -99,15 +99,15 @@ for j = 1:length(gaussiannumvec)
 %     saveas(gcf,[filename,'.jpeg'])
     
     %% calculate error
-%     diff = predict/(generatenum-count)-result/generatenum;
-%     diff_new = sort(abs(reshape(diff,10000,1)),'descend');
+    diff = predict/(generatenum-count)-result/generatenum;
+    diff_new = sort(abs(reshape(diff,10000,1)),'descend');
 %     figure
 %     plot(diff_new, 'linewidth',2)
 %     title(['error from large to small, 5 gaussian, alpha=',num2str(alpha)])
-%     err = sqrt(sum(sum(diff.*diff)));
-%     
-%     errvec(j) = err;
-%     countvec(j) = count;
+    err = sqrt(sum(sum(diff.*diff)));
+    
+    errvec(j) = err;
+    countvec(j) = count;
     
     
 end
@@ -120,8 +120,8 @@ end
 % filename=['half_projected_z1',num2str(angle),'_alpha_',num2str(alpha),'_2Dcompare'];
 % saveas(gcf,[filename,'.jpeg'])
 
-% errvec_filename = ['half_projected_z1',num2str(angle),'_angle_',num2str(alpha),'_err.mat'];
-% countvec_filename = ['half_projected_z1',num2str(angle),'_angle_',num2str(alpha),'_badcount.mat'];
-% save(errvec_filename,'errvec')
-% save(countvec_filename,'count')
+errvec_filename = ['half_projected_z1',num2str(angle),'_angle_',num2str(alpha),'_err.mat'];
+countvec_filename = ['half_projected_z1',num2str(angle),'_angle_',num2str(alpha),'_badcount.mat'];
+save(errvec_filename,'errvec')
+save(countvec_filename,'count')
 end
