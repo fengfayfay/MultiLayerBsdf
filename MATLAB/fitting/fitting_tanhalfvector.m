@@ -2,7 +2,6 @@ function fitting_tanhalfvector(dir,alpha,angle,x,y,z,weight,testafter, trainnum,
     generatenum, gaussiannumvec, incident, thetarange, thetanum)
 
 cd(dir)
-
 errvec = zeros(1,length(gaussiannumvec));
 countvec = zeros(1,length(gaussiannumvec));
 

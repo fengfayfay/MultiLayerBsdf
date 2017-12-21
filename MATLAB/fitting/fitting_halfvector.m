@@ -2,7 +2,6 @@ function fitting_halfvector(dir,alpha,angle,x,y,z,weight,epsilon,...
     testafter, trainnum, generatenum, gaussiannumvec, incident, phinum, thetanum)
 
 cd(dir)
-
 errvec = zeros(1,length(gaussiannumvec));
 countvec = zeros(1,length(gaussiannumvec));
 

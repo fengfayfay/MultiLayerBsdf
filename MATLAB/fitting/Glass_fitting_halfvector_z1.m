@@ -1,8 +1,7 @@
-function Glass_fitting_halfvector_z1(dir,alpha,angle,x,y,z,weight,...
+function Glass_fitting_halfvector_z1(dir, alpha,angle,x,y,z,weight,...
     testafter, trainnum, generatenum, gaussiannumvec, incident, xnum, ynum,ior)
 
 cd(dir)
-
 errvec = zeros(1,length(gaussiannumvec));
 countvec = zeros(1,length(gaussiannumvec));
 
@@ -14,32 +13,40 @@ reflect_hnorm = repmat(sqrt(sum(reflect_h.^2,2)),1,3);
 reflect_h = reflect_h./reflect_hnorm;
 reflect_xdividez = reflect_h(:,1)./reflect_h(:,3);
 reflect_ydividez = reflect_h(:,2)./reflect_h(:,3);
-reflect_xrange = max(max(reflect_xdividez),-min(reflect_xdividez));
-reflect_yrange = max(max(reflect_ydividez),-min(reflect_ydividez));
-reflect_range = 2*max(reflect_xrange, reflect_yrange);
+reflect_sortedxz = sort(abs(reflect_xdividez));
+reflect_xrange = reflect_sortedxz(ceil(99/100*length(reflect_xdividez)));
+reflect_sortedyz = sort(abs(reflect_ydividez));
+reflect_yrange = reflect_sortedyz(ceil(99/100*length(reflect_xdividez)));
+cutoff = max(reflect_xrange, reflect_yrange);
+% cutoff = max(reflect_xdividez, reflect_ydividez);
+reflect_range = 2*cutoff;
 reflect_x_unit = 2*reflect_range/xnum;
 reflect_y_unit = 2*reflect_range/ynum;
 reflect = zeros(xnum,ynum);
 reflect_test_index = reflect_index(reflect_index>trainnum);
 reflect_xdividez_train = reflect_xdividez(reflect_index<=trainnum);
 reflect_ydividez_train = reflect_ydividez(reflect_index<=trainnum);
+reflect_xdividez_new = reflect_xdividez_train(abs(reflect_xdividez_train)<=cutoff&abs(reflect_ydividez_train)<=cutoff);
+reflect_ydividez_new = reflect_ydividez_train(abs(reflect_xdividez_train)<=cutoff&abs(reflect_ydividez_train)<=cutoff);
 reflect_xdividez_test = reflect_xdividez(reflect_index>trainnum);
 reflect_ydividez_test = reflect_ydividez(reflect_index>trainnum);
 
 for i = 1:length(reflect_xdividez_test)
-    reflect(ceil((reflect_xdividez_test(i) + reflect_range)/reflect_x_unit), ceil((reflect_ydividez_test(i) + reflect_range)/reflect_y_unit))...
+    if abs(reflect_xdividez_test(i))<reflect_range && abs(reflect_ydividez_test(i))<=reflect_range
+        reflect(ceil((reflect_xdividez_test(i) + reflect_range)/reflect_x_unit), ceil((reflect_ydividez_test(i) + reflect_range)/reflect_y_unit))...
             = reflect(ceil((reflect_xdividez_test(i) + reflect_range)/reflect_x_unit), ceil((reflect_ydividez_test(i) + reflect_range)/reflect_y_unit)) + ...
             weight(reflect_test_index(i));
+    end
 end
 
 % close all
-% figure
-% imagesc(reflect/generatenum)
-% ylabel('x/z')
-% xlabel('y/z')
-% colorbar()
-% title(['Gaussian Heightfiled reflect ray distribution, alpha=', num2str(alpha),' angle=',num2str(angle)])
-% filename = ['reflect_halfprojected_z1',num2str(angle),'_alpha_',num2str(alpha), 'heightfield'];
+figure
+imagesc(reflect/generatenum)
+ylabel('x/z')
+xlabel('y/z')
+colorbar()
+title(['Gaussian Heightfiled reflect ray distribution, alpha=', num2str(alpha),' angle=',num2str(angle)])
+filename = ['reflect_halfprojected_z1',num2str(angle),'_alpha_',num2str(alpha), 'heightfield'];
 % saveas(gcf,[filename,'.jpeg'])
 
 % transmit
@@ -51,7 +58,12 @@ transmit_xdividez = transmit_h(:,1)./transmit_h(:,3);
 transmit_ydividez = transmit_h(:,2)./transmit_h(:,3);
 
 % set the plotting range
-transmit_range = alpha*4;
+transmit_sortedxz = sort(abs(transmit_xdividez));
+transmit_xrange = transmit_sortedxz(ceil(99/100*length(transmit_xdividez)));
+transmit_sortedyz = sort(abs(transmit_ydividez));
+transmit_yrange = transmit_sortedyz(ceil(99/100*length(transmit_xdividez)));
+cutoff = max(transmit_xrange, transmit_yrange);
+transmit_range = 2*max(transmit_xrange, transmit_yrange);
 transmit_x_unit = 2*transmit_range/xnum;
 transmit_y_unit = 2*transmit_range/ynum;
 transmit = zeros(xnum,ynum);
@@ -60,8 +72,8 @@ transmit_xdividez_train = transmit_xdividez(transmit_index<=trainnum);
 transmit_ydividez_train = transmit_ydividez(transmit_index<=trainnum);
 
 % remove extreme data from training
-transmit_xdividez_new = transmit_xdividez_train(abs(transmit_xdividez_train)<=10&abs(transmit_xdividez_train)<=10);
-transmit_ydividez_new = transmit_ydividez_train(abs(transmit_xdividez_train)<=10&abs(transmit_xdividez_train)<=10);
+transmit_xdividez_new = transmit_xdividez_train(abs(transmit_xdividez_train)<=cutoff&abs(transmit_xdividez_train)<=cutoff);
+transmit_ydividez_new = transmit_ydividez_train(abs(transmit_xdividez_train)<=cutoff&abs(transmit_xdividez_train)<=cutoff);
 
 transmit_xdividez_test = transmit_xdividez(transmit_index>trainnum);
 transmit_ydividez_test = transmit_ydividez(transmit_index>trainnum);
@@ -74,7 +86,7 @@ for i = 1:length(transmit_xdividez_test)
     end
 end
 
-close all
+% close all
 figure
 imagesc(transmit/generatenum)
 ylabel('x/z')
@@ -85,7 +97,7 @@ filename = ['transmit_halfprojected_z1',num2str(angle),'_alpha_',num2str(alpha),
 saveas(gcf,[filename,'.jpeg'])
 
 %training data
-reflect_train = [reflect_xdividez_train, reflect_ydividez_train];
+reflect_train = [reflect_xdividez_new, reflect_ydividez_new];
 transmit_train = [transmit_xdividez_new, transmit_ydividez_new];
 % 
 % close all
@@ -98,7 +110,7 @@ for j = 1:length(gaussiannumvec)
 
     options = statset('MaxIter',500, 'Display','final','TolFun',1e-5);
     try
-        reflect_obj = fitgmdist(reflect_train,numGaussian,'Options',options);
+        reflect_obj = fitgmdist(reflect_train,numGaussian,'Options',options,'Start','customize');
     catch exception
         disp('There was an error fitting the Gaussian mixture model')
         error = exception.message
@@ -163,11 +175,11 @@ for j = 1:length(gaussiannumvec)
     
 %     plot(predict(xnum/2,:)/(generatenum-count), 'linewidth', 2)
     count = transmit_count + reflect_count;
-%     figure
-%     imagesc(reflect_predict/(generatenum-count))
-%     colorbar()
-%     title(['Reflect distribution generated using GMM, alpha=', num2str(alpha),' angle=',num2str(angle),' #G=',num2str(numGaussian)])
-%     filename = ['reflect_half_projected_z1',num2str(angle),'_alpha_',num2str(alpha), '_#G',num2str(numGaussian)];
+    figure
+    imagesc(reflect_predict/(generatenum-count))
+    colorbar()
+    title(['Reflect distribution generated using GMM, alpha=', num2str(alpha),' angle=',num2str(angle),' #G=',num2str(numGaussian)])
+    filename = ['reflect_half_projected_z1',num2str(angle),'_alpha_',num2str(alpha), '_#G',num2str(numGaussian)];
 %     saveas(gcf,[filename,'.jpeg'])
     
     figure

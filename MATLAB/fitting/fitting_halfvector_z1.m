@@ -2,7 +2,6 @@ function fitting_halfvector_z1(dir,alpha,angle,x,y,z,weight,...
     testafter, trainnum, generatenum, gaussiannumvec, incident, xnum, ynum)
 
 cd(dir)
-
 errvec = zeros(1,length(gaussiannumvec));
 countvec = zeros(1,length(gaussiannumvec));
 
@@ -14,6 +13,11 @@ xdividez = h(:,1)./h(:,3);
 ydividez = h(:,2)./h(:,3);
 xrange = max(max(xdividez),-min(xdividez));
 yrange = max(max(ydividez),-min(ydividez));
+% sortedxz = sort(abs(xdividez));
+% xrange = sortedxz(ceil(99/100*length(xdividez)));
+% sortedyz = sort(abs(ydividez));
+% yrange = sortedyz(ceil(99/100*length(xdividez)));
+cutoff = max(xrange, yrange);
 range = 2*max(xrange, yrange);
 fprintf('range is %4.2f\n',range)
 x_unit = 2*range/xnum;
@@ -21,8 +25,10 @@ y_unit = 2*range/ynum;
 result = zeros(xnum,ynum);
 
 for i = testafter+1:length(x)
-    result(ceil((xdividez(i)+range)/x_unit),ceil((ydividez(i)+range)/y_unit)) = ...
-        result(ceil((xdividez(i)+range)/x_unit),ceil((ydividez(i)+range)/y_unit)) + weight(i);
+    if abs(xdividez(i))<range && abs(ydividez(i))<range
+        result(ceil((xdividez(i)+range)/x_unit),ceil((ydividez(i)+range)/y_unit)) = ...
+            result(ceil((xdividez(i)+range)/x_unit),ceil((ydividez(i)+range)/y_unit)) + weight(i);
+    end
 end
 
 close all
@@ -36,7 +42,11 @@ filename = ['halfprojected_z1',num2str(angle),'_alpha_',num2str(alpha), 'heightf
 saveas(gcf,[filename,'.jpeg'])
 
 %training data
-train = [xdividez(1:trainnum), ydividez(1:trainnum)];
+xtrain = xdividez(1:trainnum);
+ytrain = ydividez(1:trainnum);
+xtrain_new = xtrain(abs(xtrain)<=cutoff & abs(ytrain)<=cutoff);
+ytrain_new = ytrain(abs(xtrain)<=cutoff & abs(ytrain)<=cutoff);
+train = [xtrain_new, ytrain_new];
 
 % close all
 % figure
@@ -75,7 +85,7 @@ for j = 1:length(gaussiannumvec)
     predict= zeros(xnum,ynum);
     count = 0;
     for i = 1:generatenum
-        if Y(i,1)>=-range && Y(i,1)<=range && Y(i,2)>=-range && Y(i,2)<=range
+        if abs(Y(i,1))<range && abs(Y(i,2))<range
               predict(ceil((Y(i,1)+range)/x_unit),ceil((Y(i,2)+range)/y_unit)) = ...
                 predict(ceil((Y(i,1)+range)/x_unit),ceil((Y(i,2)+range)/y_unit)) + 1;
         else
