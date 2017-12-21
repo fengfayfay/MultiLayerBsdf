@@ -1,13 +1,15 @@
 % One Layer Gaussian fitting
 close all
-dir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror/pi:3/output';
+% mirror dir
+% dir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror/pi:3/output';
+% glass dir
+dir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SingleLayer/pi:3/output';
 cd(dir)
 
 angle = 60;
 trainnum = 1e6;
 alphavec = [0.1, 0.2, 0.4, 0.5, 0.7, 0.9];
 range = 1:length(alphavec);
-figure
 for k = range
     alpha = alphavec(k);
     filename = [num2str(angle), 'outputx_', num2str(alpha),'.txt'];
@@ -40,10 +42,11 @@ for k = range
     z = z/observe;
     epsilon = 1e-6;
     
-    if sum(z<0)/length(z)>0.01
-        msg = 'More than 1% rays go down, not mirror data.';
-        error(msg)
-    end
+%     % for mirror
+%     if sum(z<0)/length(z)>0.01
+%         msg = 'More than 1% rays go down, not mirror data.';
+%         error(msg)
+%     end
     
     testafter = 1e6;
     generatenum = length(x) - testafter;
@@ -89,12 +92,21 @@ for k = range
 % fitting_halfvector_projected_cos(dir,alpha,angle,x,y,z,weight,...
 %     testafter, trainnum, generatenum, gaussiannumvec, incident, xnum, ynum)
     
-% fitting using x/z,y/z of halfvector
+% % fitting using x/z,y/z of halfvector
+% gaussiannumvec = 1:5;
+% incident = [sin(angle*pi/180), 0, cos(angle*pi/180)];
+% xnum = 100;
+% ynum = 100;
+% fitting_halfvector_z1(dir,alpha,angle,x,y,z,weight,...
+%     testafter, trainnum, generatenum, gaussiannumvec, incident, xnum, ynum)
+
+%% glass fitting
 gaussiannumvec = 1:5;
 incident = [sin(angle*pi/180), 0, cos(angle*pi/180)];
 xnum = 100;
 ynum = 100;
-fitting_halfvector_z1(dir,alpha,angle,x,y,z,weight,...
-    testafter, trainnum, generatenum, gaussiannumvec, incident, xnum, ynum)
+ior = 1.5;
+Glass_fitting_halfvector_z1(dir,alpha,angle,x,y,z,weight,...
+    testafter, trainnum, generatenum, gaussiannumvec, incident, xnum, ynum,ior)
 end
 

@@ -49,15 +49,15 @@ elseif nargin == 5
     f = 2/sqrt(pi)*rL/N/sqrt(clx)/sqrt(cly)*ifft2(fft2(Z).*fft2(F));
     
 end
-% figure
-% surf(f)
-cd('/Users/mandy/Github/MultiLayerBsdf/build_clang');
-filename = ['pz', num2str(h/clx), '.txt'];
-pz = fopen(filename,'w');
-fprintf(pz,'%5f %5f %5f %5f %5f %5f %5f %5f\n',f);
-fclose(pz);
-
-filename = ['pz', num2str(h/clx), '_2.txt'];
-pz = fopen(filename,'w');
-fprintf(pz,'%5f %5f %5f %5f %5f %5f %5f %5f\n',f-5);
-fclose(pz);
+figure
+surf(f)
+% cd('/Users/mandy/Github/MultiLayerBsdf/build_clang');
+% filename = ['pz', num2str(h/clx), '.txt'];
+% pz = fopen(filename,'w');
+% fprintf(pz,'%5f %5f %5f %5f %5f %5f %5f %5f\n',f);
+% fclose(pz);
+% 
+% filename = ['pz', num2str(h/clx), '_2.txt'];
+% pz = fopen(filename,'w');
+% fprintf(pz,'%5f %5f %5f %5f %5f %5f %5f %5f\n',f-5);
+% fclose(pz);

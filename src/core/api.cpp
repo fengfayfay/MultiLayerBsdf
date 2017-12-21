@@ -1472,7 +1472,7 @@ namespace pbrt {
       // ray tracing test
       float angle = (float) (PbrtOptions.theta_i);
       float theta = angle*M_PI/180.f;
-      float alpha = 0.9;
+      float alpha = 0.5;
       int numrays = 1e7;
       float height = 1.f;
       float dist = 5;
@@ -1518,8 +1518,8 @@ namespace pbrt {
         Ray ray = Ray(ori, dir);
         int depth = 0;
         int weight = 1;
-        SingleLayerMirror(observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth);
-        //SingleLayerGlass(observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth);
+        //SingleLayerMirror(observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth);
+        SingleLayerGlass(observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth);
         //DoubleLayerHeightfield(observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth);
       }
       outputx.close();
@@ -1637,10 +1637,17 @@ void SingleLayerGlass(float observe, const Ray &r, const Scene& scene, int weigh
       if (depth == 0){
         return;
       }else{
-
         // check intersection with observing sphere
         float t = intersect(r, observe);
         Point3f inter = r.o + r.d * t;
+
+        // check rays that go out
+        bool onedge = std::abs(r.o.x)>9.9 || std::abs(r.o.y)>9.9;
+        if (onedge){
+          count_goout++;
+          return;
+        }
+
         outputx << inter.x <<"\n";
         outputy << inter.y <<"\n";
         outputz << inter.z <<"\n";
