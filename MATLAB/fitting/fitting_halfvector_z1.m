@@ -1,5 +1,5 @@
 function fitting_halfvector_z1(dir,alpha,angle,x,y,z,weight,...
-    testafter, trainnum, generatenum, gaussiannumvec, incident, xnum, ynum)
+    trainnum, generatenum, gaussiannumvec, incident, xnum, ynum)
 
 cd(dir)
 errvec = zeros(1,length(gaussiannumvec));
@@ -11,12 +11,12 @@ hnorm = repmat(sqrt(sum(h.^2,2)),1,3);
 h = h./hnorm;
 xdividez = h(:,1)./h(:,3);
 ydividez = h(:,2)./h(:,3);
-xrange = max(max(xdividez),-min(xdividez));
-yrange = max(max(ydividez),-min(ydividez));
-% sortedxz = sort(abs(xdividez));
-% xrange = sortedxz(ceil(99/100*length(xdividez)));
-% sortedyz = sort(abs(ydividez));
-% yrange = sortedyz(ceil(99/100*length(xdividez)));
+% xrange = max(max(xdividez),-min(xdividez));
+% yrange = max(max(ydividez),-min(ydividez));
+sortedxz = sort(abs(xdividez));
+xrange = sortedxz(ceil(99/100*length(xdividez)));
+sortedyz = sort(abs(ydividez));
+yrange = sortedyz(ceil(99/100*length(xdividez)));
 cutoff = max(xrange, yrange);
 range = 2*max(xrange, yrange);
 fprintf('range is %4.2f\n',range)
@@ -24,7 +24,7 @@ x_unit = 2*range/xnum;
 y_unit = 2*range/ynum;
 result = zeros(xnum,ynum);
 
-for i = testafter+1:length(x)
+for i = trainnum+1:length(x)
     if abs(xdividez(i))<range && abs(ydividez(i))<range
         result(ceil((xdividez(i)+range)/x_unit),ceil((ydividez(i)+range)/y_unit)) = ...
             result(ceil((xdividez(i)+range)/x_unit),ceil((ydividez(i)+range)/y_unit)) + weight(i);
@@ -109,15 +109,16 @@ for j = 1:length(gaussiannumvec)
 %     saveas(gcf,[filename,'.jpeg'])
     
     %% calculate error
-    diff = predict/(generatenum-count)-result/generatenum;
-    diff_new = sort(abs(reshape(diff,10000,1)),'descend');
+    diff = predict/sum(sum(predict))-result/sum(sum(result));
+%     diff_new = sort(abs(reshape(diff,10000,1)),'descend');
 %     figure
 %     plot(diff_new, 'linewidth',2)
 %     title(['error from large to small, 5 gaussian, alpha=',num2str(alpha)])
-    err = sqrt(sum(sum(diff.*diff)));
-    
+%     err = sum(abs(diff))/sum(result/sum(sum(result)));
+    err = sqrt(sum(sum(diff.*diff)))/sqrt(sum(sum(result/sum(sum(result)).*result/sum(sum(result)))));
+    disp(err)
     errvec(j) = err;
-    countvec(j) = count;
+%     countvec(j) = count;
     
     
 end

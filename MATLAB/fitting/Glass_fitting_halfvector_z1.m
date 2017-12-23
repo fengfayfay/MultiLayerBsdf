@@ -1,5 +1,5 @@
 function Glass_fitting_halfvector_z1(dir, alpha,angle,x,y,z,weight,...
-    testafter, trainnum, generatenum, gaussiannumvec, incident, xnum, ynum,ior)
+    trainnum, generatenum, gaussiannumvec, incident, xnum, ynum,ior)
 
 cd(dir)
 errvec = zeros(1,length(gaussiannumvec));
@@ -87,14 +87,14 @@ for i = 1:length(transmit_xdividez_test)
 end
 
 % close all
-figure
-imagesc(transmit/generatenum)
-ylabel('x/z')
-xlabel('y/z')
-colorbar()
-title(['Gaussian Heightfiled transmit ray distribution, alpha=', num2str(alpha),' angle=',num2str(angle)])
-filename = ['transmit_halfprojected_z1',num2str(angle),'_alpha_',num2str(alpha), 'heightfield'];
-saveas(gcf,[filename,'.jpeg'])
+% figure
+% imagesc(transmit/generatenum)
+% ylabel('x/z')
+% xlabel('y/z')
+% colorbar()
+% title(['Gaussian Heightfiled transmit ray distribution, alpha=', num2str(alpha),' angle=',num2str(angle)])
+% filename = ['transmit_halfprojected_z1',num2str(angle),'_alpha_',num2str(alpha), 'heightfield'];
+% saveas(gcf,[filename,'.jpeg'])
 
 %training data
 reflect_train = [reflect_xdividez_new, reflect_ydividez_new];
@@ -174,20 +174,20 @@ for j = 1:length(gaussiannumvec)
     end
     
 %     plot(predict(xnum/2,:)/(generatenum-count), 'linewidth', 2)
-    count = transmit_count + reflect_count;
-    figure
-    imagesc(reflect_predict/(generatenum-count))
-    colorbar()
-    title(['Reflect distribution generated using GMM, alpha=', num2str(alpha),' angle=',num2str(angle),' #G=',num2str(numGaussian)])
-    filename = ['reflect_half_projected_z1',num2str(angle),'_alpha_',num2str(alpha), '_#G',num2str(numGaussian)];
+%     count = transmit_count + reflect_count;
+%     figure
+%     imagesc(reflect_predict/(generatenum-count))
+%     colorbar()
+%     title(['Reflect distribution generated using GMM, alpha=', num2str(alpha),' angle=',num2str(angle),' #G=',num2str(numGaussian)])
+%     filename = ['reflect_half_projected_z1',num2str(angle),'_alpha_',num2str(alpha), '_#G',num2str(numGaussian)];
 %     saveas(gcf,[filename,'.jpeg'])
     
-    figure
-    imagesc(transmit_predict/(generatenum-count))
-    colorbar()
-    title(['Transmit distribution generated using GMM, alpha=', num2str(alpha),' angle=',num2str(angle),' #G=',num2str(numGaussian)])
-    filename = ['transmit_half_projected_z1',num2str(angle),'_alpha_',num2str(alpha), '_#G',num2str(numGaussian)];
-    saveas(gcf,[filename,'.jpeg'])
+%     figure
+%     imagesc(transmit_predict/(generatenum-count))
+%     colorbar()
+%     title(['Transmit distribution generated using GMM, alpha=', num2str(alpha),' angle=',num2str(angle),' #G=',num2str(numGaussian)])
+%     filename = ['transmit_half_projected_z1',num2str(angle),'_alpha_',num2str(alpha), '_#G',num2str(numGaussian)];
+%     saveas(gcf,[filename,'.jpeg'])
     
 %     figure
 %     plot(predict(phinum/2,:)/(generatenum-count), 'linewidth', 2)
@@ -196,14 +196,14 @@ for j = 1:length(gaussiannumvec)
 %     saveas(gcf,[filename,'.jpeg'])
     
     %% calculate error
-    reflect_diff = reflect_predict/(generatenum-count)-reflect/generatenum;
-    transmit_diff = transmit_predict/(generatenum-count)-transmit/generatenum;
+    reflect_diff = reflect_predict/sum(sum(reflect_predict))-reflect/sum(sum(reflect));
+    transmit_diff = transmit_predict/sum(sum(transmit_predict))-transmit/sum(sum(transmit));
 %     diff_new = sort(abs(reshape(diff,10000,1)),'descend');
 %     figure
 %     plot(diff_new, 'linewidth',2)
 %     title(['error from large to small, 5 gaussian, alpha=',num2str(alpha)])
-    reflect_err = sqrt(sum(sum(reflect_diff.*reflect_diff)));
-    transmit_err = sqrt(sum(sum(transmit_diff.*transmit_diff)));
+    reflect_err = sqrt(sum(sum(reflect_diff.*reflect_diff)))/sqrt(sum(sum(reflect/sum(sum(reflect)).*reflect/sum(sum(reflect)))));
+    transmit_err = sqrt(sum(sum(transmit_diff.*transmit_diff)))/sqrt(sum(sum(transmit/sum(sum(transmit)).*transmit/sum(sum(transmit)))));
     
     reflect_errvec(j) = reflect_err;
     transmit_errvec(j) = transmit_err;
@@ -222,8 +222,8 @@ end
 
 reflect_errvec_filename = ['reflect_half_projected_z1',num2str(angle),'_angle_',num2str(alpha),'_err.mat'];
 transmit_errvec_filename = ['transmit_half_projected_z1',num2str(angle),'_angle_',num2str(alpha),'_err.mat'];
-countvec_filename = ['glass_half_projected_z1',num2str(angle),'_angle_',num2str(alpha),'_badcount.mat'];
+% countvec_filename = ['glass_half_projected_z1',num2str(angle),'_angle_',num2str(alpha),'_badcount.mat'];
 save(reflect_errvec_filename,'reflect_errvec')
 save(transmit_errvec_filename,'transmit_errvec')
-save(countvec_filename,'count')
+% save(countvec_filename,'count')
 end

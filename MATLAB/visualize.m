@@ -4,28 +4,53 @@ cd('/Users/mandy/Github/MultiLayerBsdf/build_clang')
 % cd('/Users/mandy/Github/pixar/ritest/GaussianHeightField/SingleLayer/pi:3/output')
 % cd('/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror/pi:3/output')
 alpha = 0.5;
-angle = 60;
-filename = [num2str(angle), 'outputx_', num2str(alpha),'.txt'];
+% angle = 60;
+% filename = [num2str(angle), 'outputx_', num2str(alpha),'.txt'];
+% fileID = fopen(filename);
+% C1 = textscan(fileID,'%f');
+% fclose(fileID);
+% 
+% filename = [num2str(angle),'outputy_', num2str(alpha),'.txt'];
+% fileID = fopen(filename);
+% C2 = textscan(fileID,'%f');
+% fclose(fileID);
+% 
+% filename = [num2str(angle),'outputz_', num2str(alpha),'.txt'];
+% fileID = fopen(filename);
+% C3 = textscan(fileID,'%f');
+% fclose(fileID);
+% 
+% filename = [num2str(angle),'outputweight_', num2str(alpha),'.txt'];
+% fileID = fopen(filename);
+% C4 = textscan(fileID,'%f');
+% fclose(fileID);
+% 
+% filename = [num2str(angle),'outputdepth_', num2str(alpha),'.txt'];
+% fileID = fopen(filename);
+% C5 = textscan(fileID,'%f');
+% fclose(fileID);
+
+filename = ['3d_outputx_', num2str(alpha),'.txt'];
 fileID = fopen(filename);
 C1 = textscan(fileID,'%f');
 fclose(fileID);
 
-filename = [num2str(angle),'outputy_', num2str(alpha),'.txt'];
+filename = ['3d_outputy_', num2str(alpha),'.txt'];
 fileID = fopen(filename);
 C2 = textscan(fileID,'%f');
 fclose(fileID);
 
-filename = [num2str(angle),'outputz_', num2str(alpha),'.txt'];
+filename = ['3d_outputz_', num2str(alpha),'.txt'];
 fileID = fopen(filename);
 C3 = textscan(fileID,'%f');
 fclose(fileID);
 
-filename = [num2str(angle),'outputweight_', num2str(alpha),'.txt'];
+filename = ['3d_outputweight_', num2str(alpha),'.txt'];
 fileID = fopen(filename);
 C4 = textscan(fileID,'%f');
 fclose(fileID);
 
-filename = [num2str(angle),'outputdepth_', num2str(alpha),'.txt'];
+filename = ['3d_outputdepth_', num2str(alpha),'.txt'];
 fileID = fopen(filename);
 C5 = textscan(fileID,'%f');
 fclose(fileID);
@@ -41,8 +66,6 @@ depth = C5{1};
 % scatter3(x,y,z)
 
 % parameter for gaussian heightfield test
-N = 4800;
-len = 100;
 observe = 6000;
 numray = sum(weight);
 
@@ -50,9 +73,6 @@ numray = sum(weight);
 munum = 100;
 phinum = 400;
 
-x1 = linspace(-len,len,N);
-y1 = linspace(-len,len,N);
-[X,Y] = meshgrid(x1,y1);
 % hold on
 % surf(X,Y,f)
 
@@ -67,10 +87,10 @@ z = z/observe;
 mu_unit = 1/munum;
 phi_unit = 2*pi/phinum;
 result = zeros(phinum,munum);
-result_d1 = zeros(phinum,munum);
-result_d2 = zeros(phinum,munum);
-result_d3 = zeros(phinum,munum);
-result_d4 = zeros(phinum,munum);
+% result_d1 = zeros(phinum,munum);
+% result_d2 = zeros(phinum,munum);
+% result_d3 = zeros(phinum,munum);
+% result_d4 = zeros(phinum,munum);
 epsilon = 1e-6;
 for i = 1:length(x)
     if z(i) >=0
@@ -89,17 +109,17 @@ for i = 1:length(x)
             end
         end
         result(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) = result(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) + weight(i);
-        if depth(i)<=1
-            result_d1(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) = result_d1(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) + weight(i);
-%         else
+%         if depth(i)<=1
+%             result_d1(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) = result_d1(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) + weight(i);
+% %         else
+% %             result_d2(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) = result_d2(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) + weight(i);
+%         elseif depth(i)==2
 %             result_d2(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) = result_d2(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) + weight(i);
-        elseif depth(i)==2
-            result_d2(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) = result_d2(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) + weight(i);
-        elseif depth(i)==3
-            result_d3(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) = result_d2(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) + weight(i);
-        elseif depth(i)==4
-            result_d4(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) = result_d2(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) + weight(i);
-        end
+%         elseif depth(i)==3
+%             result_d3(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) = result_d2(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) + weight(i);
+%         elseif depth(i)==4
+%             result_d4(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) = result_d2(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) + weight(i);
+%         end
     end
 end
 figure
