@@ -3,57 +3,57 @@ close all
 cd('/Users/mandy/Github/MultiLayerBsdf/build_clang')
 % cd('/Users/mandy/Github/pixar/ritest/GaussianHeightField/SingleLayer/pi:3/output')
 % cd('/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror/pi:3/output')
-alpha = 0.5;
-% angle = 60;
-% filename = [num2str(angle), 'outputx_', num2str(alpha),'.txt'];
-% fileID = fopen(filename);
-% C1 = textscan(fileID,'%f');
-% fclose(fileID);
-% 
-% filename = [num2str(angle),'outputy_', num2str(alpha),'.txt'];
-% fileID = fopen(filename);
-% C2 = textscan(fileID,'%f');
-% fclose(fileID);
-% 
-% filename = [num2str(angle),'outputz_', num2str(alpha),'.txt'];
-% fileID = fopen(filename);
-% C3 = textscan(fileID,'%f');
-% fclose(fileID);
-% 
-% filename = [num2str(angle),'outputweight_', num2str(alpha),'.txt'];
-% fileID = fopen(filename);
-% C4 = textscan(fileID,'%f');
-% fclose(fileID);
-% 
-% filename = [num2str(angle),'outputdepth_', num2str(alpha),'.txt'];
-% fileID = fopen(filename);
-% C5 = textscan(fileID,'%f');
-% fclose(fileID);
-
-filename = ['3d_outputx_', num2str(alpha),'.txt'];
+alpha = 0.1;
+angle = 60;
+filename = [num2str(angle), 'outputx_', num2str(alpha),'.txt'];
 fileID = fopen(filename);
 C1 = textscan(fileID,'%f');
 fclose(fileID);
 
-filename = ['3d_outputy_', num2str(alpha),'.txt'];
+filename = [num2str(angle),'outputy_', num2str(alpha),'.txt'];
 fileID = fopen(filename);
 C2 = textscan(fileID,'%f');
 fclose(fileID);
 
-filename = ['3d_outputz_', num2str(alpha),'.txt'];
+filename = [num2str(angle),'outputz_', num2str(alpha),'.txt'];
 fileID = fopen(filename);
 C3 = textscan(fileID,'%f');
 fclose(fileID);
 
-filename = ['3d_outputweight_', num2str(alpha),'.txt'];
+filename = [num2str(angle),'outputweight_', num2str(alpha),'.txt'];
 fileID = fopen(filename);
 C4 = textscan(fileID,'%f');
 fclose(fileID);
 
-filename = ['3d_outputdepth_', num2str(alpha),'.txt'];
+filename = [num2str(angle),'outputdepth_', num2str(alpha),'.txt'];
 fileID = fopen(filename);
 C5 = textscan(fileID,'%f');
 fclose(fileID);
+
+% filename = ['3d_outputx_', num2str(alpha),'.txt'];
+% fileID = fopen(filename);
+% C1 = textscan(fileID,'%f');
+% fclose(fileID);
+% 
+% filename = ['3d_outputy_', num2str(alpha),'.txt'];
+% fileID = fopen(filename);
+% C2 = textscan(fileID,'%f');
+% fclose(fileID);
+% 
+% filename = ['3d_outputz_', num2str(alpha),'.txt'];
+% fileID = fopen(filename);
+% C3 = textscan(fileID,'%f');
+% fclose(fileID);
+% 
+% filename = ['3d_outputweight_', num2str(alpha),'.txt'];
+% fileID = fopen(filename);
+% C4 = textscan(fileID,'%f');
+% fclose(fileID);
+% 
+% filename = ['3d_outputdepth_', num2str(alpha),'.txt'];
+% fileID = fopen(filename);
+% C5 = textscan(fileID,'%f');
+% fclose(fileID);
 
 
 x = C1{1};
@@ -67,7 +67,7 @@ depth = C5{1};
 
 % parameter for gaussian heightfield test
 observe = 6000;
-numray = sum(weight);
+total = sum(weight);
 
 % visualization parameters
 munum = 100;
@@ -75,9 +75,6 @@ phinum = 400;
 
 % hold on
 % surf(X,Y,f)
-
-total = length(x);
-disp(total)
 
 sum(depth==1)/total
 
@@ -87,10 +84,10 @@ z = z/observe;
 mu_unit = 1/munum;
 phi_unit = 2*pi/phinum;
 result = zeros(phinum,munum);
-% result_d1 = zeros(phinum,munum);
-% result_d2 = zeros(phinum,munum);
-% result_d3 = zeros(phinum,munum);
-% result_d4 = zeros(phinum,munum);
+result_d1 = zeros(phinum,munum);
+result_d2 = zeros(phinum,munum);
+result_d3 = zeros(phinum,munum);
+result_d4 = zeros(phinum,munum);
 epsilon = 1e-6;
 for i = 1:length(x)
     if z(i) >=0
@@ -109,17 +106,17 @@ for i = 1:length(x)
             end
         end
         result(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) = result(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) + weight(i);
-%         if depth(i)<=1
-%             result_d1(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) = result_d1(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) + weight(i);
-% %         else
-% %             result_d2(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) = result_d2(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) + weight(i);
-%         elseif depth(i)==2
+        if depth(i)<=1
+            result_d1(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) = result_d1(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) + weight(i);
+%         else
 %             result_d2(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) = result_d2(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) + weight(i);
-%         elseif depth(i)==3
-%             result_d3(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) = result_d2(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) + weight(i);
-%         elseif depth(i)==4
-%             result_d4(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) = result_d2(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) + weight(i);
-%         end
+        elseif depth(i)==2
+            result_d2(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) = result_d2(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) + weight(i);
+        elseif depth(i)==3
+            result_d3(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) = result_d2(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) + weight(i);
+        elseif depth(i)==4
+            result_d4(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) = result_d2(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) + weight(i);
+        end
     end
 end
 figure
@@ -129,29 +126,29 @@ xlabel('mu_o')
 ylabel('phi_o')
 colorbar
 
-% figure
-% plot(result_d1(200,:)/total, 'linewidth', 2)
-% title(['Incident angle=', num2str(angle),' alpha =',num2str(alpha), 'r bounce1'])
-% filename = [num2str(angle),'_alpha_',num2str(alpha), 'r_bounce1'];
-% % saveas(gcf,[filename,'.jpeg'])
-% 
-% figure
-% plot(result_d2(200,:)/total, 'linewidth', 2)
-% title(['Incident angle=', num2str(angle),' alpha =',num2str(alpha), 'r bounce2'])
-% filename = [num2str(angle),'_alpha_',num2str(alpha), 'r_bounce2'];
-% % saveas(gcf,[filename,'.jpeg'])
-% 
-% figure
-% plot(result_d3(200,:)/total, 'linewidth', 2)
-% title(['Incident angle=', num2str(angle),' alpha =',num2str(alpha), 'r bounce3'])
-% filename = [num2str(angle),'_alpha_',num2str(alpha), 'r_bounce3'];
-% % saveas(gcf,[filename,'.jpeg'])
-% 
-% figure
-% plot(result_d4(200,:)/total, 'linewidth', 2)
-% title(['Incident angle=', num2str(angle),' alpha =',num2str(alpha), 'r bounce4'])
-% filename = [num2str(angle),'_alpha_',num2str(alpha), 'r_bounce4'];
-% % saveas(gcf,[filename,'.jpeg'])
+figure
+plot(result_d1(200,:)/total, 'linewidth', 2)
+title(['Incident angle=', num2str(angle),' alpha =',num2str(alpha), 'r bounce1'])
+filename = [num2str(angle),'_alpha_',num2str(alpha), 'r_bounce1'];
+% saveas(gcf,[filename,'.jpeg'])
+
+figure
+plot(result_d2(200,:)/total, 'linewidth', 2)
+title(['Incident angle=', num2str(angle),' alpha =',num2str(alpha), 'r bounce2'])
+filename = [num2str(angle),'_alpha_',num2str(alpha), 'r_bounce2'];
+% saveas(gcf,[filename,'.jpeg'])
+
+figure
+plot(result_d3(200,:)/total, 'linewidth', 2)
+title(['Incident angle=', num2str(angle),' alpha =',num2str(alpha), 'r bounce3'])
+filename = [num2str(angle),'_alpha_',num2str(alpha), 'r_bounce3'];
+% saveas(gcf,[filename,'.jpeg'])
+
+figure
+plot(result_d4(200,:)/total, 'linewidth', 2)
+title(['Incident angle=', num2str(angle),' alpha =',num2str(alpha), 'r bounce4'])
+filename = [num2str(angle),'_alpha_',num2str(alpha), 'r_bounce4'];
+% saveas(gcf,[filename,'.jpeg'])
 
 
 
