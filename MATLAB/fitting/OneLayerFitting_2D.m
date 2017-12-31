@@ -1,9 +1,9 @@
 % One Layer Gaussian fitting
 close all
 % mirror dir
-% datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror/pi:3/output';
+datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror/pi:3/output';
 % glass dir
-datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SingleLayer/pi:3/output';
+% datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SingleLayer/pi:3/output';
 fundir = '/Users/mandy/Github/MultiLayerBsdf/MATLAB/fitting';
 cd(datadir)
 trainnum = 1e6;
@@ -13,7 +13,7 @@ alpharange = 1:length(alphavec);
 anglerange = 1:length(anglevec);
 for j = 7
     angle = anglevec(j);
-    for k = alpharange
+    for k = 4
         alpha = alphavec(k);
         filename = [num2str(angle), 'outputx_', num2str(alpha),'.txt'];
         fileID = fopen(filename);
@@ -52,7 +52,8 @@ for j = 7
 %         end
         
         cd(fundir);
-        generatenum = length(x) - trainnum;
+%         generatenum = length(x) - trainnum;
+        generatenum = 1e6;
         
         % %% Mirror fitting
         %     % fitting using phi mu
@@ -94,13 +95,13 @@ for j = 7
         % fitting_halfvector_projected_cos(datadir,alpha,angle,x,y,z,weight,...
         %     testafter, trainnum, generatenum, gaussiannumvec, incident, xnum, ynum)
         
-%         % fitting using x/z,y/z of halfvector
-%         gaussiannumvec = 1:20;
-%         incident = [sin(angle*pi/180), 0, cos(angle*pi/180)];
-%         xnum = 100;
-%         ynum = 100;
-%         fitting_halfvector_z1(datadir,alpha,angle,x,y,z,weight,...
-%             testafter, trainnum, generatenum, gaussiannumvec, incident, xnum, ynum)
+        % fitting using x/z,y/z of halfvector
+        gaussiannumvec = 5;
+        incident = [sin(angle*pi/180), 0, cos(angle*pi/180)];
+        xnum = 100;
+        ynum = 100;
+        fitting_halfvector_z1(datadir,alpha,angle,x,y,z,weight,...
+            trainnum, generatenum, gaussiannumvec, incident, xnum, ynum)
         
 %         % fitting using x/z,y/z of outgoing vector
 %         gaussiannumvec = 1:5;
@@ -110,14 +111,14 @@ for j = 7
 %         fitting_wo_z1(datadir,alpha,angle,x,y,z,weight,...
 %             trainnum, generatenum, gaussiannumvec, xnum, ynum)
         
-        %% glass fitting
-        gaussiannumvec = 1:20;
-        incident = [sin(angle*pi/180), 0, cos(angle*pi/180)];
-        xnum = 100;
-        ynum = 100;
-        ior = 1.5;
-        Glass_fitting_halfvector_z1(datadir,alpha,angle,x,y,z,weight,...
-            trainnum, generatenum, gaussiannumvec, incident, xnum, ynum,ior)
+%         %% glass fitting
+%         gaussiannumvec = 5;
+%         incident = [sin(angle*pi/180), 0, cos(angle*pi/180)];
+%         xnum = 100;
+%         ynum = 100;
+%         ior = 1.5;
+%         Glass_fitting_halfvector_z1(datadir,alpha,angle,x,y,z,weight,...
+%             trainnum, generatenum, gaussiannumvec, incident, xnum, ynum,ior)
     end
 end
 

@@ -5,8 +5,7 @@ mirror = true;
 
 if mirror
     % mirror dir
-    %     datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror/pi:3/output';
-    datadir = '/Users/mandy/Github/MultiLayerBsdf/build_clang';
+    datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror_3d/';
 else
     % glass dir
     % datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SingleLayer/pi:3/output';
@@ -16,7 +15,7 @@ fundir = '/Users/mandy/Github/MultiLayerBsdf/MATLAB/fitting';
 cd(datadir)
 
 trainnum = 1e7;
-generatenum = 5e7;
+generatenum = 1e7;
 alphavec = [0.1, 0.2, 0.4, 0.5, 0.7, 0.9];
 alpharange = 1:length(alphavec);
 trainangle = [];
@@ -92,9 +91,9 @@ for k = 4
         xdividez = h(:,1)./h(:,3);
         ydividez = h(:,2)./h(:,3);
         sortedxz = sort(abs(xdividez));
-        xrange = sortedxz(ceil(99/100*length(xdividez)));
+        xrange = sortedxz(ceil(9999/10000*length(xdividez)));
         sortedyz = sort(abs(ydividez));
-        yrange = sortedyz(ceil(99/100*length(xdividez)));
+        yrange = sortedyz(ceil(9999/10000*length(xdividez)));
         cutoff = max(xrange, yrange);
         range = 2*cutoff;
         plotrange = max(plotrange, range);
@@ -124,7 +123,7 @@ end
 
 cd(fundir);
 % fitting using x/z,y/z of halfvector
-gaussiannumvec = 50;
+gaussiannumvec = 30;
 xnum = 100;
 ynum = 100;
 znum = 90;

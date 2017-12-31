@@ -1511,32 +1511,32 @@ namespace pbrt {
       // outputdepth.open(var5);
 
       std::ostringstream oss1;
-      oss1 <<"3dglass_outputx_" << alpha<<".txt";
+      oss1 <<"3d_outputx_" << alpha<<".txt";
       std::string var1 = oss1.str();
       outputx.open(var1);
 
       std::ostringstream oss2;
-      oss2 <<"3dglass_outputy_" << alpha<<".txt";
+      oss2 <<"3d_outputy_" << alpha<<".txt";
       std::string var2 = oss2.str();
       outputy.open(var2);
 
       std::ostringstream oss3;
-      oss3 <<"3dglass_outputz_" << alpha<<".txt";
+      oss3 <<"3d_outputz_" << alpha<<".txt";
       std::string var3 = oss3.str();
       outputz.open(var3);
 
       std::ostringstream oss4;
-      oss4 <<"3dglass_outputweight_" << alpha<<".txt";
+      oss4 <<"3d_outputweight_" << alpha<<".txt";
       std::string var4 = oss4.str();
       outputweight.open(var4);
 
       std::ostringstream oss5;
-      oss5 <<"3dglass_outputdepth_" << alpha<<".txt";
+      oss5 <<"3d_outputdepth_" << alpha<<".txt";
       std::string var5 = oss5.str();
       outputdepth.open(var5);
 
       std::ostringstream oss6;
-      oss6 <<"3dglass_outputangle_" << alpha<<".txt";
+      oss6 <<"3d_outputangle_" << alpha<<".txt";
       std::string var6 = oss6.str();
       outputangle.open(var6);
 
@@ -1555,8 +1555,8 @@ namespace pbrt {
         Ray ray = Ray(ori, dir);
         int depth = 0;
         int weight = 1;
-        //SingleLayerMirror(theta,observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth, outputangle);
-        SingleLayerGlass(theta,observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth, outputangle);
+        SingleLayerMirror(theta,observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth, outputangle);
+        //SingleLayerGlass(theta,observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth, outputangle);
         //DoubleLayerHeightfield(theta,observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth, outputangle);
       }
       outputx.close();
