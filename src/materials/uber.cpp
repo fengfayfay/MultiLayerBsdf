@@ -81,8 +81,11 @@ void UberMaterial::ComputeScatteringFunctions(SurfaceInteraction *si,
             roughu = TrowbridgeReitzDistribution::RoughnessToAlpha(roughu);
             roughv = TrowbridgeReitzDistribution::RoughnessToAlpha(roughv);
         }
+        //MicrofacetDistribution *distrib =
+        //ARENA_ALLOC(arena, TrowbridgeReitzDistribution)(roughu, roughv);
+        // invoke Beckmann distribution instead of GGX for testing (Mandy)
         MicrofacetDistribution *distrib =
-            ARENA_ALLOC(arena, TrowbridgeReitzDistribution)(roughu, roughv);
+          ARENA_ALLOC(arena, BeckmannDistribution)(roughu, roughv);
         BxDF *spec =
             ARENA_ALLOC(arena, MicrofacetReflection)(ks, distrib, fresnel);
         si->bsdf->Add(spec);
