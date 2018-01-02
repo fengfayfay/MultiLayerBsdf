@@ -42,6 +42,7 @@
 #include "pbrt.h"
 #include "geometry.h"
 #include "microfacet.h"
+#include "gaussian.h"
 #include "shape.h"
 #include "spectrum.h"
 

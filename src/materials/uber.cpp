@@ -88,6 +88,8 @@ void UberMaterial::ComputeScatteringFunctions(SurfaceInteraction *si,
           ARENA_ALLOC(arena, BeckmannDistribution)(roughu, roughv);
         BxDF *spec =
             ARENA_ALLOC(arena, MicrofacetReflection)(ks, distrib, fresnel);
+        // use Gaussian BSDF (Mandy)
+        //BxDF *spec = ARENA_ALLOC(arena, GaussianReflection)(ks, fresnel);
         si->bsdf->Add(spec);
     }
 
