@@ -1,8 +1,10 @@
 % One Layer Gaussian fitting
 close all
 % mirror dir
+mirror = true;
 datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror/pi:3/output';
 % glass dir
+% mirror = false;
 % datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SingleLayer/pi:3/output';
 fundir = '/Users/mandy/Github/MultiLayerBsdf/MATLAB/fitting';
 cd(datadir)
@@ -45,11 +47,11 @@ for j = 7
         z = z/observe;
         epsilon = 1e-6;
         
-%         % for mirror
-%         if sum(z<0)/length(z)>0.01
-%             msg = 'More than 1% rays go down, not mirror data.';
-%             error(msg)
-%         end
+        % for mirror
+        if mirror && (sum(z<0)/length(z)>0.01)
+            msg = 'More than 1% rays go down, not mirror data.';
+            error(msg)
+        end
         
         cd(fundir);
 %         generatenum = length(x) - trainnum;
@@ -102,14 +104,6 @@ for j = 7
         ynum = 100;
         fitting_halfvector_z1(datadir,alpha,angle,x,y,z,weight,...
             trainnum, generatenum, gaussiannumvec, incident, xnum, ynum)
-        
-%         % fitting using x/z,y/z of outgoing vector
-%         gaussiannumvec = 1:5;
-%         incident = [sin(angle*pi/180), 0, cos(angle*pi/180)];
-%         xnum = 100;
-%         ynum = 100;
-%         fitting_wo_z1(datadir,alpha,angle,x,y,z,weight,...
-%             trainnum, generatenum, gaussiannumvec, xnum, ynum)
         
 %         %% glass fitting
 %         gaussiannumvec = 5;

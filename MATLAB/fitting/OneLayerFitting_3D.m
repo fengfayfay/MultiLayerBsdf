@@ -75,7 +75,7 @@ for k = 4
             error(msg)
         end
         % only take z>= data
-        sum(z<0)/length(z)
+        disp(sum(z<0)/length(z))
         x = x(z>=0);
         y = y(z>=0);
         z = z(z>=0);
@@ -123,7 +123,7 @@ end
 
 cd(fundir);
 % fitting using x/z,y/z of halfvector
-gaussiannumvec = 30;
+gaussiannumvec = 50;
 xnum = 100;
 ynum = 100;
 znum = 90;
@@ -138,34 +138,3 @@ fitting_halfvector_z13D(datadir,alpha,xdividez_train_new,ydividez_train_new,angl
 %     ior = 1.5;
 %     Glass_fitting_halfvector_z1(datadir,alpha,angle,x,y,z,weight,...
 %         testafter, trainnum, generatenum, gaussiannumvec, incident, xnum, ynum,ior)
-
-% cd('/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror_3d')
-% filename = ['3d_mirror_xdividez_', num2str(alpha),'.txt'];
-% fid = fopen(filename,'w');
-% fprintf(fid,'%6f\n',xdividez);
-% fclose(fid);
-% 
-% filename = ['3d_mirror_ydividez_', num2str(alpha),'.txt'];
-% fid = fopen(filename,'w');
-% fprintf(fid,'%6f\n',ydividez);
-% fclose(fid);
-% 
-% filename = ['3d_mirror_xdividez_train', num2str(alpha),'.txt'];
-% fid = fopen(filename,'w');
-% fprintf(fid,'%6f\n',xdividez_train_new);
-% fclose(fid);
-% 
-% filename = ['3d_mirror_ydividez_train', num2str(alpha),'.txt'];
-% fid = fopen(filename,'w');
-% fprintf(fid,'%6f\n',ydividez_train_new);
-% fclose(fid);
-% 
-% filename = ['3d_mirror_xdividez_test', num2str(alpha),'.txt'];
-% fid = fopen(filename,'w');
-% fprintf(fid,'%6f\n',xdividez_test_new);
-% fclose(fid);
-% 
-% filename = ['3d_mirror_ydividez_test', num2str(alpha),'.txt'];
-% fid = fopen(filename,'w');
-% fprintf(fid,'%6f\n',ydividez_test_new);
-% fclose(fid);

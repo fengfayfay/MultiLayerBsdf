@@ -38,92 +38,44 @@ end
 % filename = ['3d_halfprojected_z1_alpha_',num2str(alpha), 'heightfield'];
 % % saveas(gcf,[filename,'.jpeg'])
 % 
-% figure
-% imagesc(result(:,:,90)/sum(sum(sum(result))))
-% % ylabel('x/z')
-% % xlabel('y/z')
-% % colorbar()
-% % title(['Gaussian Heightfiled mirror ray distribution, alpha=', num2str(alpha),' angle~=',num2str(20)])
-% % filename = ['3d_halfprojected_z1_alpha_',num2str(alpha), 'heightfield'];
-% 
-% % close all
-% figure
-% imagesc(result(:,:,40)/sum(sum(sum(result))))
-% ylabel('x/z')
-% xlabel('y/z')
-% colorbar()
-% title(['Gaussian Heightfiled mirror ray distribution, alpha=', num2str(alpha),' angle~=',num2str(40)])
-% filename = ['3d_halfprojected_z1_alpha_',num2str(alpha), 'heightfield'];
-% % saveas(gcf,[filename,'.jpeg'])
-% figure
-% imagesc(result(:,:,50)/sum(sum(sum(result))))
-% ylabel('x/z')
-% xlabel('y/z')
-% colorbar()
-% title(['Gaussian Heightfiled mirror ray distribution, alpha=', num2str(alpha),' angle~=',num2str(20)])
-% filename = ['3d_halfprojected_z1_alpha_',num2str(alpha), 'heightfield'];
-% 
-% % close all
-% figure
-% imagesc(result(:,:,60)/sum(sum(sum(result))))
-% ylabel('x/z')
-% xlabel('y/z')
-% colorbar()
-% title(['Gaussian Heightfiled mirror ray distribution, alpha=', num2str(alpha),' angle~=',num2str(60)])
-% filename = ['3d_halfprojected_z1_alpha_',num2str(alpha), 'heightfield'];
-% % saveas(gcf,[filename,'.jpeg'])
-% figure
-% imagesc(result(:,:,70)/sum(sum(sum(result))))
-% ylabel('x/z')
-% xlabel('y/z')
-% colorbar()
-% title(['Gaussian Heightfiled mirror ray distribution, alpha=', num2str(alpha),' angle~=',num2str(20)])
-% filename = ['3d_halfprojected_z1_alpha_',num2str(alpha), 'heightfield'];
-% figure
-% imagesc(result(:,:,80)/sum(sum(sum(result))))
-% ylabel('x/z')
-% xlabel('y/z')
-% colorbar()
-% title(['Gaussian Heightfiled mirror ray distribution, alpha=', num2str(alpha),' angle~=',num2str(20)])
-% filename = ['3d_halfprojected_z1_alpha_',num2str(alpha), 'heightfield'];
-% 
+
 %training data
 train = [trainx, trainy,trainangle];
 
-% use accelearted em for fitting
-t=cputime;
-tree = buildtree(train, 0, 0, 3, 10000);
-[W,M,R,ff,Ws,Ms,Rs] = em(train,[],20,1,1,tree);
-fprintf('\nRuntime: %.2f seconds\n', cputime-t);
-Rnew = reshape(R', 3,3,20);
-obj = gmdistribution(M,Rnew,W');
-Y = random(obj,1e7);
+% % use accelearted em for fitting
+% t=cputime;
+% tree = buildtree(train, 0, 0, 3, 10000);
+% [W,M,R,ff,Ws,Ms,Rs] = em(train,[],20,1,1,tree);
+% fprintf('\nRuntime: %.2f seconds\n', cputime-t);
+% Rnew = reshape(R', 3,3,20);
+% obj = gmdistribution(M,Rnew,W');
+% Y = random(obj,1e7);
 
-% for j = 1:length(gaussiannumvec)
-%     %% fit mixture of Gaussians using half vector
-%     numGaussian = gaussiannumvec(j);
-%     fprintf('using %4d Gaussians\n',numGaussian)
-%     
-%     options = statset('MaxIter',500, 'Display','final','TolFun',1e-4);
-%     try
-%         obj = fitgmdist(train,numGaussian,'Options',options,'start','customize');
-%     catch exception
-%         disp('There was an error fitting the Gaussian mixture model')
-%         error = exception.message
-%     end
-%     
-%     %     disp(obj.mu)
-%     %
-%     filename = ['3dhalf_projected_z1_alpha_',num2str(alpha), '_#G',num2str(numGaussian),'.mat'];
-%     save(filename,'obj')
-%     
-%     %     filename = ['half_projected_z1',num2str(angle),'_alpha_',num2str(alpha), '_#G',num2str(numGaussian),'.mat'];
-%     %     load(filename,'obj')
-%     
-%     %% generate points from fitted model
-%     Y = random(obj,length(testangle));
-%     
-    %% calculate energy
+for j = 1:length(gaussiannumvec)
+    %% fit mixture of Gaussians using half vector
+    numGaussian = gaussiannumvec(j);
+    fprintf('using %4d Gaussians\n',numGaussian)
+    
+    options = statset('MaxIter',500, 'Display','final','TolFun',1e-4);
+    try
+        obj = fitgmdist(train,numGaussian,'Options',options,'start','customize');
+    catch exception
+        disp('There was an error fitting the Gaussian mixture model')
+        error = exception.message
+    end
+    
+    %     disp(obj.mu)
+    %
+    filename = ['3dhalf_projected_z1_alpha_',num2str(alpha), '_#G',num2str(numGaussian),'.mat'];
+    save(filename,'obj')
+    
+    %     filename = ['half_projected_z1',num2str(angle),'_alpha_',num2str(alpha), '_#G',num2str(numGaussian),'.mat'];
+    %     load(filename,'obj')
+    
+    %% generate points from fitted model
+    Y = random(obj,length(testangle));
+    
+    % calculate predict matrix
     predict = zeros(xnum,ynum,znum);
     for i = 1:length(Y)
         if abs(Y(i,1))<range && abs(Y(i,2))<range && Y(i,3)<pi/2 && Y(i,3)>0
@@ -131,41 +83,42 @@ Y = random(obj,1e7);
                 predict(ceil((Y(i,1)+range)/x_unit),ceil((Y(i,2)+range)/y_unit),ceil(Y(i,3)/z_unit)) + 1;
         end
     end
-%     
-% %     figure
-% %     imagesc(predict(:,:,znum/2)/sum(sum(sum(predict))))
-% %     colorbar()
-% %     title(['Mirror distribution generated using GMM, alpha=', num2str(alpha),' angle~=',num2str(45),' #G=',num2str(numGaussian)])
-%     %     filename = ['half_projected_z1',num2str(angle),'_alpha_',num2str(alpha), '_#G',num2str(numGaussian)];
-%     %     saveas(gcf,[filename,'.jpeg'])
-%     
-    %% calculate error
+    
+%     figure
+%     imagesc(predict(:,:,znum/2)/sum(sum(sum(predict))))
+%     colorbar()
+%     title(['Mirror distribution generated using GMM, alpha=', num2str(alpha),' angle~=',num2str(45),' #G=',num2str(numGaussian)])
+%     filename = ['half_projected_z1',num2str(angle),'_alpha_',num2str(alpha), '_#G',num2str(numGaussian)];
+%     saveas(gcf,[filename,'.jpeg'])
+    
+    % calculate error
     diff = predict/sum(sum(sum(predict)))-result/sum(sum(sum(result)));
+    % L2 error
     err = sqrt(sum(sum(sum(diff.*diff))));
     value = sqrt(sum(sum(sum(result/sum(sum(sum(result))).*result/sum(sum(sum(result)))))));
     err = err/value;
     fprintf('error is %4.6f\n', err)
-%     
-% %     diff_new = sort(abs(reshape(diff,10000,1)),'descend');
-%     %     figure
-%     %     plot(diff_new, 'linewidth',2)
-%     %     title(['error from large to small, 5 gaussian, alpha=',num2str(alpha)])
-%     
-%     errvec(j) = err;
-%     
-%     
+    
+%     diff_new = sort(abs(reshape(diff,10000,1)),'descend');
+    %     figure
+    %     plot(diff_new, 'linewidth',2)
+    %     title(['error from large to small, 5 gaussian, alpha=',num2str(alpha)])
+    
+    errvec(j) = err;
+    
+    
+end
+% title(['Energy generated using GMM on projected h, alpha=', num2str(alpha),' angle=',num2str(angle),'compare'])
+% legendInfo{1} = ['heightfield'];
+% for i = 1:length(gaussiannumvec)
+%     legendInfo{i+1} = [num2str(gaussiannumvec(i)),'G'];
 % end
-% % title(['Energy generated using GMM on projected h, alpha=', num2str(alpha),' angle=',num2str(angle),'compare'])
-% % legendInfo{1} = ['heightfield'];
-% % for i = 1:length(gaussiannumvec)
-% %     legendInfo{i+1} = [num2str(gaussiannumvec(i)),'G'];
-% % end
-% % legend(legendInfo)
-% % filename=['half_projected_z1',num2str(angle),'_alpha_',num2str(alpha),'_2Dcompare'];
-% % saveas(gcf,[filename,'.jpeg'])
-% 
-% % errvec_filename = ['3dhalf_projected_z1',num2str(angle),'_angle_',num2str(alpha),'_err.mat'];
-% % countvec_filename = ['half_projected_z1',num2str(angle),'_angle_',num2str(alpha),'_badcount.mat'];
-% % save(errvec_filename,'errvec')
-% % save(countvec_filename,'count')
+% legend(legendInfo)
+% filename=['half_projected_z1',num2str(angle),'_alpha_',num2str(alpha),'_2Dcompare'];
+% saveas(gcf,[filename,'.jpeg'])
+
+% errvec_filename = ['3dhalf_projected_z1',num2str(angle),'_angle_',num2str(alpha),'_err.mat'];
+% countvec_filename = ['half_projected_z1',num2str(angle),'_angle_',num2str(alpha),'_badcount.mat'];
+% save(errvec_filename,'errvec')
+% save(countvec_filename,'count')
 end
