@@ -132,7 +132,9 @@ for j = 1:length(gaussiannumvec)
     errvec(j) = err;
     countvec(j) = count;
     % elementwise error
-    error_el = abs(diff)./(result+0.0001);
+    error_el = zeros(xnum,ynum);
+    absdiff = abs(diff);
+    error_el(result~=0) = absdiff(result~=0)./(result(result~=0));
     figure
     imagesc(error_el)
     title(['relative error at each grid, alpha=', num2str(alpha),' angle=',num2str(angle),' #G=',num2str(numGaussian)])
