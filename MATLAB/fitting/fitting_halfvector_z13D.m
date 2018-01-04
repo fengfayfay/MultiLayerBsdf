@@ -92,10 +92,10 @@ for j = 1:length(gaussiannumvec)
 %     saveas(gcf,[filename,'.jpeg'])
     
     % calculate error
-    diff = predict/sum(sum(sum(predict)))-result/sum(sum(sum(result)));
+    diff = predict-result;
     % L2 error
     err = sqrt(sum(sum(sum(diff.*diff))));
-    value = sqrt(sum(sum(sum(result/sum(sum(sum(result))).*result/sum(sum(sum(result)))))));
+    value = sqrt(sum(sum(sum(result.*result))));
     err = err/value;
     fprintf('error is %4.6f\n', err)
     

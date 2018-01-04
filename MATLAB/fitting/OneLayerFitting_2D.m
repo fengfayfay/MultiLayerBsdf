@@ -54,65 +54,28 @@ for j = 7
         end
         
         cd(fundir);
-%         generatenum = length(x) - trainnum;
         generatenum = 1e6;
         
-        % %% Mirror fitting
-        %     % fitting using phi mu
-        %     gaussiannumvec = 2:5;
-        %     phinum = 400;
-        %     munum = 100;
-        %     fitting_phimu(datadir,alpha,angle,x,y,z,weight,epsilon,testafter,trainnum,...
-        %       generatenum, gaussiannumvec, phinum, munum);
-        
-        %     % fitting using tan(halfvector)
-        %     gaussiannumvec = 1:5;
-        %     incident = [sin(angle*pi/180), 0, cos(angle*pi/180)];
-        %     thetanum = 1e3;
-        %     thetarange = 3;
-        %     fitting_tanhalfvector(datadir,alpha,angle,x,y,z,weight,testafter,trainnum,...
-        %         generatenum, gaussiannumvec, incident, thetarange, thetanum);
-        
-        %     % fitting using phi(halfvector), theta(halfvector)
-        %     gaussiannumvec = 1:5;
-        %     incident = [sin(angle*pi/180), 0, cos(angle*pi/180)];
-        %     phinum = 400;
-        %     thetanum = 200;
-        %     fitting_halfvector(datadir,alpha,angle,x,y,z,weight,epsilon, testafter, trainnum, ...
-        %     generatenum, gaussiannumvec, incident, phinum, thetanum);
-        
-        %     % fitting using x,y of halfvector
-        %     gaussiannumvec = 1:5;
-        %     incident = [sin(angle*pi/180), 0, cos(angle*pi/180)];
-        %     xnum = 100;
-        %     ynum = 100;
-        %     fitting_halfvector_projected(datadir,alpha,angle,x,y,z,weight,testafter, trainnum, ...
-        %     generatenum, gaussiannumvec, incident, xnum, ynum);
-        
-        % % fitting using x,y of halfvector, compensated by cos^4 factor
-        % gaussiannumvec = 1:5;
-        % incident = [sin(angle*pi/180), 0, cos(angle*pi/180)];
-        % xnum = 100;
-        % ynum = 100;
-        % fitting_halfvector_projected_cos(datadir,alpha,angle,x,y,z,weight,...
-        %     testafter, trainnum, generatenum, gaussiannumvec, incident, xnum, ynum)
-        
-        % fitting using x/z,y/z of halfvector
-        gaussiannumvec = 5;
-        incident = [sin(angle*pi/180), 0, cos(angle*pi/180)];
-        xnum = 100;
-        ynum = 100;
-        fitting_halfvector_z1(datadir,alpha,angle,x,y,z,weight,...
-            trainnum, generatenum, gaussiannumvec, incident, xnum, ynum)
-        
-%         %% glass fitting
-%         gaussiannumvec = 5;
-%         incident = [sin(angle*pi/180), 0, cos(angle*pi/180)];
-%         xnum = 100;
-%         ynum = 100;
-%         ior = 1.5;
-%         Glass_fitting_halfvector_z1(datadir,alpha,angle,x,y,z,weight,...
-%             trainnum, generatenum, gaussiannumvec, incident, xnum, ynum,ior)
+        if mirror
+            %% Mirror fitting
+            % fitting using x/z,y/z of halfvector
+            gaussiannumvec = 5;
+            incident = [sin(angle*pi/180), 0, cos(angle*pi/180)];
+            xnum = 100;
+            ynum = 100;
+            fitting_halfvector_z1(datadir,alpha,angle,x,y,z,...
+                trainnum, generatenum, gaussiannumvec, incident, xnum, ynum)
+            
+        else
+            %% glass fitting
+            %         gaussiannumvec = 5;
+            %         incident = [sin(angle*pi/180), 0, cos(angle*pi/180)];
+            %         xnum = 100;
+            %         ynum = 100;
+            %         ior = 1.5;
+            %         Glass_fitting_halfvector_z1(datadir,alpha,angle,x,y,z,weight,...
+            %             trainnum, generatenum, gaussiannumvec, incident, xnum, ynum,ior)
+        end
     end
 end
 

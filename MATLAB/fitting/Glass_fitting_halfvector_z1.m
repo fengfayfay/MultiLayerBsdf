@@ -14,9 +14,9 @@ reflect_h = reflect_h./reflect_hnorm;
 reflect_xdividez = reflect_h(:,1)./reflect_h(:,3);
 reflect_ydividez = reflect_h(:,2)./reflect_h(:,3);
 reflect_sortedxz = sort(abs(reflect_xdividez));
-reflect_xrange = reflect_sortedxz(ceil(99/100*length(reflect_xdividez)));
+reflect_xrange = reflect_sortedxz(ceil(9999/10000*length(reflect_xdividez)));
 reflect_sortedyz = sort(abs(reflect_ydividez));
-reflect_yrange = reflect_sortedyz(ceil(99/100*length(reflect_xdividez)));
+reflect_yrange = reflect_sortedyz(ceil(9999/10000*length(reflect_xdividez)));
 cutoff = max(reflect_xrange, reflect_yrange);
 % cutoff = max(reflect_xdividez, reflect_ydividez);
 reflect_range = 2*cutoff;
@@ -59,9 +59,9 @@ transmit_ydividez = transmit_h(:,2)./transmit_h(:,3);
 
 % set the plotting range
 transmit_sortedxz = sort(abs(transmit_xdividez));
-transmit_xrange = transmit_sortedxz(ceil(99/100*length(transmit_xdividez)));
+transmit_xrange = transmit_sortedxz(ceil(9999/10000*length(transmit_xdividez)));
 transmit_sortedyz = sort(abs(transmit_ydividez));
-transmit_yrange = transmit_sortedyz(ceil(99/100*length(transmit_xdividez)));
+transmit_yrange = transmit_sortedyz(ceil(9999/10000*length(transmit_xdividez)));
 cutoff = max(transmit_xrange, transmit_yrange);
 transmit_range = 2*max(transmit_xrange, transmit_yrange);
 transmit_x_unit = 2*transmit_range/xnum;
@@ -86,14 +86,14 @@ for i = 1:length(transmit_xdividez_test)
     end
 end
 
-% close all
-% figure
-% imagesc(transmit/generatenum)
-% ylabel('x/z')
-% xlabel('y/z')
-% colorbar()
-% title(['Gaussian Heightfiled transmit ray distribution, alpha=', num2str(alpha),' angle=',num2str(angle)])
-% filename = ['transmit_halfprojected_z1',num2str(angle),'_alpha_',num2str(alpha), 'heightfield'];
+close all
+figure
+imagesc(transmit/generatenum)
+ylabel('x/z')
+xlabel('y/z')
+colorbar()
+title(['Gaussian Heightfiled transmit ray distribution, alpha=', num2str(alpha),' angle=',num2str(angle)])
+filename = ['transmit_halfprojected_z1',num2str(angle),'_alpha_',num2str(alpha), 'heightfield'];
 % saveas(gcf,[filename,'.jpeg'])
 
 %training data
@@ -141,11 +141,6 @@ for j = 1:length(gaussiannumvec)
     %% generate points from fitted model
     test_reflect_num = length(reflect_xdividez_test);
     test_transmit_num = length(transmit_xdividez_test);
-     
-    if test_reflect_num + test_transmit_num ~= generatenum
-        msg = 'number of test points is incorrect';
-        error(msg)
-    end
     
     reflect_Y = random(reflect_obj,test_reflect_num);
     transmit_Y = random(transmit_obj,test_transmit_num);
@@ -196,14 +191,14 @@ for j = 1:length(gaussiannumvec)
 %     saveas(gcf,[filename,'.jpeg'])
     
     %% calculate error
-    reflect_diff = reflect_predict/sum(sum(reflect_predict))-reflect/sum(sum(reflect));
-    transmit_diff = transmit_predict/sum(sum(transmit_predict))-transmit/sum(sum(transmit));
-%     diff_new = sort(abs(reshape(diff,10000,1)),'descend');
-%     figure
-%     plot(diff_new, 'linewidth',2)
-%     title(['error from large to small, 5 gaussian, alpha=',num2str(alpha)])
-    reflect_err = sqrt(sum(sum(reflect_diff.*reflect_diff)))/sqrt(sum(sum(reflect/sum(sum(reflect)).*reflect/sum(sum(reflect)))));
-    transmit_err = sqrt(sum(sum(transmit_diff.*transmit_diff)))/sqrt(sum(sum(transmit/sum(sum(transmit)).*transmit/sum(sum(transmit)))));
+    reflect_predict = reflect_predict/sum(sum(reflect_predict));
+    reflect = reflect/sum(sum(reflect));
+    transmit_predict = transmit_predict/sum(sum(transmit_predict));
+    transmit = transmit/sum(sum(transmit));
+    reflect_diff = reflect_predict-reflect;
+    transmit_diff = transmit_predict-transmit;
+    reflect_err = sqrt(sum(sum(reflect_diff.*reflect_diff)))/sqrt(sum(sum(reflect.*reflect)));
+    transmit_err = sqrt(sum(sum(transmit_diff.*transmit_diff)))/sqrt(sum(sum(transmit.*transmit)));
     
     reflect_errvec(j) = reflect_err;
     transmit_errvec(j) = transmit_err;
@@ -220,10 +215,10 @@ end
 % filename=['half_projected_z1',num2str(angle),'_alpha_',num2str(alpha),'_2Dcompare'];
 % saveas(gcf,[filename,'.jpeg'])
 
-reflect_errvec_filename = ['reflect_half_projected_z1',num2str(angle),'_angle_',num2str(alpha),'_err.mat'];
-transmit_errvec_filename = ['transmit_half_projected_z1',num2str(angle),'_angle_',num2str(alpha),'_err.mat'];
+% reflect_errvec_filename = ['reflect_half_projected_z1',num2str(angle),'_angle_',num2str(alpha),'_err.mat'];
+% transmit_errvec_filename = ['transmit_half_projected_z1',num2str(angle),'_angle_',num2str(alpha),'_err.mat'];
 % countvec_filename = ['glass_half_projected_z1',num2str(angle),'_angle_',num2str(alpha),'_badcount.mat'];
-save(reflect_errvec_filename,'reflect_errvec')
-save(transmit_errvec_filename,'transmit_errvec')
+% save(reflect_errvec_filename,'reflect_errvec')
+% save(transmit_errvec_filename,'transmit_errvec')
 % save(countvec_filename,'count')
 end
