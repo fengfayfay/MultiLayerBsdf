@@ -42,32 +42,31 @@ end
 %training data
 train = [trainx, trainy,trainangle];
 
-% % use accelearted em for fitting
-% t=cputime;
-% tree = buildtree(train, 0, 0, 3, 10000);
-% [W,M,R,ff,Ws,Ms,Rs] = em(train,[],20,1,1,tree);
-% fprintf('\nRuntime: %.2f seconds\n', cputime-t);
-% Rnew = reshape(R', 3,3,20);
-% obj = gmdistribution(M,Rnew,W');
-% Y = random(obj,1e7);
+% use accelearted em for fitting
+t=cputime;
+tree = buildtree(train, 0, 0, 3, 10000);
+[W,M,R,ff,Ws,Ms,Rs] = em(train,[],20,1,1,tree);
+fprintf('\nRuntime: %.2f seconds\n', cputime-t);
+Rnew = reshape(R', 3,3,20);
+obj = gmdistribution(M,Rnew,W');
 
 for j = 1:length(gaussiannumvec)
     %% fit mixture of Gaussians using half vector
     numGaussian = gaussiannumvec(j);
-    fprintf('using %4d Gaussians\n',numGaussian)
-    
-    options = statset('MaxIter',500, 'Display','final','TolFun',1e-4);
-    try
-        obj = fitgmdist(train,numGaussian,'Options',options,'start','customize');
-    catch exception
-        disp('There was an error fitting the Gaussian mixture model')
-        error = exception.message
-    end
-    
-    %     disp(obj.mu)
-    %
-    filename = ['3dhalf_projected_z1_alpha_',num2str(alpha), '_#G',num2str(numGaussian),'.mat'];
-    save(filename,'obj')
+%     fprintf('using %4d Gaussians\n',numGaussian)
+%     
+%     options = statset('MaxIter',500, 'Display','final','TolFun',1e-4);
+%     try
+%         obj = fitgmdist(train,numGaussian,'Options',options,'start','customize');
+%     catch exception
+%         disp('There was an error fitting the Gaussian mixture model')
+%         error = exception.message
+%     end
+%     
+%     %     disp(obj.mu)
+%     %
+%     filename = ['3dhalf_projected_z1_alpha_',num2str(alpha), '_#G',num2str(numGaussian),'.mat'];
+%     save(filename,'obj')
     
     %     filename = ['half_projected_z1',num2str(angle),'_alpha_',num2str(alpha), '_#G',num2str(numGaussian),'.mat'];
     %     load(filename,'obj')
@@ -92,18 +91,11 @@ for j = 1:length(gaussiannumvec)
 %     saveas(gcf,[filename,'.jpeg'])
     
     % calculate error
-    diff = predict-result;
+    predict = predict/sum(predict(:));
+    result = result/sum(result(:));
     % L2 error
-    err = sqrt(sum(sum(sum(diff.*diff))));
-    value = sqrt(sum(sum(sum(result.*result))));
-    err = err/value;
+    err = relativel2err(result,predict);
     fprintf('error is %4.6f\n', err)
-    
-%     diff_new = sort(abs(reshape(diff,10000,1)),'descend');
-    %     figure
-    %     plot(diff_new, 'linewidth',2)
-    %     title(['error from large to small, 5 gaussian, alpha=',num2str(alpha)])
-    
     errvec(j) = err;
     
     

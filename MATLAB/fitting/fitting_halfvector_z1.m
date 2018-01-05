@@ -1,4 +1,4 @@
-function fitting_halfvector_z1(dir,alpha,angle,x,y,z,...
+function fitting_halfvector_z1(dir,fundir,alpha,angle,x,y,z,...
     trainnum, generatenum, gaussiannumvec, incident, xnum, ynum)
 
 cd(dir)
@@ -48,32 +48,31 @@ xtrain_new = xtrain(abs(xtrain)<=cutoff & abs(ytrain)<=cutoff);
 ytrain_new = ytrain(abs(xtrain)<=cutoff & abs(ytrain)<=cutoff);
 train = [xtrain_new, ytrain_new];
 
-% % % use accelearted em for fitting
-% t=cputime;
-% tree = buildtree(train, 0, 0, 3, 1000);
-% [W,M,R,ff,Ws,Ms,Rs] = em(train,[],5,0,1,tree);
-% fprintf('\nRuntime: %.2f seconds\n', cputime-t);
-% Rnew = reshape(R', 2,2,5);
-% obj = gmdistribution(M,Rnew,W');
-% Y = random(obj,generatenum);
+% % use accelearted em for fitting
+t=cputime;
+tree = buildtree(train, 0, 0, 3, 1000);
+[W,M,R,ff,Ws,Ms,Rs] = em(train,[],5,0,1,tree);
+fprintf('\nRuntime: %.2f seconds\n', cputime-t);
+Rnew = reshape(R', 2,2,5);
+obj = gmdistribution(M,Rnew,W');
 
 % close all
 % figure
 % plot(result(xnum/2,:)/generatenum, 'linewidth', 2)
 % hold on
 for j = 1:length(gaussiannumvec)
-    t=cputime;
-    %% fit mixture of Gaussians using half vector
+%     t=cputime;
+%     %% fit mixture of Gaussians using half vector
     numGaussian = gaussiannumvec(j);
-    
-    options = statset('MaxIter',500, 'Display','final','TolFun',1e-5);
-    try
-        obj = fitgmdist(train,numGaussian,'Options',options,'Start','customize');
-    catch exception
-        disp('There was an error fitting the Gaussian mixture model')
-        error = exception.message
-    end
-    fprintf('\nRuntime: %.2f seconds\n', cputime-t);
+%     
+%     options = statset('MaxIter',500, 'Display','final','TolFun',1e-5);
+%     try
+%         obj = fitgmdist(train,numGaussian,'Options',options,'Start','customize');
+%     catch exception
+%         disp('There was an error fitting the Gaussian mixture model')
+%         error = exception.message
+%     end
+%     fprintf('\nRuntime: %.2f seconds\n', cputime-t);
     
     %     disp(obj.mu)
     %
@@ -110,8 +109,8 @@ for j = 1:length(gaussiannumvec)
     figure
     imagesc(predict/sum(sum(predict)))
     colorbar()
-    title(['Mirror distribution generated using GMM, alpha=', num2str(alpha),' angle=',num2str(angle),' #G=',num2str(numGaussian)])
-    filename = ['half_projected_z1',num2str(angle),'_alpha_',num2str(alpha), '_#G',num2str(numGaussian)];
+%     title(['Mirror distribution generated using GMM, alpha=', num2str(alpha),' angle=',num2str(angle),' #G=',num2str(numGaussian)])
+%     filename = ['half_projected_z1',num2str(angle),'_alpha_',num2str(alpha), '_#G',num2str(numGaussian)];
     %     saveas(gcf,[filename,'.jpeg'])
     %
     %     figure
@@ -123,22 +122,16 @@ for j = 1:length(gaussiannumvec)
     % calculate error
     predict = predict/sum(sum(predict));
     result = result/sum(sum(result));
-    diff = (predict-result);
-    % L2 error
-    err = sqrt(sum(sum(diff.*diff)))/sqrt(sum(sum(result.*result)));
-%     % L1 error
-%     err = sum(sum(abs(diff)));
+    % relative L2 error
+    cd(fundir)
+    [err,maxl1err,minl1err,varl1err] = relativel2err(result,predict);
     disp(err)
+    disp(maxl1err)
+    disp(minl1err)
+    disp(varl1err)
     errvec(j) = err;
     countvec(j) = count;
-    % elementwise error
-    error_el = zeros(xnum,ynum);
-    absdiff = abs(diff);
-    error_el(result~=0) = absdiff(result~=0)./(result(result~=0));
-    figure
-    imagesc(error_el)
-    title(['relative error at each grid, alpha=', num2str(alpha),' angle=',num2str(angle),' #G=',num2str(numGaussian)])
-    colorbar
+
     
 end
 % title(['Energy generated using GMM on projected h, alpha=', num2str(alpha),' angle=',num2str(angle),'compare'])

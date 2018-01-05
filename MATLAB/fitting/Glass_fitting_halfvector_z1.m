@@ -195,11 +195,8 @@ for j = 1:length(gaussiannumvec)
     reflect = reflect/sum(sum(reflect));
     transmit_predict = transmit_predict/sum(sum(transmit_predict));
     transmit = transmit/sum(sum(transmit));
-    reflect_diff = reflect_predict-reflect;
-    transmit_diff = transmit_predict-transmit;
-    reflect_err = sqrt(sum(sum(reflect_diff.*reflect_diff)))/sqrt(sum(sum(reflect.*reflect)));
-    transmit_err = sqrt(sum(sum(transmit_diff.*transmit_diff)))/sqrt(sum(sum(transmit.*transmit)));
-    
+    reflect_err = relativel2err(reflect,reflect_predict);
+    transmit_err = relativel2err(transmit,transmit_predict);
     reflect_errvec(j) = reflect_err;
     transmit_errvec(j) = transmit_err;
     countvec(j) = reflect_count + transmit_count;

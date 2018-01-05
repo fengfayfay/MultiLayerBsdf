@@ -59,11 +59,11 @@ for j = 7
         if mirror
             %% Mirror fitting
             % fitting using x/z,y/z of halfvector
-            gaussiannumvec = 5;
+            gaussiannumvec = 1;
             incident = [sin(angle*pi/180), 0, cos(angle*pi/180)];
             xnum = 100;
             ynum = 100;
-            fitting_halfvector_z1(datadir,alpha,angle,x,y,z,...
+            fitting_halfvector_z1(datadir,fundir,alpha,angle,x,y,z,...
                 trainnum, generatenum, gaussiannumvec, incident, xnum, ynum)
             
         else
@@ -73,7 +73,7 @@ for j = 7
             %         xnum = 100;
             %         ynum = 100;
             %         ior = 1.5;
-            %         Glass_fitting_halfvector_z1(datadir,alpha,angle,x,y,z,weight,...
+            %         Glass_fitting_halfvector_z1(datadir,fundir,alpha,angle,x,y,z,weight,...
             %             trainnum, generatenum, gaussiannumvec, incident, xnum, ynum,ior)
         end
     end
