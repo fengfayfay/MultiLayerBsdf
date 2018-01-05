@@ -7,7 +7,6 @@ datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirro
 % mirror = false;
 % datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SingleLayer/pi:3/output';
 fundir = '/Users/mandy/Github/MultiLayerBsdf/MATLAB/fitting';
-cd(datadir)
 trainnum = 1e6;
 alphavec = [0.1, 0.2, 0.4, 0.5, 0.7, 0.9];
 anglevec = [0, 10, 20, 30, 40, 50, 60, 70, 80 ,89];
@@ -15,7 +14,8 @@ alpharange = 1:length(alphavec);
 anglerange = 1:length(anglevec);
 for j = 7
     angle = anglevec(j);
-    for k = 4
+    for k = 1:2
+        cd(datadir)
         alpha = alphavec(k);
         filename = [num2str(angle), 'outputx_', num2str(alpha),'.txt'];
         fileID = fopen(filename);
@@ -59,7 +59,7 @@ for j = 7
         if mirror
             %% Mirror fitting
             % fitting using x/z,y/z of halfvector
-            gaussiannumvec = 1;
+            gaussiannumvec = 10;
             incident = [sin(angle*pi/180), 0, cos(angle*pi/180)];
             xnum = 100;
             ynum = 100;

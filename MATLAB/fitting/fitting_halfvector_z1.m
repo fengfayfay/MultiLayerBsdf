@@ -12,11 +12,11 @@ h = h./hnorm;
 xdividez = h(:,1)./h(:,3);
 ydividez = h(:,2)./h(:,3);
 sortedxz = sort(abs(xdividez));
-% xrange = sortedxz(ceil(9999/10000*length(xdividez)));
-xrange = max(xdividez);
+xrange = sortedxz(ceil(9999/10000*length(xdividez)));
+%xrange = max(xdividez);
 sortedyz = sort(abs(ydividez));
-% yrange = sortedyz(ceil(9999/10000*length(xdividez)));
-yrange = max(ydividez);
+yrange = sortedyz(ceil(9999/10000*length(xdividez)));
+% yrange = max(ydividez);
 cutoff = max(xrange, yrange);
 range = 2*max(xrange, yrange);
 fprintf('range is %4.2f\n',range)
@@ -30,16 +30,61 @@ for i = trainnum+1:trainnum+generatenum
             result(ceil((xdividez(i)+range)/x_unit),ceil((ydividez(i)+range)/y_unit)) + 1;
     end
 end
-
-close all
+result = result/sum(sum(result));
+% close all
 figure
-imagesc(result/sum(sum(result)))
+imagesc(result)
 ylabel('x/z')
 xlabel('y/z')
 colorbar()
 title(['Gaussian Heightfiled mirror ray distribution, alpha=', num2str(alpha),' angle=',num2str(angle)])
 filename = ['halfprojected_z1',num2str(angle),'_alpha_',num2str(alpha), 'heightfield'];
 % saveas(gcf,[filename,'.jpeg'])
+
+% %% calculate diff between beckmann distribution
+% cd('/Users/mandy/Github/pixar/ritest')
+% filename = ['Mirror_alpha', num2str(alpha),'_2.txt'];
+% fileID = fopen(filename);
+% C1 = textscan(fileID,'%f');
+% fclose(fileID);
+% 
+% filename = ['Mirrorhxz_alpha', num2str(alpha),'_2.txt'];
+% fileID = fopen(filename);
+% C2 = textscan(fileID,'%f');
+% fclose(fileID);
+% 
+% filename = ['Mirrorhyz_alpha', num2str(alpha),'_2.txt'];
+% fileID = fopen(filename);
+% C3 = textscan(fileID,'%f');
+% fclose(fileID);
+% 
+% energy = C1{1};
+% hxz = C2{1};
+% hyz = C3{1};
+% 
+% beckmann= zeros(xnum,ynum);
+% count = 0;
+% for i = 1:generatenum
+%     a = hxz(i);
+%     b = hyz(i);
+%     if abs(a)<range && abs(b)<range
+%         beckmann(ceil((a+range)/x_unit),ceil((b+range)/y_unit)) = ...
+%             beckmann(ceil((a+range)/x_unit),ceil((b+range)/y_unit)) + energy(i);
+%     else
+%         count = count + 1;
+%     end
+% end
+% beckmann = beckmann/sum(beckmann(:));
+% figure
+% imagesc(beckmann)
+% colorbar()
+% 
+% cd(fundir)
+% [err,maxl1err,minl1err,varl1err] = relativel2err(result,beckmann);
+% fprintf('alpha = %2.1f\n',alpha)
+% fprintf('err: %4.6f\n', err)
+% fprintf('va: %4.13f\n', varl1err)
+
 
 %training data
 xtrain = xdividez(1:trainnum);
@@ -64,15 +109,15 @@ for j = 1:length(gaussiannumvec)
 %     t=cputime;
 %     %% fit mixture of Gaussians using half vector
     numGaussian = gaussiannumvec(j);
-%     
-%     options = statset('MaxIter',500, 'Display','final','TolFun',1e-5);
-%     try
-%         obj = fitgmdist(train,numGaussian,'Options',options,'Start','customize');
-%     catch exception
-%         disp('There was an error fitting the Gaussian mixture model')
-%         error = exception.message
-%     end
-%     fprintf('\nRuntime: %.2f seconds\n', cputime-t);
+    
+    options = statset('MaxIter',500, 'Display','final','TolFun',1e-5);
+    try
+        obj = fitgmdist(train,numGaussian,'Options',options,'Start','customize');
+    catch exception
+        disp('There was an error fitting the Gaussian mixture model')
+        error = exception.message
+    end
+    fprintf('\nRuntime: %.2f seconds\n', cputime-t);
     
     %     disp(obj.mu)
     %
@@ -121,14 +166,12 @@ for j = 1:length(gaussiannumvec)
     
     % calculate error
     predict = predict/sum(sum(predict));
-    result = result/sum(sum(result));
     % relative L2 error
     cd(fundir)
     [err,maxl1err,minl1err,varl1err] = relativel2err(result,predict);
-    disp(err)
-    disp(maxl1err)
-    disp(minl1err)
-    disp(varl1err)
+    fprintf('alpha = %2.1f\n',alpha)
+    fprintf('err: %4.6f\n', err)
+    fprintf('va: %4.13f\n', varl1err)
     errvec(j) = err;
     countvec(j) = count;
 

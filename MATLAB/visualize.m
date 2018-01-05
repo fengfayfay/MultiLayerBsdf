@@ -120,35 +120,35 @@ for i = 1:length(x)
     end
 end
 figure
-imagesc(result/numray)
+imagesc(result/total)
 title('reflection lobe')
 xlabel('mu_o')
 ylabel('phi_o')
 colorbar
 
-figure
-plot(result_d1(200,:)/total, 'linewidth', 2)
-title(['Incident angle=', num2str(angle),' alpha =',num2str(alpha), 'r bounce1'])
-filename = [num2str(angle),'_alpha_',num2str(alpha), 'r_bounce1'];
-% saveas(gcf,[filename,'.jpeg'])
-
-figure
-plot(result_d2(200,:)/total, 'linewidth', 2)
-title(['Incident angle=', num2str(angle),' alpha =',num2str(alpha), 'r bounce2'])
-filename = [num2str(angle),'_alpha_',num2str(alpha), 'r_bounce2'];
-% saveas(gcf,[filename,'.jpeg'])
-
-figure
-plot(result_d3(200,:)/total, 'linewidth', 2)
-title(['Incident angle=', num2str(angle),' alpha =',num2str(alpha), 'r bounce3'])
-filename = [num2str(angle),'_alpha_',num2str(alpha), 'r_bounce3'];
-% saveas(gcf,[filename,'.jpeg'])
-
-figure
-plot(result_d4(200,:)/total, 'linewidth', 2)
-title(['Incident angle=', num2str(angle),' alpha =',num2str(alpha), 'r bounce4'])
-filename = [num2str(angle),'_alpha_',num2str(alpha), 'r_bounce4'];
-% saveas(gcf,[filename,'.jpeg'])
+% figure
+% plot(result_d1(200,:)/total, 'linewidth', 2)
+% title(['Incident angle=', num2str(angle),' alpha =',num2str(alpha), 'r bounce1'])
+% filename = [num2str(angle),'_alpha_',num2str(alpha), 'r_bounce1'];
+% % saveas(gcf,[filename,'.jpeg'])
+% 
+% figure
+% plot(result_d2(200,:)/total, 'linewidth', 2)
+% title(['Incident angle=', num2str(angle),' alpha =',num2str(alpha), 'r bounce2'])
+% filename = [num2str(angle),'_alpha_',num2str(alpha), 'r_bounce2'];
+% % saveas(gcf,[filename,'.jpeg'])
+% 
+% figure
+% plot(result_d3(200,:)/total, 'linewidth', 2)
+% title(['Incident angle=', num2str(angle),' alpha =',num2str(alpha), 'r bounce3'])
+% filename = [num2str(angle),'_alpha_',num2str(alpha), 'r_bounce3'];
+% % saveas(gcf,[filename,'.jpeg'])
+% 
+% figure
+% plot(result_d4(200,:)/total, 'linewidth', 2)
+% title(['Incident angle=', num2str(angle),' alpha =',num2str(alpha), 'r bounce4'])
+% filename = [num2str(angle),'_alpha_',num2str(alpha), 'r_bounce4'];
+% % saveas(gcf,[filename,'.jpeg'])
 
 
 
