@@ -14,30 +14,43 @@ for i = 1:length(testangle)
     end
 end
 
-% figure
-% scatter3(testx(1:100000), testy(1:100000), testangle(1:100000),'filled')
-% xlabel('hx/hz')
-% ylabel('hy/hz')
-% zlabel('incident angle')
+figure
+scatter3(testx(1:100000), testy(1:100000), testangle(1:100000),'filled')
+xlabel('hx/hz')
+ylabel('hy/hz')
+zlabel('incident angle')
 
-% % close all
-% figure
-% imagesc(result(:,ynum/2,:)/sum(sum(sum(result))))
-% ylabel('x/z')
-% xlabel('y/z')
-% colorbar()
-% title(['Gaussian Heightfiled mirror ray distribution, alpha=', num2str(alpha),' angle~=',num2str(20)])
-% filename = ['3d_halfprojected_z1_alpha_',num2str(alpha), 'heightfield'];
-% 
-% figure
-% imagesc(result(xnum/2,:,:)/sum(sum(sum(result))))
-% ylabel('x/z')
-% xlabel('y/z')
-% colorbar()
-% title(['Gaussian Heightfiled mirror ray distribution, alpha=', num2str(alpha),' angle~=',num2str(20)])
-% filename = ['3d_halfprojected_z1_alpha_',num2str(alpha), 'heightfield'];
-% % saveas(gcf,[filename,'.jpeg'])
-% 
+figure
+imagesc(result(:,:,80)/sum(result(:)))
+ylabel('x/z')
+xlabel('y/z')
+colorbar()
+title(['Gaussian Heightfiled mirror ray distribution, alpha=', num2str(alpha),'xnum/2'])
+
+
+% close all
+figure
+A = result(:,ynum/2,:)/sum(result(:));
+C = permute(A,[1 3 2]);
+imagesc(C)
+ylabel('x/z')
+xlabel('y/z')
+colorbar()
+title(['Gaussian Heightfiled mirror ray distribution, alpha=', num2str(alpha),'xnum/2'])
+filename = ['3d_halfprojected_z1_alpha_',num2str(alpha), 'heightfield_yz'];
+saveas(gcf,[filename,'.jpeg'])
+
+figure
+A = result(xnum/2,:,:)/sum(result(:));
+C = permute(A,[2 3 1]);
+imagesc(C)
+ylabel('x/z')
+xlabel('y/z')
+colorbar()
+title(['Gaussian Heightfiled mirror ray distribution, alpha=', num2str(alpha),'ynum/2'])
+filename = ['3d_halfprojected_z1_alpha_',num2str(alpha), 'heightfield_xz'];
+saveas(gcf,[filename,'.jpeg'])
+
 
 %training data
 train = [trainx, trainy,trainangle];
@@ -83,12 +96,23 @@ for j = 1:length(gaussiannumvec)
         end
     end
     
-%     figure
-%     imagesc(predict(:,:,znum/2)/sum(sum(sum(predict))))
-%     colorbar()
-%     title(['Mirror distribution generated using GMM, alpha=', num2str(alpha),' angle~=',num2str(45),' #G=',num2str(numGaussian)])
-%     filename = ['half_projected_z1',num2str(angle),'_alpha_',num2str(alpha), '_#G',num2str(numGaussian)];
-%     saveas(gcf,[filename,'.jpeg'])
+    figure
+    A = predict(xnum/2,:,:)/sum(predict(:));
+    C = permute(A,[2 3 1]);
+    imagesc(C)
+    colorbar()
+    title(['Mirror distribution generated using GMM, alpha=', num2str(alpha),' #G=',num2str(numGaussian),'xnum/2'])
+    filename = ['3d_halfprojected_z1_alpha_',num2str(alpha), '_#G',num2str(numGaussian),'yz'];
+    saveas(gcf,[filename,'.jpeg'])
+    
+    figure
+    A = predict(:,ynum/2,:)/sum(predict(:));
+    C = permute(A,[1 3 2]);
+    imagesc(C)
+    colorbar()
+    title(['Mirror distribution generated using GMM, alpha=', num2str(alpha),' #G=',num2str(numGaussian),'ynum/2'])
+    filename = ['3d_halfprojected_z1_alpha_',num2str(alpha), '_#G',num2str(numGaussian),'xz'];
+    saveas(gcf,[filename,'.jpeg'])
     
     % calculate error
     predict = predict/sum(predict(:));

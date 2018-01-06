@@ -1,7 +1,9 @@
 % One Layer Gaussian fitting
+clear
 close all
 % mirror dir
 mirror = true;
+% datadir = '/Users/mandy/Github/MultiLayerBsdf/build_clang';
 datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror/pi:3/output';
 % glass dir
 % mirror = false;
@@ -14,7 +16,8 @@ alpharange = 1:length(alphavec);
 anglerange = 1:length(anglevec);
 for j = 7
     angle = anglevec(j);
-    for k = 1:2
+%     angle = 89;
+    for k = 1:length(alphavec)
         cd(datadir)
         alpha = alphavec(k);
         filename = [num2str(angle), 'outputx_', num2str(alpha),'.txt'];
@@ -37,10 +40,16 @@ for j = 7
         C4 = textscan(fileID,'%f');
         fclose(fileID);
         
+        filename = [num2str(angle),'outputdepth_', num2str(alpha),'.txt'];
+        fileID = fopen(filename);
+        C5 = textscan(fileID,'%f');
+        fclose(fileID);
+        
         x = C1{1};
         y = C2{1};
         z = C3{1};
         weight = C4{1};
+        depth = C5{1};
         observe = 6000;
         x = x/observe;
         y = y/observe;
@@ -59,12 +68,12 @@ for j = 7
         if mirror
             %% Mirror fitting
             % fitting using x/z,y/z of halfvector
-            gaussiannumvec = 10;
+            gaussiannumvec = 5;
             incident = [sin(angle*pi/180), 0, cos(angle*pi/180)];
             xnum = 100;
             ynum = 100;
             fitting_halfvector_z1(datadir,fundir,alpha,angle,x,y,z,...
-                trainnum, generatenum, gaussiannumvec, incident, xnum, ynum)
+                trainnum, generatenum, gaussiannumvec, incident, xnum, ynum,depth)
             
         else
             %% glass fitting

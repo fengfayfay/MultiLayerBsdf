@@ -1475,82 +1475,83 @@ namespace pbrt {
       float dist = 5;
       float height = 1.f;
       // fix incidence angle
-      //float angle = (float) (PbrtOptions.theta_i);
-      //float theta = angle*M_PI/180.f;
-      //Point3f center = Point3f(height*tan(theta), 0.f, height);
-      //Vector3f dir = Normalize(Vector3f(-height*tan(theta), 0.f, -height));
+      float angle = (float) (PbrtOptions.theta_i);
+      float theta = angle*M_PI/180.f;
+      Point3f center = Point3f(height*tan(theta), 0.f, height);
+      Vector3f dir = Normalize(Vector3f(-height*tan(theta), 0.f, -height));
       float trand, urand;
       float observe = 6000;
       int maxdepth = 10;
       float radius = 5;
       std::ofstream outputx, outputy, outputz, outputweight, outputdepth, outputangle;
 
-      // std::ostringstream oss1;
-      // oss1 << angle << "outputx_" << alpha<<".txt";
-      // std::string var1 = oss1.str();
-      // outputx.open(var1);
-
-      // std::ostringstream oss2;
-      // oss2 << angle << "outputy_" << alpha<<".txt";
-      // std::string var2 = oss2.str();
-      // outputy.open(var2);
-
-      // std::ostringstream oss3;
-      // oss3 << angle << "outputz_" << alpha<<".txt";
-      // std::string var3 = oss3.str();
-      // outputz.open(var3);
-
-      // std::ostringstream oss4;
-      // oss4 << angle << "outputweight_" << alpha<<".txt";
-      // std::string var4 = oss4.str();
-      // outputweight.open(var4);
-
-      // std::ostringstream oss5;
-      // oss5 << angle << "outputdepth_" << alpha<<".txt";
-      // std::string var5 = oss5.str();
-      // outputdepth.open(var5);
-
       std::ostringstream oss1;
-      oss1 <<"3d_outputx_" << alpha<<".txt";
+      oss1 << angle << "outputx_" << alpha<<".txt";
       std::string var1 = oss1.str();
       outputx.open(var1);
 
       std::ostringstream oss2;
-      oss2 <<"3d_outputy_" << alpha<<".txt";
+      oss2 << angle << "outputy_" << alpha<<".txt";
       std::string var2 = oss2.str();
       outputy.open(var2);
 
       std::ostringstream oss3;
-      oss3 <<"3d_outputz_" << alpha<<".txt";
+      oss3 << angle << "outputz_" << alpha<<".txt";
       std::string var3 = oss3.str();
       outputz.open(var3);
 
       std::ostringstream oss4;
-      oss4 <<"3d_outputweight_" << alpha<<".txt";
+      oss4 << angle << "outputweight_" << alpha<<".txt";
       std::string var4 = oss4.str();
       outputweight.open(var4);
 
       std::ostringstream oss5;
-      oss5 <<"3d_outputdepth_" << alpha<<".txt";
+      oss5 << angle << "outputdepth_" << alpha<<".txt";
       std::string var5 = oss5.str();
       outputdepth.open(var5);
 
-      std::ostringstream oss6;
-      oss6 <<"3d_outputangle_" << alpha<<".txt";
-      std::string var6 = oss6.str();
-      outputangle.open(var6);
+      // std::ostringstream oss1;
+      // oss1 <<"3d_outputx_" << alpha<<".txt";
+      // std::string var1 = oss1.str();
+      // outputx.open(var1);
+
+      // std::ostringstream oss2;
+      // oss2 <<"3d_outputy_" << alpha<<".txt";
+      // std::string var2 = oss2.str();
+      // outputy.open(var2);
+
+      // std::ostringstream oss3;
+      // oss3 <<"3d_outputz_" << alpha<<".txt";
+      // std::string var3 = oss3.str();
+      // outputz.open(var3);
+
+      // std::ostringstream oss4;
+      // oss4 <<"3d_outputweight_" << alpha<<".txt";
+      // std::string var4 = oss4.str();
+      // outputweight.open(var4);
+
+      // std::ostringstream oss5;
+      // oss5 <<"3d_outputdepth_" << alpha<<".txt";
+      // std::string var5 = oss5.str();
+      // outputdepth.open(var5);
+
+      // std::ostringstream oss6;
+      // oss6 <<"3d_outputangle_" << alpha<<".txt";
+      // std::string var6 = oss6.str();
+      // outputangle.open(var6);
 
       for (int i = 0; i<numrays; ++i){
         trand = 2 * M_PI * ((float) rand() / (RAND_MAX));
         urand = (float) rand() / (RAND_MAX);
 
         // fix incident angle
-        //Point3f ori = center + Point3f(radius*sqrt(urand)*cos(trand), radius*sqrt(urand)*sin(trand), 0.f);
+        Point3f ori = center + Point3f(radius*sqrt(urand)*cos(trand), radius*sqrt(urand)*sin(trand), 0.f);
 
         // different incident angle
-        float theta = M_PI/2 * ((float) rand() / (RAND_MAX));
-        Point3f ori = Point3f(height*sin(theta), 0.f, height*cos(theta)) + Point3f(radius*sqrt(urand)*cos(trand), radius*sqrt(urand)*sin(trand), 0.f);
-        Vector3f dir = Vector3f(-sin(theta), 0.f, -cos(theta));
+        //float theta = M_PI/2 * ((float) rand() / (RAND_MAX));
+        //Point3f ori = Point3f(height*tan(theta), 0.f, height) + Point3f(radius*sqrt(urand)*cos(trand), radius*sqrt(urand)*sin(trand), 0.f);
+        //Point3f ori = Point3f(height*sin(theta), 0.f, height*cos(theta)) + Point3f(radius*sqrt(urand)*cos(trand), radius*sqrt(urand)*sin(trand), 0.f);
+        //Vector3f dir = Vector3f(-sin(theta), 0.f, -cos(theta));
         // create a ray
         Ray ray = Ray(ori, dir);
         int depth = 0;

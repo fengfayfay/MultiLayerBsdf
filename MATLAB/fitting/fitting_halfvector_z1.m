@@ -1,5 +1,5 @@
 function fitting_halfvector_z1(dir,fundir,alpha,angle,x,y,z,...
-    trainnum, generatenum, gaussiannumvec, incident, xnum, ynum)
+    trainnum, generatenum, gaussiannumvec, incident, xnum, ynum, depth)
 
 cd(dir)
 errvec = zeros(1,length(gaussiannumvec));
@@ -23,7 +23,6 @@ fprintf('range is %4.2f\n',range)
 x_unit = 2*range/xnum;
 y_unit = 2*range/ynum;
 result = zeros(xnum,ynum);
-
 for i = trainnum+1:trainnum+generatenum
     if abs(xdividez(i))<range && abs(ydividez(i))<range
         result(ceil((xdividez(i)+range)/x_unit),ceil((ydividez(i)+range)/y_unit)) = ...
@@ -41,7 +40,33 @@ title(['Gaussian Heightfiled mirror ray distribution, alpha=', num2str(alpha),' 
 filename = ['halfprojected_z1',num2str(angle),'_alpha_',num2str(alpha), 'heightfield'];
 % saveas(gcf,[filename,'.jpeg'])
 
-% %% calculate diff between beckmann distribution
+% %% calculate diff between total heightfield and depth 1 
+% xdividez_depth1 = xdividez(depth<=1);
+% ydividez_depth1 = ydividez(depth<=1);
+% depth1 = zeros(xnum,ynum);
+% for i = 1:generatenum
+%     if abs(xdividez_depth1(i))<range && abs(ydividez_depth1(i))<range
+%         depth1(ceil((xdividez_depth1(i)+range)/x_unit),ceil((ydividez_depth1(i)+range)/y_unit)) = ...
+%             depth1(ceil((xdividez_depth1(i)+range)/x_unit),ceil((ydividez_depth1(i)+range)/y_unit)) + 1;
+%     end
+% end
+% 
+% figure
+% depth1 = depth1/sum(depth1(:));
+% imagesc(depth1)
+% ylabel('x/z')
+% xlabel('y/z')
+% colorbar()
+% title(['Gaussian Heightfiled mirror ray distribution, alpha=', num2str(alpha),' angle=',num2str(angle)])
+% filename = ['halfprojected_z1',num2str(angle),'_alpha_',num2str(alpha), 'heightfield'];
+% 
+% cd(fundir)
+% [err,maxl1err,minl1err,varl1err] = relativel2err(result,depth1);
+% fprintf('alpha = %2.1f\n',alpha)
+% fprintf('err: %4.6f\n', err)
+% fprintf('va: %4.13f\n', varl1err)
+
+% %% calculate diff between heightfield and beckmann distribution
 % cd('/Users/mandy/Github/pixar/ritest')
 % filename = ['Mirror_alpha', num2str(alpha),'_2.txt'];
 % fileID = fopen(filename);
@@ -96,7 +121,7 @@ train = [xtrain_new, ytrain_new];
 % % use accelearted em for fitting
 t=cputime;
 tree = buildtree(train, 0, 0, 3, 1000);
-[W,M,R,ff,Ws,Ms,Rs] = em(train,[],5,0,1,tree);
+[W,M,R,ff,Ws,Ms,Rs] = em(train,[],5,0,0,tree);
 fprintf('\nRuntime: %.2f seconds\n', cputime-t);
 Rnew = reshape(R', 2,2,5);
 obj = gmdistribution(M,Rnew,W');
@@ -117,7 +142,7 @@ for j = 1:length(gaussiannumvec)
         disp('There was an error fitting the Gaussian mixture model')
         error = exception.message
     end
-    fprintf('\nRuntime: %.2f seconds\n', cputime-t);
+%     fprintf('\nRuntime: %.2f seconds\n', cputime-t);
     
     %     disp(obj.mu)
     %
