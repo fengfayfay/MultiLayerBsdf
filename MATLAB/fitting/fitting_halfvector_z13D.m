@@ -1,4 +1,4 @@
-function fitting_halfvector_z13D(dir,alpha,trainx,trainy,trainangle,...
+function fitting_halfvector_z13D(dir,fundir,alpha,trainx,trainy,trainangle,...
     testx,testy,testangle,range,xnum, ynum,znum,gaussiannumvec)
 
 cd(dir)
@@ -118,6 +118,7 @@ for j = 1:length(gaussiannumvec)
     predict = predict/sum(predict(:));
     result = result/sum(result(:));
     % L2 error
+    cd(fundir)
     err = relativel2err(result,predict);
     fprintf('error is %4.6f\n', err)
     errvec(j) = err;

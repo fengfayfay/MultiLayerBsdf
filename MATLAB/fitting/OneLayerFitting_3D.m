@@ -14,7 +14,7 @@ fundir = '/Users/mandy/Github/MultiLayerBsdf/MATLAB/fitting';
 
 cd(datadir)
 
-trainnum = 1e7;
+trainnum = 1e6;
 generatenum = 1e7;
 alphavec = [0.1, 0.2, 0.4, 0.5, 0.7, 0.9];
 alpharange = 1:length(alphavec);
@@ -122,11 +122,11 @@ end
 
 cd(fundir);
 % fitting using x/z,y/z of halfvector
-gaussiannumvec = 50;
+gaussiannumvec = 100;
 xnum = 100;
 ynum = 100;
 znum = 90;
-fitting_halfvector_z13D(datadir,alpha,xdividez_train_new,ydividez_train_new,angle_train_new,...
+fitting_halfvector_z13D(datadir,fundir,alpha,xdividez_train_new,ydividez_train_new,angle_train_new,...
     xdividez_test_new,ydividez_test_new,angle_test_new,plotrange, xnum, ynum, znum, gaussiannumvec);
 
 %     %% glass fitting

@@ -16,31 +16,30 @@ alpharange = 1:length(alphavec);
 anglerange = 1:length(anglevec);
 for j = 7
     angle = anglevec(j);
-%     angle = 89;
     for k = 1:length(alphavec)
         cd(datadir)
         alpha = alphavec(k);
-        filename = [num2str(angle), 'outputx_', num2str(alpha),'.txt'];
+        filename = [num2str(angle), 'outputx_', num2str(alpha),'1.txt'];
         fileID = fopen(filename);
         C1 = textscan(fileID,'%f');
         fclose(fileID);
         
-        filename = [num2str(angle),'outputy_', num2str(alpha),'.txt'];
+        filename = [num2str(angle),'outputy_', num2str(alpha),'1.txt'];
         fileID = fopen(filename);
         C2 = textscan(fileID,'%f');
         fclose(fileID);
         
-        filename = [num2str(angle),'outputz_', num2str(alpha),'.txt'];
+        filename = [num2str(angle),'outputz_', num2str(alpha),'1.txt'];
         fileID = fopen(filename);
         C3 = textscan(fileID,'%f');
         fclose(fileID);
         
-        filename = [num2str(angle),'outputweight_', num2str(alpha),'.txt'];
+        filename = [num2str(angle),'outputweight_', num2str(alpha),'1.txt'];
         fileID = fopen(filename);
         C4 = textscan(fileID,'%f');
         fclose(fileID);
         
-        filename = [num2str(angle),'outputdepth_', num2str(alpha),'.txt'];
+        filename = [num2str(angle),'outputdepth_', num2str(alpha),'1.txt'];
         fileID = fopen(filename);
         C5 = textscan(fileID,'%f');
         fclose(fileID);

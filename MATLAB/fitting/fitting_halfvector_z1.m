@@ -23,7 +23,8 @@ fprintf('range is %4.2f\n',range)
 x_unit = 2*range/xnum;
 y_unit = 2*range/ynum;
 result = zeros(xnum,ynum);
-for i = trainnum+1:trainnum+generatenum
+% for i = trainnum+1:trainnum+generatenum
+for i = 1:length(x)
     if abs(xdividez(i))<range && abs(ydividez(i))<range
         result(ceil((xdividez(i)+range)/x_unit),ceil((ydividez(i)+range)/y_unit)) = ...
             result(ceil((xdividez(i)+range)/x_unit),ceil((ydividez(i)+range)/y_unit)) + 1;
