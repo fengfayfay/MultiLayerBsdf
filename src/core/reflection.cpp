@@ -795,7 +795,7 @@ bool MicrofacetReflection::readIntegralTables() {
     
     printf("trying read integral tables\n");
     fflush(stdout);
-    FILE *ifile = fopen("/Users/feng/work/MaterialTables/E_mu_32.txt", "r"); 
+    FILE *ifile = fopen("/Users/fengxie/work/MaterialTables/E_mu_32.txt", "r"); 
     if (!ifile) {
         printf("file not found\n");
         return false;
@@ -807,7 +807,7 @@ bool MicrofacetReflection::readIntegralTables() {
             printf("%f %f %f\n", v[0], v[1], v[2]);
         }
     }    
-    ifile = fopen("/Users/feng/work/MaterialTables/E_ave_32.txt", "r"); 
+    ifile = fopen("/Users/fengxie/work/MaterialTables/E_ave_32.txt", "r"); 
     for (int i = 0; i < E_AVE_TABLE_SIZE; i++) {
         Vector2<Float>& v = E_ave[i];
         fscanf(ifile, "%f %f", &(v[0]), &(v[1]));
