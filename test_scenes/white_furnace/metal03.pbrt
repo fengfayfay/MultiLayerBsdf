@@ -1,0 +1,30 @@
+
+Film "image"
+	"integer xresolution" [900] "integer yresolution" [900]
+    "string filename" "metal03c.png"
+Integrator "path" "integer maxdepth" [1]
+Sampler "halton" "integer pixelsamples" [32] 
+
+LookAt 0 3 8  0 .8 0   0 1 0
+Camera "perspective" "float fov" [22]
+
+WorldBegin
+
+
+AttributeBegin
+  LightSource "infinite" "color L" [.5 .5 .5]
+AttributeEnd
+
+
+MakeNamedMaterial "Metal" "string type" "metal" "float roughness" [0.3] "color k" [1 1 1] 
+
+AttributeBegin
+NamedMaterial "Metal"
+Translate 0 1 0
+Rotate 60 1 1 1
+Scale .9 .9 .9
+Shape "sphere"
+AttributeEnd
+
+
+WorldEnd
