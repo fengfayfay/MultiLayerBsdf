@@ -31,6 +31,7 @@
 */
 #include <fstream>
 #include <sstream>
+#include <random>
 // core/api.cpp*
 #include "api.h"
 #include "parallel.h"
@@ -1540,7 +1541,12 @@ namespace pbrt {
       std::string var6 = oss6.str();
       outputangle.open(var6);
 
+      // random seed
       srand (time(NULL));
+      // normal distribution of incident angle
+      //std::default_random_engine generator;
+      //std::normal_distribution<float> distribution(M_PI/4,M_PI/12);
+      //float theta;
       for (int i = 0; i<numrays; ++i){
         trand = 2 * M_PI * ((float) rand() / (RAND_MAX));
         urand = (float) rand() / (RAND_MAX);
@@ -1550,6 +1556,12 @@ namespace pbrt {
 
         // different incident angle
         float theta = M_PI/2 * ((float) rand() / (RAND_MAX));
+        // normal distribution incident angle
+        // float randnum = distribution(generator);
+        // while (randnum<0 || randnum>M_PI/2){
+        //   randnum = distribution(generator);
+        // }
+        // theta = randnum;
         Point3f ori = Point3f(height*tan(theta), 0.f, height) + Point3f(radius*sqrt(urand)*cos(trand), radius*sqrt(urand)*sin(trand), 0.f);
         //Point3f ori = Point3f(height*sin(theta), 0.f, height*cos(theta)) + Point3f(radius*sqrt(urand)*cos(trand), radius*sqrt(urand)*sin(trand), 0.f);
         Vector3f dir = Vector3f(-sin(theta), 0.f, -cos(theta));

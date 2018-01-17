@@ -5,6 +5,7 @@ mirror = true;
 
 if mirror
     % mirror dir
+%     datadir = '/Users/mandy/Github/MultiLayerBsdf/build_clang';
     datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror_3d/';
 else
     % glass dir
@@ -46,21 +47,15 @@ for k = 4
     C3 = textscan(fileID,'%f');
     fclose(fileID);
     
-    filename = ['3d_outputweight_', num2str(alpha),'.txt'];
-    fileID = fopen(filename);
-    C4 = textscan(fileID,'%f');
-    fclose(fileID);
-    
     filename = ['3d_outputangle_', num2str(alpha),'.txt'];
     fileID = fopen(filename);
-    C5 = textscan(fileID,'%f');
+    C4 = textscan(fileID,'%f');
     fclose(fileID);
     
     x = C1{1};
     y = C2{1};
     z = C3{1};
-    weight = C4{1};
-    angle = C5{1};
+    angle = C4{1};
     observe = 6000;
     x = x/observe;
     y = y/observe;
@@ -74,11 +69,16 @@ for k = 4
             error(msg)
         end
         % only take z>= data
-        disp(sum(z<0)/length(z))
         x = x(z>=0);
         y = y(z>=0);
         z = z(z>=0);
         angle = angle(z>=0);
+        
+%         % use tan angle
+%         angle = tan(angle);
+        
+        % use inverr function
+%         angle = sqrt(2)*erfinv(4*angle/pi - 1);
         
         % preprocess raw data to eliminate extreme hx/hz hy/hz values for
         % each incident angle
@@ -95,15 +95,32 @@ for k = 4
         yrange = sortedyz(ceil(99/100*length(xdividez)));
         cutoff = max(xrange, yrange);
         range = 2*cutoff;
+        disp(range)
         plotrange = max(plotrange, range);
         
         xdividez_train = xdividez(1:trainnum);
         ydividez_train = ydividez(1:trainnum);
         angle_train = angle(1:trainnum);
+        
+        
+        zmax = pi/2;
+        zmin = 0;
+        % use tangent theta
+%         zmax = ceil(max(angle));
+%         zmin = 0;
+%         fprintf('max tan angle is is %4.6f\n', max(tan(angle)))
+        % use inverse of error function
+%         zmax = ceil(max(angle));
+%         zmin = floor(min(angle));
         trainindex = abs(xdividez_train)<=cutoff&abs(ydividez_train)<=cutoff;
         xdividez_train_new = xdividez_train(trainindex);
         ydividez_train_new = ydividez_train(trainindex);
         angle_train_new = angle_train(trainindex);
+        
+%         % relfection around normal incidence 
+%         xdividez_train_new = [xdividez_train_new;xdividez_train_new];
+%         ydividez_train_new = [ydividez_train_new;ydividez_train_new];
+%         angle_train_new = [angle_train_new;-angle_train_new];
         
         xdividez_test = xdividez(trainnum+1:trainnum+generatenum);
         ydividez_test = ydividez(trainnum+1:trainnum+generatenum);
@@ -113,6 +130,10 @@ for k = 4
         ydividez_test_new = ydividez_test(testindex);
         angle_test_new = angle_test(testindex);
         
+%         xdividez_test_new = [xdividez_test_new;xdividez_test_new];
+%         ydividez_test_new = [ydividez_test_new;ydividez_test_new];
+%         angle_test_new = [angle_test_new;-angle_test_new];
+               
         
     else% glass case
         
@@ -122,18 +143,18 @@ end
 
 cd(fundir);
 % fitting using x/z,y/z of halfvector
-gaussiannumvec = 100;
+gaussiannumvec = 50;
 xnum = 100;
 ynum = 100;
 znum = 90;
 fitting_halfvector_z13D(datadir,fundir,alpha,xdividez_train_new,ydividez_train_new,angle_train_new,...
-    xdividez_test_new,ydividez_test_new,angle_test_new,plotrange, xnum, ynum, znum, gaussiannumvec);
+    xdividez_test_new,ydividez_test_new,angle_test_new,plotrange, xnum, ynum, znum, zmax,zmin,gaussiannumvec);
 
 %     %% glass fitting
-%     gaussiannumvec = 5;
+%     gaussiannumvec = 5;=
 %     incident = [sin(angle*pi/180), 0, cos(angle*pi/180)];
 %     xnum = 100;
 %     ynum = 100;
 %     ior = 1.5;
-%     Glass_fitting_halfvector_z1(datadir,alpha,angle,x,y,z,weight,...
+%     Glass_fitting_halfvector_z1(datadir,alpha,angle,x,y,z,...
 %         testafter, trainnum, generatenum, gaussiannumvec, incident, xnum, ynum,ior)
