@@ -119,13 +119,13 @@ xtrain_new = xtrain(abs(xtrain)<=cutoff & abs(ytrain)<=cutoff);
 ytrain_new = ytrain(abs(xtrain)<=cutoff & abs(ytrain)<=cutoff);
 train = [xtrain_new, ytrain_new];
 
-% % use accelearted em for fitting
-t=cputime;
-tree = buildtree(train, 0, 0, 3, 1000);
-[W,M,R,ff,Ws,Ms,Rs] = em(train,[],5,0,0,tree);
-fprintf('\nRuntime: %.2f seconds\n', cputime-t);
-Rnew = reshape(R', 2,2,5);
-obj = gmdistribution(M,Rnew,W');
+% % % use accelearted em for fitting
+% t=cputime;
+% tree = buildtree(train, 0, 0, 3, 1000);
+% [W,M,R,ff,Ws,Ms,Rs] = em(train,[],5,0,0,tree);
+% fprintf('\nRuntime: %.2f seconds\n', cputime-t);
+% Rnew = reshape(R', 2,2,5);
+% obj = gmdistribution(M,Rnew,W');
 
 % close all
 % figure
@@ -147,8 +147,8 @@ for j = 1:length(gaussiannumvec)
     
     %     disp(obj.mu)
     %
-    %     filename = ['half_projected_z1',num2str(angle),'_alpha_',num2str(alpha), '_#G',num2str(numGaussian),'.mat'];
-    %     save(filename,'obj')
+        filename = ['half_projected_z1',num2str(angle),'_alpha_',num2str(alpha), '_#G',num2str(numGaussian),'.mat'];
+        save(filename,'obj')
     
     %     filename = ['half_projected_z1',num2str(angle),'_alpha_',num2str(alpha), '_#G',num2str(numGaussian),'.mat'];
     %     load(filename,'obj')
