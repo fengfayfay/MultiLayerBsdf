@@ -22,12 +22,6 @@ xlabel('hx/hz')
 ylabel('hy/hz')
 zlabel('incident angle')
 
-% figure
-% scatter3(trainx, trainy, trainangle,'filled')
-% xlabel('hx/hz')
-% ylabel('hy/hz')
-% zlabel('incident angle')
-
 figure
 imagesc(result(:,:,10))
 ylabel('x/z')
@@ -105,16 +99,14 @@ for j = 1:length(gaussiannumvec)
     fprintf('using %4d Gaussians\n',numGaussian)
     
     % use accelearted em for fitting
-%     t=cputime;
+    cd('accelerated_greedy_EM')
     tic
     tree = buildtree(train, 0, 0, 3, 1000);
     [W,M,R,ff,Ws,Ms,Rs] = em(train,[],numGaussian,0,0,tree);
-%     fprintf('\nRuntime: %.2f seconds\n', cputime-t);
     fprintf('\nRuntime: %.2f seconds\n', toc);
     Rnew = reshape(R', 3,3,numGaussian);
     obj = gmdistribution(M,Rnew,W');
-    
-%     
+   
 %     options = statset('MaxIter',500, 'Display','final','TolFun',1e-4);
 %     try
 %         obj = fitgmdist(train,numGaussian,'Options',options,'start','customize');
@@ -123,13 +115,8 @@ for j = 1:length(gaussiannumvec)
 %         error = exception.message
 %     end
 %     
-%     %     disp(obj.mu)
-%     %
 %     filename = ['3dhalf_projected_z1_alpha_',num2str(alpha), '_#G',num2str(numGaussian),'.mat'];
 %     save(filename,'obj')
-    
-    %     filename = ['half_projected_z1',num2str(angle),'_alpha_',num2str(alpha), '_#G',num2str(numGaussian),'.mat'];
-    %     load(filename,'obj')
     
     %% generate points from fitted model
     Y = random(obj,length(testangle));
@@ -188,7 +175,7 @@ for j = 1:length(gaussiannumvec)
     xlabel('y/z')
     colorbar()
     title(['GMM mirror ray distribution, alpha=', num2str(alpha),'angle~10'])
-    filename = ['3d_mirror_reflect_predict_alpha_',num2str(alpha), 'angle~10'];
+    filename = ['3d_mirror_predict_predict_alpha_',num2str(alpha), 'angle~10'];
 %     saveas(gcf,[filename,'.jpeg'])
     
     figure
@@ -197,7 +184,7 @@ for j = 1:length(gaussiannumvec)
     xlabel('y/z')
     colorbar()
     title(['GMM mirror ray distribution, alpha=', num2str(alpha),'angle~30'])
-    filename = ['3d_mirror_reflect_predict_alpha_',num2str(alpha), 'angle~30'];
+    filename = ['3d_mirror_predict_alpha_',num2str(alpha), 'angle~30'];
 %     saveas(gcf,[filename,'.jpeg'])
     
     figure
@@ -206,7 +193,7 @@ for j = 1:length(gaussiannumvec)
     xlabel('y/z')
     colorbar()
     title(['GMM mirror ray distribution, alpha=', num2str(alpha),'angle~50'])
-    filename = ['3d_mirror_reflect_predict_alpha_',num2str(alpha), 'angle~50'];
+    filename = ['3d_mirror_predict_predict_alpha_',num2str(alpha), 'angle~50'];
 %     saveas(gcf,[filename,'.jpeg'])
     
     figure
@@ -215,7 +202,7 @@ for j = 1:length(gaussiannumvec)
     xlabel('y/z')
     colorbar()
     title(['GMM mirror ray distribution, alpha=', num2str(alpha),'angle~70'])
-    filename = ['3d_mirror_reflect_predict_alpha_',num2str(alpha), 'angle~70'];
+    filename = ['3d_mirror_predict_predict_alpha_',num2str(alpha), 'angle~70'];
 %     saveas(gcf,[filename,'.jpeg'])
     
     figure
@@ -224,7 +211,7 @@ for j = 1:length(gaussiannumvec)
     xlabel('y/z')
     colorbar()
     title(['GMM mirror ray distribution, alpha=', num2str(alpha),'angle~90'])
-    filename = ['3d_mirror_reflect_predict_alpha_',num2str(alpha), 'angle~90'];
+    filename = ['3d_mirror_predict_predict_alpha_',num2str(alpha), 'angle~90'];
 %     saveas(gcf,[filename,'.jpeg'])
     
     

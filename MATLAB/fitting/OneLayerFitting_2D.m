@@ -3,8 +3,8 @@
 close all
 % mirror dir
 mirror = true;
-datadir = '/Users/mandy/Github/MultiLayerBsdf/build_clang';
-% datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror/pi:3/output';
+% datadir = '/Users/mandy/Github/MultiLayerBsdf/build_clang';
+datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror/pi:3/output';
 % glass dir
 % mirror = false;
 % datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SingleLayer/pi:3/output';
@@ -14,7 +14,7 @@ alphavec = [0.1, 0.2, 0.4, 0.5, 0.7, 0.9];
 anglevec = [0, 10, 20, 30, 40, 50, 60, 70, 80 ,89];
 alpharange = 1:length(alphavec);
 anglerange = 1:length(anglevec);
-for j = 1
+for j = 7
     angle = anglevec(j);
     for k = 4
         cd(datadir)

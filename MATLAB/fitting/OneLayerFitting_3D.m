@@ -74,12 +74,6 @@ for k = 4
         z = z(z>=0);
         angle = angle(z>=0);
         
-%         % use tan angle
-%         angle = tan(angle);
-        
-        % use inverr function
-%         angle = sqrt(2)*erfinv(4*angle/pi - 1);
-        
         % preprocess raw data to eliminate extreme hx/hz hy/hz values for
         % each incident angle
         incident = [sin(angle), zeros(length(x),1), cos(angle)];
@@ -105,13 +99,7 @@ for k = 4
         
         zmax = pi/2;
         zmin = 0;
-        % use tangent theta
-%         zmax = ceil(max(angle));
-%         zmin = 0;
-%         fprintf('max tan angle is is %4.6f\n', max(tan(angle)))
-        % use inverse of error function
-%         zmax = ceil(max(angle));
-%         zmin = floor(min(angle));
+
         trainindex = abs(xdividez_train)<=cutoff&abs(ydividez_train)<=cutoff;
         xdividez_train_new = xdividez_train(trainindex);
         ydividez_train_new = ydividez_train(trainindex);
