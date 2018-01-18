@@ -1480,7 +1480,11 @@ namespace pbrt {
       //float theta = angle*M_PI/180.f;
       //Point3f center = Point3f(height*tan(theta), 0.f, height);
       //Vector3f dir = Normalize(Vector3f(-height*tan(theta), 0.f, -height));
+       
+      //what does trand and urand do?
       float trand, urand;
+      //why is this hardcoded to 6000?
+      //is this the radius of observing sphere?
       float observe = 6000;
       int maxdepth = 10;
       float radius = 5;
@@ -1541,7 +1545,6 @@ namespace pbrt {
       std::string var6 = oss6.str();
       outputangle.open(var6);
 
-      // random seed
       srand (time(NULL));
       // normal distribution of incident angle
       //std::default_random_engine generator;
@@ -1569,9 +1572,9 @@ namespace pbrt {
         Ray ray = Ray(ori, dir);
         int depth = 0;
         int weight = 1;
-        SingleLayerMirror(theta,observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth, outputangle);
+        //SingleLayerMirror(theta,observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth, outputangle);
         //SingleLayerGlass(theta,observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth, outputangle);
-        //DoubleLayerHeightfield(theta,observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth, outputangle);
+        DoubleLayerHeightfield(theta,observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth, outputangle);
       }
       outputx.close();
       outputy.close();
@@ -1800,19 +1803,25 @@ namespace pbrt {
       else return;
     }
 
+    Normal3f normal = isect.shading.n;
+    float cos = Dot(Vector3f(normal), isect.wo);
+    bool entering = cos>0;
 
+    float rprob = 1;
     // for doublelayer
+    // Feng:
+    // I am cheating to make the first layer a glass and second layer mirror
     float etaI, etaT;
     if (isect.p.z>-2){
       etaI = 1;
       etaT = 1.5;
+      rprob = FrDielectric(cos, etaI, etaT);
     }else{
       etaI = 1.5;
       etaT = 2;
+      rprob = 1;
     }
 
-    Normal3f normal = isect.shading.n;
-    bool entering = Dot(normal, isect.wo)>0;
     // check for bad rays
     if (Dot(isect.n, isect.wo) * Dot(isect.shading.n, isect.wo)<=0){
       count++;
@@ -1845,9 +1854,8 @@ namespace pbrt {
     RayDifferential tranRay = isect.SpawnRay(tdir);
 
     // specular reflection + specular refraction
-    float cos = Dot(Vector3f(normal), isect.wo);
-    float rprob = FrDielectric(cos, etaI, etaT);
     float rt = (float) rand() / (RAND_MAX);
+
     if (rt<=rprob){
       // refelctance ray
       DoubleLayerHeightfield(theta, observe, reflRay, scene, weight, depth+1, maxdepth, outputx, outputy, outputz, outputweight, outputdepth, outputangle);
@@ -1860,6 +1868,7 @@ namespace pbrt {
     }
   }
 
+  //observe is the observing radius
   float intersect(const Ray &r, float observe){
     // returns distance, 0 if nohit
     Vector3f op = Vector3f(r.o.x, r.o.y, r.o.z); // Solve t^2*d.d + 2*t*(o-p).d + (o-p).(o-p)-R^2 = 0
