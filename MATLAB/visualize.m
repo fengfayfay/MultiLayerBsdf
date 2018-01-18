@@ -1,9 +1,9 @@
 close all
 % cd('/Users/mandy/Github/MultiLayerBsdf/build');
-cd('/Users/mandy/Github/MultiLayerBsdf/build_clang')
+% cd('/Users/mandy/Github/MultiLayerBsdf/build_clang')
 % cd('/Users/mandy/Github/pixar/ritest/GaussianHeightField/SingleLayer/pi:3/output')
-% cd('/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror/pi:3/output')
-alpha = 0.1;
+cd('/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror/pi:3/output')
+alpha = 0.5;
 angle = 60;
 filename = [num2str(angle), 'outputx_', num2str(alpha),'.txt'];
 fileID = fopen(filename);
@@ -120,7 +120,10 @@ for i = 1:length(x)
     end
 end
 figure
-imagesc(result/total)
+% energy
+% imagesc(result/total)
+% brdf*cos
+imagesc(result/total/(2*pi/(phinum*munum)))
 title('reflection lobe')
 xlabel('mu_o')
 ylabel('phi_o')

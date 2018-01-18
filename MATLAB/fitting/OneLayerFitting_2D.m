@@ -4,7 +4,7 @@ close all
 % mirror dir
 mirror = true;
 % datadir = '/Users/mandy/Github/MultiLayerBsdf/build_clang';
-datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror/pi:3/output';
+datadir = '/Users/mandy/Githubd/pixar/ritest/GaussianHeightField/SinglelayerMirror/pi:3/output';
 % glass dir
 % mirror = false;
 % datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SingleLayer/pi:3/output';
