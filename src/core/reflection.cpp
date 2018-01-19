@@ -375,6 +375,52 @@ bool FourierBSDFTable::GetWeightsAndOffset(Float cosTheta, int *offset,
     return CatmullRomWeights(nMu, mu, cosTheta, offset, weights);
 }
 
+  // Add GaussianBSDF f and ToString methods (Mandy)
+  Spectrum GaussianBSDF::f(const Vector3f &wo, const Vector3f &wi) const {
+    if (!SameHemisphere(wo, wi)) return Spectrum(0);  // now reflection only
+    Float cosThetaO = AbsCosTheta(wo), cosThetaI = AbsCosTheta(wi);
+    Vector3f wh = wi + wo;
+
+    // handle degenerate cases
+    if (cosThetaI == 0 || cosThetaO == 0) return Spectrum(0.);
+    if (wh.z == 0) return Spectrum(0.);
+
+    wh = Normalize(wh);
+
+    // calculate probability in slope domain using fitted GMM
+    Float x = wh.x/abs(wh.z);
+    Float y = wh.y/abs(wh.z);
+    Float z = acos(abs(wh.z));
+    // Float p = g.prob(x,y,z);
+    Float p = 1;
+    // probability conditioned on a particular incident angle
+    // uniform distributed incident angle prob = 1/(pi/2)
+    p /= 1.f/(M_PI/2);
+
+    // convert to brdf*cos value
+    Float phi = atan2(wo.y,wo.x);    // atan2 gives -pi to pi
+    Float mu = wo.z;
+    Float sintheta_o = sqrt(1-pow(mu,2));
+    Float dxdphi = -sintheta_o * sin(phi)/(wi.z + mu);
+    Float dxdmu = (-cos(phi) * mu/sintheta_o*(wi.z + mu) - (wi.x + sintheta_o*cos(phi)))/pow(wi.z + mu, 2);
+    Float dydphi = sintheta_o*cos(phi)/(wi.z + mu);
+    Float dydmu = (-sin(phi)*mu/sintheta_o*(wi.z + mu) - (wi.y + sintheta_o*sin(phi)))/pow(wi.z + mu, 2);
+    // Jacobian
+    Float J = dxdphi*dydmu - dxdmu*dydphi;
+    Float brdfcos = p * J;
+
+    // return the brdf value
+    return R * brdfcos / mu;
+  }
+
+  std::string GaussianBSDF::ToString() const {
+    // return std::string("[ MicrofacetReflection R: ") + R.ToString() +
+    //   std::string(" distribution: ") + distribution->ToString() +
+    //   std::string(" fresnel: ") + fresnel->ToString() + std::string(" ]");
+    return std::string("");
+  }
+
+
 Spectrum BxDF::Sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &u,
                         Float *pdf, BxDFType *sampledType) const {
     // Cosine-sample the hemisphere, flipping the direction if necessary
@@ -412,7 +458,7 @@ Spectrum MicrofacetReflection::Sample_f(const Vector3f &wo, Vector3f *wi,
     if (!SameHemisphere(wo, *wi)) return Spectrum(0.f);
 
     // Compute PDF of _wi_ for microfacet reflection
-    *pdf = distribution->Pdf(wo, wh) / (4 * Dot(wo, wh));
+    *pdf = distribution->Pdf(wo, *wi);
     return f(wo, *wi);
 }
 
@@ -639,6 +685,25 @@ Float FourierBSDF::Pdf(const Vector3f &wo, const Vector3f &wi) const {
     Float Y = Fourier(ak, mMax, cosPhi);
     return (rho > 0 && Y > 0) ? (Y / rho) : 0;
 }
+
+  // Add Gaussian BSDF Sample_f and Pdf functions (Mandy)
+  Spectrum GaussianBSDF::Sample_f(const Vector3f &wo, Vector3f *wi,
+                                          const Point2f &u, Float *pdf,
+                                          BxDFType *sampledType) const {
+    // Sample gaussian orientation $\wh$ and reflected direction $\wi$
+    if (wo.z == 0) return 0.;
+    if (!SameHemisphere(wo, *wi)) return Spectrum(0.f);
+    // Compute PDF of _wi_ for gaussianbsdf reflection
+    *pdf = Pdf(wo, *wi);
+    return f(wo, *wi);
+  }
+
+  // uniform sampling for now (Mandy)
+  Float GaussianBSDF::Pdf(const Vector3f &wo, const Vector3f &wi) const {
+    if (!SameHemisphere(wo, wi)) return 0;
+    Vector3f wh = Normalize(wo + wi);
+    return 1.f/(2*M_PI);
+  }
 
 Spectrum BxDF::rho(const Vector3f &w, int nSamples, const Point2f *u) const {
     Spectrum r(0.);

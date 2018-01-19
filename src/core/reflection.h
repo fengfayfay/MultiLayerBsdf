@@ -42,9 +42,14 @@
 #include "pbrt.h"
 #include "geometry.h"
 #include "microfacet.h"
-#include "gaussian.h"
 #include "shape.h"
 #include "spectrum.h"
+
+// gaussian mixture for gaussianbsdf (Mandy)
+#include "gaussianmixture.h"
+
+#include <fstream>
+#include <string>
 
 namespace pbrt {
 
@@ -524,6 +529,85 @@ inline int BSDF::NumComponents(BxDFType flags) const {
         if (bxdfs[i]->MatchesFlags(flags)) ++num;
     return num;
 }
+
+// Fitted GMM BSDF class declaration (Mandy)
+class GaussianBSDF : public BxDF{
+ public:
+ // GaussianBSDF Public Methods
+ GaussianBSDF(const Spectrum &R)
+   : BxDF(BxDFType(BSDF_REFLECTION)),R(R){
+
+    // read in gaussian mixture and create a gm object
+    int dim = 3;
+    int num = 50;
+    // weights
+    std::vector<Float> w;
+    std::string line;
+    std::ifstream weightfile ("weights.txt");
+    if (weightfile.is_open())
+      {
+        while ( getline (weightfile,line) )
+          {
+            w.push_back((Float)std::stod(line));
+          }
+        weightfile.close();
+      }
+    else Error("Unable to open file weights.txt");
+
+    // means
+    std::vector<std::vector<Float>> m;
+    std::vector<Float> m_cur;
+    std::ifstream meanfile ("means.txt");
+    if (meanfile.is_open())
+      {
+        while ( getline (meanfile,line) )
+          {
+            if (m_cur.size()<dim){
+              m_cur.push_back((Float)std::stod(line));
+            }
+            else{
+              m.push_back(m_cur);
+              m_cur = {(Float)std::stod(line)};
+            }
+          }
+        meanfile.close();
+      }
+    else Error("Unable to open file means.txt");
+
+    // covarians
+    std::vector<Matrix3x3> c;
+    std::vector<Float> c_cur;
+    std::ifstream covfile ("covars.txt");
+    if (covfile.is_open())
+      {
+        while ( getline (covfile,line) )
+          {
+            if (c_cur.size()<dim*dim){
+              c_cur.push_back((Float)std::stod(line));
+            }
+            else{
+              c.push_back(Matrix3x3(c_cur));
+              c_cur = {(Float)std::stod(line)};
+            }
+          }
+        covfile.close();
+      }
+    else Error("Unable to open file covars.txt");
+
+    g = Gaussianmixture(dim, num, w, m, c);
+  };
+
+ Spectrum f(const Vector3f &wo, const Vector3f &wi) const;
+ Spectrum Sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &u,
+                   Float *pdf, BxDFType *sampledType) const;
+ Float Pdf(const Vector3f &wo, const Vector3f &wi) const;
+ std::string ToString() const;
+
+ private:
+ // GaussianBSDF Private Data
+ const Spectrum R;
+ Gaussianmixture g;
+};
 
 }  // namespace pbrt
 
