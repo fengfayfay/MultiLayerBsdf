@@ -1473,18 +1473,15 @@ namespace pbrt {
       // ray tracing test
       float alpha = (float) (PbrtOptions.alpha)/10;
       int numrays = (int) (PbrtOptions.numrays);
-      float dist = 5;
       float height = 1.f;
+
       // fix incidence angle
       //float angle = (float) (PbrtOptions.theta_i);
       //float theta = angle*M_PI/180.f;
       //Point3f center = Point3f(height*tan(theta), 0.f, height);
-      //Vector3f dir = Normalize(Vector3f(-height*tan(theta), 0.f, -height));
-       
-      //what does trand and urand do?
+      //Vector3f dir = Vector3f(-sin(theta), 0.f, -cos(theta));
+
       float trand, urand;
-      //why is this hardcoded to 6000?
-      //is this the radius of observing sphere?
       float observe = 6000;
       int maxdepth = 10;
       float radius = 5;
@@ -1566,21 +1563,22 @@ namespace pbrt {
         // }
         // theta = randnum;
         Point3f ori = Point3f(height*tan(theta), 0.f, height) + Point3f(radius*sqrt(urand)*cos(trand), radius*sqrt(urand)*sin(trand), 0.f);
-        //Point3f ori = Point3f(height*sin(theta), 0.f, height*cos(theta)) + Point3f(radius*sqrt(urand)*cos(trand), radius*sqrt(urand)*sin(trand), 0.f);
+        // Point3f ori = Point3f(height*sin(theta), 0.f, height*cos(theta)) + Point3f(radius*sqrt(urand)*cos(trand), radius*sqrt(urand)*sin(trand), 0.f);
         Vector3f dir = Vector3f(-sin(theta), 0.f, -cos(theta));
         // create a ray
         Ray ray = Ray(ori, dir);
         int depth = 0;
         int weight = 1;
-        //SingleLayerMirror(theta,observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth, outputangle);
+        SingleLayerMirror(theta,observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth, outputangle);
         //SingleLayerGlass(theta,observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth, outputangle);
-        DoubleLayerHeightfield(theta,observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth, outputangle);
+        //DoubleLayerHeightfield(theta,observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth, outputangle);
       }
       outputx.close();
       outputy.close();
       outputz.close();
       outputweight.close();
       outputdepth.close();
+      outputangle.close();
       std::cout<<"bad rays "<<count<<std::endl;
       std::cout<<"rays that go out: "<<count_goout<<std::endl;
 

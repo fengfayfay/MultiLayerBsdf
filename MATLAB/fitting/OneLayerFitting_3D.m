@@ -5,8 +5,8 @@ mirror = true;
 
 if mirror
     % mirror dir
-%     datadir = '/Users/mandy/Github/MultiLayerBsdf/build_clang';
-    datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror_3d/';
+    datadir = '/Users/mandy/Github/MultiLayerBsdf/build_clang';
+%     datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror_3d/';
 else
     % glass dir
     % datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SingleLayer/pi:3/output';
@@ -131,7 +131,7 @@ end
 
 cd(fundir);
 % fitting using x/z,y/z of halfvector
-gaussiannumvec = 50;
+gaussiannumvec = 100;
 xnum = 100;
 ynum = 100;
 znum = 90;

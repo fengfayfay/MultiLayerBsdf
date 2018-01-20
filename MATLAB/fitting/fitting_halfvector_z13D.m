@@ -16,19 +16,19 @@ end
 
 result = result/sum(result(:));
 
-figure
-scatter3(testx, testy, testangle,'filled')
-xlabel('hx/hz')
-ylabel('hy/hz')
-zlabel('incident angle')
+% figure
+% scatter3(testx, testy, testangle,'filled')
+% xlabel('hx/hz')
+% ylabel('hy/hz')
+% zlabel('incident angle')
 
 figure
-imagesc(result(:,:,10))
+imagesc(result(:,:,1))
 ylabel('x/z')
 xlabel('y/z')
 colorbar()
 title(['Gaussian Heightfiled mirror ray distribution, alpha=', num2str(alpha),'angle~10'])
-filename = ['3d_mirror_reflect_alpha_',num2str(alpha), '~10'];
+% filename = ['3d_mirror_reflect_alpha_',num2str(alpha), '~10'];
 % saveas(gcf,[filename,'.jpeg'])
 
 figure
@@ -136,8 +136,8 @@ for j = 1:length(gaussiannumvec)
     predict = predict/sum(predict(:));
     
     cd(fundir)
-    for i = 1:90
-        e(i) = relativel2err(result(:,:,i),predict(:,:,i));
+    for i = 1:180
+        e(i) = relativel2err(result(:,:,i),result1(:,:,i));
     end
     figure
     plot(e,'linewidth',2)

@@ -1,10 +1,10 @@
-close all
+% close all
 % cd('/Users/mandy/Github/MultiLayerBsdf/build');
-% cd('/Users/mandy/Github/MultiLayerBsdf/build_clang')
+cd('/Users/mandy/Github/MultiLayerBsdf/build_clang')
 % cd('/Users/mandy/Github/pixar/ritest/GaussianHeightField/SingleLayer/pi:3/output')
-cd('/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror/pi:3/output')
+% cd('/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror/pi:3/output')
 alpha = 0.5;
-angle = 60;
+angle = 89;
 filename = [num2str(angle), 'outputx_', num2str(alpha),'.txt'];
 fileID = fopen(filename);
 C1 = textscan(fileID,'%f');
@@ -90,7 +90,7 @@ result_d3 = zeros(phinum,munum);
 result_d4 = zeros(phinum,munum);
 epsilon = 1e-6;
 for i = 1:length(x)
-    if z(i) >=0
+    if z(i) >=0 && angle(i) < pi/2/90
         if abs(x(i))<epsilon && y(i)>=0
             theta = pi/2;
         elseif (abs(x(i))<epsilon && y(i)<0)
@@ -105,18 +105,18 @@ for i = 1:length(x)
                 end
             end
         end
-        result(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) = result(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) + weight(i);
-        if depth(i)<=1
-            result_d1(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) = result_d1(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) + weight(i);
-%         else
+        result(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) = result(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) + 1;
+%         if depth(i)<=1
+%             result_d1(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) = result_d1(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) + weight(i);
+% %         else
+% %             result_d2(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) = result_d2(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) + weight(i);
+%         elseif depth(i)==2
 %             result_d2(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) = result_d2(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) + weight(i);
-        elseif depth(i)==2
-            result_d2(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) = result_d2(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) + weight(i);
-        elseif depth(i)==3
-            result_d3(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) = result_d2(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) + weight(i);
-        elseif depth(i)==4
-            result_d4(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) = result_d2(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) + weight(i);
-        end
+%         elseif depth(i)==3
+%             result_d3(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) = result_d2(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) + weight(i);
+%         elseif depth(i)==4
+%             result_d4(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) = result_d2(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) + weight(i);
+%         end
     end
 end
 figure
