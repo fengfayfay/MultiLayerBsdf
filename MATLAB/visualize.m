@@ -91,21 +91,25 @@ result_d4 = zeros(phinum,munum);
 epsilon = 1e-6;
 for i = 1:length(x)
     if z(i) >=0 && angle(i) < pi/2/90
-        if abs(x(i))<epsilon && y(i)>=0
-            theta = pi/2;
-        elseif (abs(x(i))<epsilon && y(i)<0)
-            theta = 3*pi/2;
-        else
-            theta = atan(y(i)/x(i));
-            if x(i)< 0 
-                theta = theta + pi;
-            else
-                if y(i) < 0
-                theta = theta + 2*pi;
-                end
-            end
+        phi = atan2(y(i),x(i));
+        if phi<0
+            phi = phi + 2*pi;
         end
-        result(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) = result(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) + 1;
+%         if abs(x(i))<epsilon && y(i)>=0
+%             theta = pi/2;
+%         elseif (abs(x(i))<epsilon && y(i)<0)
+%             theta = 3*pi/2;
+%         else
+%             theta = atan(y(i)/x(i));
+%             if x(i)< 0 
+%                 theta = theta + pi;
+%             else
+%                 if y(i) < 0
+%                 theta = theta + 2*pi;
+%                 end
+%             end
+%         end
+        result(ceil(phi/phi_unit),ceil(z(i)/mu_unit)) = result(ceil(phi/phi_unit),ceil(z(i)/mu_unit)) + 1;
 %         if depth(i)<=1
 %             result_d1(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) = result_d1(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) + weight(i);
 % %         else
@@ -123,7 +127,7 @@ figure
 % energy
 % imagesc(result/total)
 % brdf*cos
-imagesc(result/total/(2*pi/(phinum*munum)))
+imagesc(result/(2*pi/(phinum*munum)))
 title('reflection lobe')
 xlabel('mu_o')
 ylabel('phi_o')

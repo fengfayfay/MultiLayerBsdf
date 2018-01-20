@@ -172,6 +172,7 @@ struct Options {
     int theta_i = 60;
     float alpha = 0.5;
     int numrays = 1e6;
+    int dimension = 2;
 };
 
 extern Options PbrtOptions;

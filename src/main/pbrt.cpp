@@ -55,6 +55,7 @@ Rendering options:
   --theta_i <num>      Use a specific incident angle
   --alpha <num>        Use a specific roughness alpha value times 10
   --numrays <num>      Use a specific number of rays
+  --dimension <num>    dimension of gaussian heightfield (2 or 3)
 
 Logging options:
   --logdir <dir>       Specify directory that log files should be written to.
@@ -98,6 +99,10 @@ int main(int argc, char *argv[]) {
           if (i + 1 == argc)
             usage("missing value after --numrays argument");
           options.numrays = atoi(argv[++i]);
+        }else if (!strcmp(argv[i], "--dimension") || !strcmp(argv[i], "-dimension")) {
+          if (i + 1 == argc)
+            usage("missing value after --dimension argument");
+          options.dimension = atoi(argv[++i]);
         } else if (!strncmp(argv[i], "--nthreads=", 11)) {
             options.nThreads = atoi(&argv[i][11]);
         } else if (!strcmp(argv[i], "--outfile") || !strcmp(argv[i], "-outfile")) {

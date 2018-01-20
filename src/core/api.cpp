@@ -293,140 +293,140 @@ namespace pbrt {
           func);                                        \
     return;                                             \
   } else /* swallow trailing semicolon */
-#define VERIFY_WORLD(func)                          \
-  VERIFY_INITIALIZED(func);                         \
-  if (!(PbrtOptions.cat || PbrtOptions.toPly) &&    \
-  currentApiState == APIState::OptionsBlock) {      \
-  Error(                                            \
-  "Scene description must be inside world block; "  \
-  "\"%s\" not allowed. Ignoring.",                  \
-    func);                                          \
-  return;                                           \
-} else /* swallow trailing semicolon */
+#define VERIFY_WORLD(func)                                  \
+  VERIFY_INITIALIZED(func);                                 \
+  if (!(PbrtOptions.cat || PbrtOptions.toPly) &&            \
+      currentApiState == APIState::OptionsBlock) {          \
+    Error(                                                  \
+          "Scene description must be inside world block; "  \
+          "\"%s\" not allowed. Ignoring.",                  \
+          func);                                            \
+    return;                                                 \
+  } else /* swallow trailing semicolon */
 #define FOR_ACTIVE_TRANSFORMS(expr)             \
   for (int i = 0; i < MaxTransforms; ++i)       \
     if (activeTransformBits & (1 << i)) {       \
       expr                                      \
         }
-#define WARN_IF_ANIMATED_TRANSFORM(func)                          \
-  do {                                                            \
-  if (curTransform.IsAnimated())                                  \
-    Warning(                                                      \
-            "Animated transformations set; ignoring for \"%s\" "  \
-            "and using the start transform only",                 \
-            func);                                                \
+#define WARN_IF_ANIMATED_TRANSFORM(func)                            \
+  do {                                                              \
+    if (curTransform.IsAnimated())                                  \
+      Warning(                                                      \
+              "Animated transformations set; ignoring for \"%s\" "  \
+              "and using the start transform only",                 \
+              func);                                                \
   } while (false) /* swallow trailing semicolon */
 
-    // Object Creation Function Definitions
-    std::vector<std::shared_ptr<Shape>> MakeShapes(const std::string &name,
-                                                   const Transform *object2world,
-                                                   const Transform *world2object,
-                                                   bool reverseOrientation,
-                                                   const ParamSet &paramSet) {
-      std::vector<std::shared_ptr<Shape>> shapes;
-      std::shared_ptr<Shape> s;
-      if (name == "sphere")
-        s = CreateSphereShape(object2world, world2object, reverseOrientation,
+  // Object Creation Function Definitions
+  std::vector<std::shared_ptr<Shape>> MakeShapes(const std::string &name,
+                                                 const Transform *object2world,
+                                                 const Transform *world2object,
+                                                 bool reverseOrientation,
+                                                 const ParamSet &paramSet) {
+    std::vector<std::shared_ptr<Shape>> shapes;
+    std::shared_ptr<Shape> s;
+    if (name == "sphere")
+      s = CreateSphereShape(object2world, world2object, reverseOrientation,
+                            paramSet);
+    // Create remaining single _Shape_ types
+    else if (name == "cylinder")
+      s = CreateCylinderShape(object2world, world2object, reverseOrientation,
                               paramSet);
-      // Create remaining single _Shape_ types
-      else if (name == "cylinder")
-        s = CreateCylinderShape(object2world, world2object, reverseOrientation,
-                                paramSet);
-      else if (name == "disk")
-        s = CreateDiskShape(object2world, world2object, reverseOrientation,
-                            paramSet);
-      else if (name == "cone")
-        s = CreateConeShape(object2world, world2object, reverseOrientation,
-                            paramSet);
-      else if (name == "paraboloid")
-        s = CreateParaboloidShape(object2world, world2object,
-                                  reverseOrientation, paramSet);
-      else if (name == "hyperboloid")
-        s = CreateHyperboloidShape(object2world, world2object,
-                                   reverseOrientation, paramSet);
-      if (s != nullptr) shapes.push_back(s);
+    else if (name == "disk")
+      s = CreateDiskShape(object2world, world2object, reverseOrientation,
+                          paramSet);
+    else if (name == "cone")
+      s = CreateConeShape(object2world, world2object, reverseOrientation,
+                          paramSet);
+    else if (name == "paraboloid")
+      s = CreateParaboloidShape(object2world, world2object,
+                                reverseOrientation, paramSet);
+    else if (name == "hyperboloid")
+      s = CreateHyperboloidShape(object2world, world2object,
+                                 reverseOrientation, paramSet);
+    if (s != nullptr) shapes.push_back(s);
 
-      // Create multiple-_Shape_ types
-      else if (name == "curve")
-        shapes = CreateCurveShape(object2world, world2object,
-                                  reverseOrientation, paramSet);
-      else if (name == "trianglemesh") {
-        if (PbrtOptions.toPly) {
-          static int count = 1;
-          const char *plyPrefix =
-            getenv("PLY_PREFIX") ? getenv("PLY_PREFIX") : "mesh";
-          std::string fn = StringPrintf("%s_%05d.ply", plyPrefix, count++);
+    // Create multiple-_Shape_ types
+    else if (name == "curve")
+      shapes = CreateCurveShape(object2world, world2object,
+                                reverseOrientation, paramSet);
+    else if (name == "trianglemesh") {
+      if (PbrtOptions.toPly) {
+        static int count = 1;
+        const char *plyPrefix =
+          getenv("PLY_PREFIX") ? getenv("PLY_PREFIX") : "mesh";
+        std::string fn = StringPrintf("%s_%05d.ply", plyPrefix, count++);
 
-          int nvi, npi, nuvi, nsi, nni;
-          const int *vi = paramSet.FindInt("indices", &nvi);
-          const Point3f *P = paramSet.FindPoint3f("P", &npi);
-          const Point2f *uvs = paramSet.FindPoint2f("uv", &nuvi);
-          if (!uvs) uvs = paramSet.FindPoint2f("st", &nuvi);
-          std::vector<Point2f> tempUVs;
-          if (!uvs) {
-            const Float *fuv = paramSet.FindFloat("uv", &nuvi);
-            if (!fuv) fuv = paramSet.FindFloat("st", &nuvi);
-            if (fuv) {
-              nuvi /= 2;
-              tempUVs.reserve(nuvi);
-              for (int i = 0; i < nuvi; ++i)
-                tempUVs.push_back(Point2f(fuv[2 * i], fuv[2 * i + 1]));
-              uvs = &tempUVs[0];
-            }
+        int nvi, npi, nuvi, nsi, nni;
+        const int *vi = paramSet.FindInt("indices", &nvi);
+        const Point3f *P = paramSet.FindPoint3f("P", &npi);
+        const Point2f *uvs = paramSet.FindPoint2f("uv", &nuvi);
+        if (!uvs) uvs = paramSet.FindPoint2f("st", &nuvi);
+        std::vector<Point2f> tempUVs;
+        if (!uvs) {
+          const Float *fuv = paramSet.FindFloat("uv", &nuvi);
+          if (!fuv) fuv = paramSet.FindFloat("st", &nuvi);
+          if (fuv) {
+            nuvi /= 2;
+            tempUVs.reserve(nuvi);
+            for (int i = 0; i < nuvi; ++i)
+              tempUVs.push_back(Point2f(fuv[2 * i], fuv[2 * i + 1]));
+            uvs = &tempUVs[0];
           }
-          const Normal3f *N = paramSet.FindNormal3f("N", &nni);
-          const Vector3f *S = paramSet.FindVector3f("S", &nsi);
+        }
+        const Normal3f *N = paramSet.FindNormal3f("N", &nni);
+        const Vector3f *S = paramSet.FindVector3f("S", &nsi);
 
-          if (!WritePlyFile(fn.c_str(), nvi / 3, vi, npi, P, S, N, uvs))
-            Error("Unable to write PLY file \"%s\"", fn.c_str());
+        if (!WritePlyFile(fn.c_str(), nvi / 3, vi, npi, P, S, N, uvs))
+          Error("Unable to write PLY file \"%s\"", fn.c_str());
 
-          printf("%*sShape \"plymesh\" \"string filename\" \"%s\" ",
-                 catIndentCount, "", fn.c_str());
+        printf("%*sShape \"plymesh\" \"string filename\" \"%s\" ",
+               catIndentCount, "", fn.c_str());
 
-          std::string alphaTex = paramSet.FindTexture("alpha");
-          if (alphaTex != "")
-            printf("\n%*s\"texture alpha\" \"%s\" ", catIndentCount + 8, "",
-                   alphaTex.c_str());
-          else {
-            int count;
-            const Float *alpha = paramSet.FindFloat("alpha", &count);
-            if (alpha)
-              printf("\n%*s\"float alpha\" %f ", catIndentCount + 8, "",
-                     *alpha);
-          }
+        std::string alphaTex = paramSet.FindTexture("alpha");
+        if (alphaTex != "")
+          printf("\n%*s\"texture alpha\" \"%s\" ", catIndentCount + 8, "",
+                 alphaTex.c_str());
+        else {
+          int count;
+          const Float *alpha = paramSet.FindFloat("alpha", &count);
+          if (alpha)
+            printf("\n%*s\"float alpha\" %f ", catIndentCount + 8, "",
+                   *alpha);
+        }
 
-          std::string shadowAlphaTex = paramSet.FindTexture("shadowalpha");
-          if (shadowAlphaTex != "")
-            printf("\n%*s\"texture shadowalpha\" \"%s\" ",
-                   catIndentCount + 8, "", shadowAlphaTex.c_str());
-          else {
-            int count;
-            const Float *alpha = paramSet.FindFloat("shadowalpha", &count);
-            if (alpha)
-              printf("\n%*s\"float shadowalpha\" %f ", catIndentCount + 8,
-                     "", *alpha);
-          }
-          printf("\n");
-        } else
-          shapes = CreateTriangleMeshShape(object2world, world2object,
-                                           reverseOrientation, paramSet,
-                                           &graphicsState.floatTextures);
-      } else if (name == "plymesh")
-        shapes = CreatePLYMesh(object2world, world2object, reverseOrientation,
-                               paramSet, &graphicsState.floatTextures);
-      else if (name == "heightfield")
-        shapes = CreateHeightfield(object2world, world2object,
-                                   reverseOrientation, paramSet);
-      else if (name == "loopsubdiv")
-        shapes = CreateLoopSubdiv(object2world, world2object,
-                                  reverseOrientation, paramSet);
-      else if (name == "nurbs")
-        shapes = CreateNURBS(object2world, world2object, reverseOrientation,
-                             paramSet);
-      else
-        Warning("Shape \"%s\" unknown.", name.c_str());
-      return shapes;
-    }
+        std::string shadowAlphaTex = paramSet.FindTexture("shadowalpha");
+        if (shadowAlphaTex != "")
+          printf("\n%*s\"texture shadowalpha\" \"%s\" ",
+                 catIndentCount + 8, "", shadowAlphaTex.c_str());
+        else {
+          int count;
+          const Float *alpha = paramSet.FindFloat("shadowalpha", &count);
+          if (alpha)
+            printf("\n%*s\"float shadowalpha\" %f ", catIndentCount + 8,
+                   "", *alpha);
+        }
+        printf("\n");
+      } else
+        shapes = CreateTriangleMeshShape(object2world, world2object,
+                                         reverseOrientation, paramSet,
+                                         &graphicsState.floatTextures);
+    } else if (name == "plymesh")
+      shapes = CreatePLYMesh(object2world, world2object, reverseOrientation,
+                             paramSet, &graphicsState.floatTextures);
+    else if (name == "heightfield")
+      shapes = CreateHeightfield(object2world, world2object,
+                                 reverseOrientation, paramSet);
+    else if (name == "loopsubdiv")
+      shapes = CreateLoopSubdiv(object2world, world2object,
+                                reverseOrientation, paramSet);
+    else if (name == "nurbs")
+      shapes = CreateNURBS(object2world, world2object, reverseOrientation,
+                           paramSet);
+    else
+      Warning("Shape \"%s\" unknown.", name.c_str());
+    return shapes;
+  }
 
   STAT_COUNTER("Scene/Materials created", nMaterialsCreated);
 
@@ -1473,112 +1473,135 @@ namespace pbrt {
       // ray tracing test
       float alpha = (float) (PbrtOptions.alpha)/10;
       int numrays = (int) (PbrtOptions.numrays);
+      int dimension = (int) (PbrtOptions.dimension);
       float height = 1.f;
 
-      // fix incidence angle
-      //float angle = (float) (PbrtOptions.theta_i);
-      //float theta = angle*M_PI/180.f;
-      //Point3f center = Point3f(height*tan(theta), 0.f, height);
-      //Vector3f dir = Vector3f(-sin(theta), 0.f, -cos(theta));
-
-      float trand, urand;
+      float trand, urand, theta;
       float observe = 6000;
       int maxdepth = 10;
       float radius = 5;
       std::ofstream outputx, outputy, outputz, outputweight, outputdepth, outputangle;
 
-      // std::ostringstream oss1;
-      // oss1 << angle << "outputx_" << alpha<<".txt";
-      // std::string var1 = oss1.str();
-      // outputx.open(var1);
-
-      // std::ostringstream oss2;
-      // oss2 << angle << "outputy_" << alpha<<".txt";
-      // std::string var2 = oss2.str();
-      // outputy.open(var2);
-
-      // std::ostringstream oss3;
-      // oss3 << angle << "outputz_" << alpha<<".txt";
-      // std::string var3 = oss3.str();
-      // outputz.open(var3);
-
-      // std::ostringstream oss4;
-      // oss4 << angle << "outputweight_" << alpha<<".txt";
-      // std::string var4 = oss4.str();
-      // outputweight.open(var4);
-
-      // std::ostringstream oss5;
-      // oss5 << angle << "outputdepth_" << alpha<<".txt";
-      // std::string var5 = oss5.str();
-      // outputdepth.open(var5);
-
-      std::ostringstream oss1;
-      oss1 <<"3d_outputx_" << alpha<<".txt";
-      std::string var1 = oss1.str();
-      outputx.open(var1);
-
-      std::ostringstream oss2;
-      oss2 <<"3d_outputy_" << alpha<<".txt";
-      std::string var2 = oss2.str();
-      outputy.open(var2);
-
-      std::ostringstream oss3;
-      oss3 <<"3d_outputz_" << alpha<<".txt";
-      std::string var3 = oss3.str();
-      outputz.open(var3);
-
-      std::ostringstream oss4;
-      oss4 <<"3d_outputweight_" << alpha<<".txt";
-      std::string var4 = oss4.str();
-      outputweight.open(var4);
-
-      std::ostringstream oss5;
-      oss5 <<"3d_outputdepth_" << alpha<<".txt";
-      std::string var5 = oss5.str();
-      outputdepth.open(var5);
-
-      std::ostringstream oss6;
-      oss6 <<"3d_outputangle_" << alpha<<".txt";
-      std::string var6 = oss6.str();
-      outputangle.open(var6);
-
-      srand (time(NULL));
-      // normal distribution of incident angle
-      //std::default_random_engine generator;
-      //std::normal_distribution<float> distribution(M_PI/4,M_PI/12);
-      //float theta;
-      for (int i = 0; i<numrays; ++i){
-        trand = 2 * M_PI * ((float) rand() / (RAND_MAX));
-        urand = (float) rand() / (RAND_MAX);
-
-        // fix incident angle
-        //Point3f ori = center + Point3f(radius*sqrt(urand)*cos(trand), radius*sqrt(urand)*sin(trand), 0.f);
-
-        // different incident angle
-        float theta = M_PI/2 * ((float) rand() / (RAND_MAX));
-        // normal distribution incident angle
-        // float randnum = distribution(generator);
-        // while (randnum<0 || randnum>M_PI/2){
-        //   randnum = distribution(generator);
-        // }
-        // theta = randnum;
-        Point3f ori = Point3f(height*tan(theta), 0.f, height) + Point3f(radius*sqrt(urand)*cos(trand), radius*sqrt(urand)*sin(trand), 0.f);
-        // Point3f ori = Point3f(height*sin(theta), 0.f, height*cos(theta)) + Point3f(radius*sqrt(urand)*cos(trand), radius*sqrt(urand)*sin(trand), 0.f);
+      if (dimension == 2){
+        // 2d experiment, incidence angle fixed
+        float angle = (float) (PbrtOptions.theta_i);
+        float theta = angle*M_PI/180.f;
+        Point3f center = Point3f(height*tan(theta), 0.f, height);
         Vector3f dir = Vector3f(-sin(theta), 0.f, -cos(theta));
-        // create a ray
-        Ray ray = Ray(ori, dir);
-        int depth = 0;
-        int weight = 1;
-        SingleLayerMirror(theta,observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth, outputangle);
-        //SingleLayerGlass(theta,observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth, outputangle);
-        //DoubleLayerHeightfield(theta,observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth, outputangle);
+
+        std::ostringstream oss1;
+        oss1 << angle << "outputx_" << alpha<<".txt";
+        std::string var1 = oss1.str();
+        outputx.open(var1);
+
+        std::ostringstream oss2;
+        oss2 << angle << "outputy_" << alpha<<".txt";
+        std::string var2 = oss2.str();
+        outputy.open(var2);
+
+        std::ostringstream oss3;
+        oss3 << angle << "outputz_" << alpha<<".txt";
+        std::string var3 = oss3.str();
+        outputz.open(var3);
+
+        std::ostringstream oss4;
+        oss4 << angle << "outputweight_" << alpha<<".txt";
+        std::string var4 = oss4.str();
+        outputweight.open(var4);
+
+        std::ostringstream oss5;
+        oss5 << angle << "outputdepth_" << alpha<<".txt";
+        std::string var5 = oss5.str();
+        outputdepth.open(var5);
+
+        srand (time(NULL));
+        for (int i = 0; i<numrays; ++i){
+          trand = 2 * M_PI * ((float) rand() / (RAND_MAX));
+          urand = (float) rand() / (RAND_MAX);
+
+          Point3f ori = center + Point3f(radius*sqrt(urand)*cos(trand), radius*sqrt(urand)*sin(trand), 0.f);
+
+          // different incident angle
+          theta = M_PI/2 * ((float) rand() / (RAND_MAX));
+          // create a ray
+          Ray ray = Ray(ori, dir);
+          int depth = 0;
+          int weight = 1;
+          SingleLayerMirror(theta,observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth, outputangle);
+          //SingleLayerGlass(theta,observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth, outputangle);
+          //DoubleLayerHeightfield(theta,observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth, outputangle);
+        }
+
+        outputx.close();
+        outputy.close();
+        outputz.close();
+        outputweight.close();
+        outputdepth.close();
+
+      }else{
+        // 3d experiment
+
+        std::ostringstream oss1;
+        oss1 <<"3d_outputx_" << alpha<<".txt";
+        std::string var1 = oss1.str();
+        outputx.open(var1);
+
+        std::ostringstream oss2;
+        oss2 <<"3d_outputy_" << alpha<<".txt";
+        std::string var2 = oss2.str();
+        outputy.open(var2);
+
+        std::ostringstream oss3;
+        oss3 <<"3d_outputz_" << alpha<<".txt";
+        std::string var3 = oss3.str();
+        outputz.open(var3);
+
+        std::ostringstream oss4;
+        oss4 <<"3d_outputweight_" << alpha<<".txt";
+        std::string var4 = oss4.str();
+        outputweight.open(var4);
+
+        std::ostringstream oss5;
+        oss5 <<"3d_outputdepth_" << alpha<<".txt";
+        std::string var5 = oss5.str();
+        outputdepth.open(var5);
+
+        std::ostringstream oss6;
+        oss6 <<"3d_outputangle_" << alpha<<".txt";
+        std::string var6 = oss6.str();
+        outputangle.open(var6);
+
+        srand (time(NULL));
+        // normal distribution of incident angle
+        //std::default_random_engine generator;
+        //std::normal_distribution<float> distribution(M_PI/4,M_PI/12);
+        float theta;
+        for (int i = 0; i<numrays; ++i){
+          trand = 2 * M_PI * ((float) rand() / (RAND_MAX));
+          urand = (float) rand() / (RAND_MAX);
+
+          // different incident angle
+          float theta = M_PI/2 * ((float) rand() / (RAND_MAX));
+
+          // normal distribution incident angle
+          // float randnum = distribution(generator);
+          // while (randnum<0 || randnum>M_PI/2){
+          //   randnum = distribution(generator);
+          // }
+          // theta = randnum;
+          Point3f ori = Point3f(height*tan(theta), 0.f, height) + Point3f(radius*sqrt(urand)*cos(trand), radius*sqrt(urand)*sin(trand), 0.f);
+          Vector3f dir = Vector3f(-sin(theta), 0.f, -cos(theta));
+          // create a ray
+          Ray ray = Ray(ori, dir);
+          int depth = 0;
+          int weight = 1;
+          SingleLayerMirror(theta,observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth, outputangle);
+          //SingleLayerGlass(theta,observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth, outputangle);
+          //DoubleLayerHeightfield(theta,observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth, outputangle);
+        }
+
       }
-      outputx.close();
-      outputy.close();
-      outputz.close();
-      outputweight.close();
-      outputdepth.close();
-      outputangle.close();
+
       std::cout<<"bad rays "<<count<<std::endl;
       std::cout<<"rays that go out: "<<count_goout<<std::endl;
 
@@ -1677,7 +1700,7 @@ namespace pbrt {
     }
     SingleLayerMirror(theta, observe, reflRay, scene, weight, depth+1, maxdepth, outputx, outputy, outputz, outputweight, outputdepth,outputangle);
     return;
-}
+  }
 
   void SingleLayerGlass(float theta, float observe, const Ray &r, const Scene& scene, int weight, int depth, int maxdepth, std::ofstream &outputx, std::ofstream &outputy, std::ofstream &outputz, std::ofstream &outputweight, std::ofstream &outputdepth, std::ofstream &outputangle){
     float etaI = 1;
@@ -1764,7 +1787,7 @@ namespace pbrt {
       SingleLayerGlass(theta, observe, tranRay, scene, weight, depth+1, maxdepth, outputx, outputy, outputz, outputweight, outputdepth, outputangle);
       return;
     }
-}
+  }
 
   void DoubleLayerHeightfield(float theta, float observe, const Ray &r, const Scene& scene, int weight, int depth, int maxdepth, std::ofstream &outputx, std::ofstream &outputy, std::ofstream &outputz, std::ofstream &outputweight, std::ofstream &outputdepth, std::ofstream &outputangle){
     // check intersection
@@ -1902,55 +1925,55 @@ namespace pbrt {
 
     Integrator *integrator = nullptr;
     if (IntegratorName == "whitted")
-        integrator = CreateWhittedIntegrator(IntegratorParams, sampler, camera);
+      integrator = CreateWhittedIntegrator(IntegratorParams, sampler, camera);
     else if (IntegratorName == "directlighting")
-        integrator =
-            CreateDirectLightingIntegrator(IntegratorParams, sampler, camera);
+      integrator =
+        CreateDirectLightingIntegrator(IntegratorParams, sampler, camera);
     else if (IntegratorName == "path")
-        integrator = CreatePathIntegrator(IntegratorParams, sampler, camera);
+      integrator = CreatePathIntegrator(IntegratorParams, sampler, camera);
     else if (IntegratorName == "volpath")
-        integrator = CreateVolPathIntegrator(IntegratorParams, sampler, camera);
+      integrator = CreateVolPathIntegrator(IntegratorParams, sampler, camera);
     else if (IntegratorName == "bdpt") {
-        integrator = CreateBDPTIntegrator(IntegratorParams, sampler, camera);
+      integrator = CreateBDPTIntegrator(IntegratorParams, sampler, camera);
     } else if (IntegratorName == "mlt") {
-        integrator = CreateMLTIntegrator(IntegratorParams, camera);
+      integrator = CreateMLTIntegrator(IntegratorParams, camera);
     } else if (IntegratorName == "ambientocclusion") {
-        integrator = CreateAOIntegrator(IntegratorParams, sampler, camera);
+      integrator = CreateAOIntegrator(IntegratorParams, sampler, camera);
     } else if (IntegratorName == "sppm") {
-        integrator = CreateSPPMIntegrator(IntegratorParams, camera);
+      integrator = CreateSPPMIntegrator(IntegratorParams, camera);
     } else {
-        Error("Integrator \"%s\" unknown.", IntegratorName.c_str());
-        return nullptr;
+      Error("Integrator \"%s\" unknown.", IntegratorName.c_str());
+      return nullptr;
     }
 
     if (renderOptions->haveScatteringMedia && IntegratorName != "volpath" &&
         IntegratorName != "bdpt" && IntegratorName != "mlt") {
-        Warning(
-            "Scene has scattering media but \"%s\" integrator doesn't support "
-            "volume scattering. Consider using \"volpath\", \"bdpt\", or "
-            "\"mlt\".", IntegratorName.c_str());
+      Warning(
+              "Scene has scattering media but \"%s\" integrator doesn't support "
+              "volume scattering. Consider using \"volpath\", \"bdpt\", or "
+              "\"mlt\".", IntegratorName.c_str());
     }
 
     IntegratorParams.ReportUnused();
     // Warn if no light sources are defined
     if (lights.empty())
-        Warning(
-            "No light sources defined in scene; "
-            "rendering a black image.");
+      Warning(
+              "No light sources defined in scene; "
+              "rendering a black image.");
     return integrator;
-}
+  }
 
-Camera *RenderOptions::MakeCamera() const {
+  Camera *RenderOptions::MakeCamera() const {
     std::unique_ptr<Filter> filter = MakeFilter(FilterName, FilterParams);
     Film *film = MakeFilm(FilmName, FilmParams, std::move(filter));
     if (!film) {
-        Error("Unable to create film.");
-        return nullptr;
+      Error("Unable to create film.");
+      return nullptr;
     }
     Camera *camera = pbrt::MakeCamera(CameraName, CameraParams, CameraToWorld,
-                                  renderOptions->transformStartTime,
-                                  renderOptions->transformEndTime, film);
+                                      renderOptions->transformStartTime,
+                                      renderOptions->transformEndTime, film);
     return camera;
-}
+  }
 
 }  // namespace pbrt

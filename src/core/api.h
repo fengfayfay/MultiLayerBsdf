@@ -90,7 +90,7 @@ void pbrtWorldEnd();
 
 // function used for my test
 float intersect(const Ray &ray, float observe);
- void SingleLayerMirror(float theta, float observe, const Ray &ray, const Scene& scene, int weight,int depth, int maxdepth, std::ofstream &outputx, std::ofstream &outputy, std::ofstream &outputz, std::ofstream &outputweight, std::ofstream &outputdepth, std::ofstream &outputangle);
+ void SingleLayerMirror(float theta, float observe, const Ray &ray, const Scene& scene, int weight,int depth, int maxdepth, std::ofstream &outputx, std::ofstream &outputy, std::ofstream &outputz, std::ofstream &outputweight, std::ofstream &outputdepth, std::ofstream &outputanglex);
 
  void SingleLayerGlass(float theta, float observe, const Ray &ray, const Scene& scene, int weight,int depth, int maxdepth, std::ofstream &outputx, std::ofstream &outputy, std::ofstream &outputz, std::ofstream &outputweight, std::ofstream &outputdepth, std::ofstream &outputangle);
 
