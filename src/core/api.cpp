@@ -1476,7 +1476,7 @@ namespace pbrt {
       int dimension = (int) (PbrtOptions.dimension);
       float height = 1.f;
 
-      float trand, urand, theta;
+      float trand, urand;
       float observe = 6000;
       int maxdepth = 10;
       float radius = 5;
