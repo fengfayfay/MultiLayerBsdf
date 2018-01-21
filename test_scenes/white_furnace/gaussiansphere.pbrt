@@ -1,0 +1,23 @@
+LookAt 0 -8.66 5  # eye
+       0 0 0      # look at point
+       0 1.73 1   # up vector
+Camera "perspective" "float fov" 45
+
+Sampler "halton" "integer pixelsamples" 128
+Integrator "path"
+Film "image" "string filename" "ubersphere.png"
+     "integer xresolution" [400] "integer yresolution" [400]
+
+WorldBegin
+AttributeBegin
+  LightSource "infinite" "color L" [.5 .5 .5]
+AttributeEnd
+
+AttributeBegin
+  Material "gaussian" "rgb Kd" [0 0 0] "rgb Ks" [1 1 1] "float roughness" [0.1] "bool remaproughness" "false"
+  Shape "sphere"
+AttributeEnd
+
+WorldEnd
+
+

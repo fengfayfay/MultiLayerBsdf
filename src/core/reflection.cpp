@@ -230,7 +230,9 @@ Spectrum MicrofacetReflection::f(const Vector3f &wo, const Vector3f &wi) const {
     if (cosThetaI == 0 || cosThetaO == 0) return Spectrum(0.);
     if (wh.x == 0 && wh.y == 0 && wh.z == 0) return Spectrum(0.);
     wh = Normalize(wh);
-    Spectrum F = fresnel->Evaluate(Dot(wi, wh));
+    // Spectrum F = fresnel->Evaluate(Dot(wi, wh));
+    // change fresnel to be 1 (Mandy)
+    Spectrum F = 1;
     return R * distribution->D(wh) * distribution->G(wo, wi) * F /
            (4 * cosThetaI * cosThetaO);
 }
