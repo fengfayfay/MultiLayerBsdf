@@ -1575,7 +1575,6 @@ namespace pbrt {
         // normal distribution of incident angle
         //std::default_random_engine generator;
         //std::normal_distribution<float> distribution(M_PI/4,M_PI/12);
-        float theta;
         for (int i = 0; i<numrays; ++i){
           trand = 2 * M_PI * ((float) rand() / (RAND_MAX));
           urand = (float) rand() / (RAND_MAX);
@@ -1588,7 +1587,7 @@ namespace pbrt {
           // while (randnum<0 || randnum>M_PI/2){
           //   randnum = distribution(generator);
           // }
-          // theta = randnum;
+          // float theta = randnum;
           Point3f ori = Point3f(height*tan(theta), 0.f, height) + Point3f(radius*sqrt(urand)*cos(trand), radius*sqrt(urand)*sin(trand), 0.f);
           Vector3f dir = Vector3f(-sin(theta), 0.f, -cos(theta));
           // create a ray

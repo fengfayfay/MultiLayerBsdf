@@ -72,25 +72,23 @@ for k = 4
     % visualization parameters
     munum = 100;
     phinum = 400;
-    anglenum = 100;
     mu_unit = 1/munum;
     phi_unit = 2*pi/phinum;
-    angle_unit = pi/2/anglenum;
-    result = zeros(phinum,munum,anglenum);
+    result = zeros(phinum,munum);
     for i = 1:length(x)
-        if z(i) >=0
+        if z(i) >=0 && angle(i)<pi/2/90
             phi = atan2(y(i),x(i));
             if phi<0
                 phi = phi + 2*pi;
             end
-            result(ceil(phi/phi_unit),ceil(z(i)/mu_unit),ceil(angle(i)/angle_unit)) = result(ceil(phi/phi_unit),ceil(z(i)/mu_unit),ceil(angle(i)/angle_unit)) + 1;
+            result(ceil(phi/phi_unit),ceil(z(i)/mu_unit)) = result(ceil(phi/phi_unit),ceil(z(i)/mu_unit)) + 1;
         end
     end
     figure
     % energy
     % imagesc(result/total)
     % brdf*cos
-    imagesc(result(:,:,30)/length(x)*(2*pi/(phinum*munum)))
+    imagesc(result/sum(result(:))*(2*pi/(phinum*munum)))
     title('reflection lobe')
     xlabel('mu_o')
     ylabel('phi_o')
