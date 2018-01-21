@@ -230,9 +230,9 @@ Spectrum MicrofacetReflection::f(const Vector3f &wo, const Vector3f &wi) const {
     if (cosThetaI == 0 || cosThetaO == 0) return Spectrum(0.);
     if (wh.x == 0 && wh.y == 0 && wh.z == 0) return Spectrum(0.);
     wh = Normalize(wh);
-    // Spectrum F = fresnel->Evaluate(Dot(wi, wh));
-    // change fresnel to be 1 (Mandy)
-    Spectrum F = 1;
+    Spectrum F = fresnel->Evaluate(Dot(wi, wh));
+    // set fresnel to be 1 for white furnace test
+    //Spectrum F = 1;
     return R * distribution->D(wh) * distribution->G(wo, wi) * F /
            (4 * cosThetaI * cosThetaO);
 }
@@ -460,7 +460,7 @@ Spectrum MicrofacetReflection::Sample_f(const Vector3f &wo, Vector3f *wi,
     if (!SameHemisphere(wo, *wi)) return Spectrum(0.f);
 
     // Compute PDF of _wi_ for microfacet reflection
-    *pdf = distribution->Pdf(wo, *wi);
+    *pdf = distribution->Pdf(wo, wh) / (4 * Dot(wo, wh));
     return f(wo, *wi);
 }
 
