@@ -58,4 +58,4 @@ GaussianMaterial *CreateGaussianMaterial(const TextureParams &mp);
 
 }  // namespace pbrt
 
-#endif  // PBRT_MATERIALS_GAUSSIAN_MATERIAL_H
+#endif  // PBRT_MATERIALS_GAUSSIAN_H

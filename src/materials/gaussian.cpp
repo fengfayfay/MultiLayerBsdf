@@ -5,7 +5,7 @@
 
 
 // materials/gaussian.cpp*
-#include "materials/uber.h"
+#include "materials/gaussian.h"
 #include "spectrum.h"
 #include "reflection.h"
 #include "texture.h"
@@ -56,7 +56,7 @@ void GaussianMaterial::ComputeScatteringFunctions(SurfaceInteraction *si,
         }
 
         // use Gaussian BSDF (Mandy)
-        BxDF *spec = ARENA_ALLOC(arena, GaussianReflection)(ks);
+        BxDF *spec = ARENA_ALLOC(arena, GaussianBSDF)(ks);
         si->bsdf->Add(spec);
     }
 

@@ -1,23 +1,27 @@
-LookAt 0 -8.66 5  # eye
-       0 0 0      # look at point
-       0 1.73 1   # up vector
-Camera "perspective" "float fov" 45
+Film "image" 
+	"integer xresolution" [900] "integer yresolution" [900]
+    "string filename" "gaussiansphere.png"
+Integrator "path" "integer maxdepth" [1]
+Sampler "halton" "integer pixelsamples" [32] 
 
-Sampler "halton" "integer pixelsamples" 128
-Integrator "path"
-Film "image" "string filename" "ubersphere.png"
-     "integer xresolution" [400] "integer yresolution" [400]
+LookAt 0 3 8  0 .8 0   0 1 0
+Camera "perspective" "float fov" [22]
 
 WorldBegin
+
+
 AttributeBegin
   LightSource "infinite" "color L" [.5 .5 .5]
 AttributeEnd
 
 AttributeBegin
-  Material "gaussian" "rgb Kd" [0 0 0] "rgb Ks" [1 1 1] "float roughness" [0.1] "bool remaproughness" "false"
-  Shape "sphere"
+Material "gaussian" "rgb Kd" [0 0 0] "rgb Ks" [1 1 1] "float roughness" [0.1] "bool remaproughness" "false"
+Translate 0 1 0
+Rotate 60 1 1 1
+Scale .9 .9 .9
+Shape "sphere"
 AttributeEnd
 
-WorldEnd
 
+WorldEnd
 
