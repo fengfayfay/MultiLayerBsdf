@@ -407,6 +407,8 @@ SET ( PBRT_CORE_SOURCE
   src/core/stats.cpp
   src/core/texture.cpp
   src/core/transform.cpp
+
+  src/core/gaussianmixture.cpp
   )
 
 SET ( PBRT_CORE_HEADERS
@@ -450,6 +452,8 @@ SET ( PBRT_CORE_HEADERS
   src/core/stringprint.h
   src/core/texture.h
   src/core/transform.h
+
+  src/core/gaussianmixture.h
   )
 
 FILE ( GLOB PBRT_SOURCE

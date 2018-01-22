@@ -50,13 +50,13 @@ void GaussianMaterial::ComputeScatteringFunctions(SurfaceInteraction *si,
             roughv = roughnessv->Evaluate(*si);
         else
             roughv = roughu;
-        if (remapRoughness) {
-            roughu = TrowbridgeReitzDistribution::RoughnessToAlpha(roughu);
-            roughv = TrowbridgeReitzDistribution::RoughnessToAlpha(roughv);
-        }
 
         // use Gaussian BSDF (Mandy)
-        BxDF *spec = ARENA_ALLOC(arena, GaussianBSDF)(ks);
+        int dim = 3;
+        int num = 50;
+        Gaussianmixture *gm =
+          ARENA_ALLOC(arena, Gaussianmixture)(dim, num, roughu);
+        BxDF *spec = ARENA_ALLOC(arena, GaussianBSDF)(ks,gm);
         si->bsdf->Add(spec);
     }
 

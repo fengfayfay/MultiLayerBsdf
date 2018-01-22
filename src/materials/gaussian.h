@@ -13,6 +13,7 @@
 // materials/gaussian.h*
 #include "pbrt.h"
 #include "material.h"
+#include "gaussianmixture.h"
 
 namespace pbrt {
 

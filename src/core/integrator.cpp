@@ -102,7 +102,7 @@ Spectrum UniformSampleOneLight(const Interaction &it, const Scene &scene,
     Point2f uLight = sampler.Get2D();
     Point2f uScattering = sampler.Get2D();
     return EstimateDirect(it, uScattering, *light, uLight,
-                          scene, sampler, arena, handleMedia) / lightPdf;
+                           scene, sampler, arena, handleMedia) / lightPdf;
 }
 
 Spectrum EstimateDirect(const Interaction &it, const Point2f &uScattering,
@@ -184,6 +184,7 @@ Spectrum EstimateDirect(const Interaction &it, const Point2f &uScattering,
         }
         VLOG(2) << "  BSDF / phase sampling f: " << f << ", scatteringPdf: " <<
             scatteringPdf;
+
         if (!f.IsBlack() && scatteringPdf > 0) {
             // Account for light contributions along sampled direction _wi_
             Float weight = 1;
@@ -208,7 +209,9 @@ Spectrum EstimateDirect(const Interaction &it, const Point2f &uScattering,
                     Li = lightIsect.Le(-wi);
             } else
                 Li = light.Le(ray);
-            if (!Li.IsBlack()) Ld += f * Li * Tr * weight / scatteringPdf;
+            if (!Li.IsBlack()) {
+              Ld += f * Li * Tr * weight / scatteringPdf;
+            }
         }
     }
     return Ld;

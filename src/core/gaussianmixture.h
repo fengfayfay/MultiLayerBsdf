@@ -10,6 +10,9 @@
 #define PBRT_CORE_GAUSSIANMIXTURE_H
 
 // core/gaussianmixture.h*
+#include "pbrt.h"
+#include "stringprint.h"
+#include <fstream>
 #include <vector>
 
 namespace pbrt {
@@ -67,7 +70,7 @@ namespace pbrt {
       return r;
     }
     friend Matrix3x3 Inverse(const Matrix3x3 &);
-    Float determinant(){
+    Float determinant() const{
       Float d = m[0][0]* (m[1][1] * m[2][2] - m[1][2] * m[2][1])
         - m[0][1] * (m[1][0] * m[2][2] - m[1][2]*m[2][0])
         + m[0][2] * (m[1][0] * m[2][1] - m[1][1]*m[2][0]);
@@ -95,7 +98,8 @@ namespace pbrt {
 
   public:
     Gaussianmixture();
-    Gaussianmixture(int dim, int num, std::vector<Float> w, std::vector<std::vector<Float>> m, std::vector<Matrix3x3> c);
+    Gaussianmixture(int dim, int num, Float alpha);
+    ~Gaussianmixture();
     Float single_gaussian_pdf(Float x, Float y, Float z, int index) const;
     Float prob(Float x, Float y, Float z) const;
 

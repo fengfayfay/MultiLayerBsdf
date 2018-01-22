@@ -534,68 +534,8 @@ inline int BSDF::NumComponents(BxDFType flags) const {
 class GaussianBSDF : public BxDF{
  public:
  // GaussianBSDF Public Methods
- GaussianBSDF(const Spectrum &R)
-   : BxDF(BxDFType(BSDF_REFLECTION)),R(R){
-
-    // read in gaussian mixture and create a gm object
-    int dim = 3;
-    int num = 50;
-    // weights
-    std::vector<Float> w;
-    std::string line;
-    std::ifstream weightfile ("weights.txt");
-    if (weightfile.is_open())
-      {
-        while ( getline (weightfile,line) )
-          {
-            w.push_back((Float)std::stod(line));
-          }
-        weightfile.close();
-      }
-    else Error("Unable to open file weights.txt");
-
-    // means
-    std::vector<std::vector<Float>> m;
-    std::vector<Float> m_cur;
-    std::ifstream meanfile ("means.txt");
-    if (meanfile.is_open())
-      {
-        while ( getline (meanfile,line) )
-          {
-            if (m_cur.size()<dim){
-              m_cur.push_back((Float)std::stod(line));
-            }
-            else{
-              m.push_back(m_cur);
-              m_cur = {(Float)std::stod(line)};
-            }
-          }
-        meanfile.close();
-      }
-    else Error("Unable to open file means.txt");
-
-    // covarians
-    std::vector<Matrix3x3> c;
-    std::vector<Float> c_cur;
-    std::ifstream covfile ("covars.txt");
-    if (covfile.is_open())
-      {
-        while ( getline (covfile,line) )
-          {
-            if (c_cur.size()<dim*dim){
-              c_cur.push_back((Float)std::stod(line));
-            }
-            else{
-              c.push_back(Matrix3x3(c_cur));
-              c_cur = {(Float)std::stod(line)};
-            }
-          }
-        covfile.close();
-      }
-    else Error("Unable to open file covars.txt");
-
-    g = Gaussianmixture(dim, num, w, m, c);
-  };
+ GaussianBSDF(const Spectrum &R, Gaussianmixture *gm)
+   : BxDF(BxDFType(BSDF_REFLECTION)),R(R),gm(gm){}
 
  Spectrum f(const Vector3f &wo, const Vector3f &wi) const;
  Spectrum Sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &u,
@@ -606,7 +546,7 @@ class GaussianBSDF : public BxDF{
  private:
  // GaussianBSDF Private Data
  const Spectrum R;
- Gaussianmixture g;
+ const Gaussianmixture *gm;
 };
 
 }  // namespace pbrt

@@ -393,8 +393,7 @@ bool FourierBSDFTable::GetWeightsAndOffset(Float cosTheta, int *offset,
     Float x = wh.x/abs(wh.z);
     Float y = wh.y/abs(wh.z);
     Float z = acos(abs(wh.z));
-    // Float p = g.prob(x,y,z);
-    Float p = 1;
+    Float p = gm->prob(x,y,z);
     // probability conditioned on a particular incident angle
     // uniform distributed incident angle prob = 1/(pi/2)
     p /= 1.f/(M_PI/2);
@@ -407,12 +406,17 @@ bool FourierBSDFTable::GetWeightsAndOffset(Float cosTheta, int *offset,
     Float dxdmu = (-cos(phi) * mu/sintheta_o*(wi.z + mu) - (wi.x + sintheta_o*cos(phi)))/pow(wi.z + mu, 2);
     Float dydphi = sintheta_o*cos(phi)/(wi.z + mu);
     Float dydmu = (-sin(phi)*mu/sintheta_o*(wi.z + mu) - (wi.y + sintheta_o*sin(phi)))/pow(wi.z + mu, 2);
-    // Jacobian
-    Float J = dxdphi*dydmu - dxdmu*dydphi;
-    Float brdfcos = p * J;
 
+    // Jacobian
+    Float J;
+    if (sintheta_o == 0){
+      J = 1.f/pow(wi.z+1.f,2);
+    }else J = dxdphi*dydmu - dxdmu*dydphi;
+    Float brdfcos = p * J;
+    
     // return the brdf value
-    return R * brdfcos / mu;
+    Spectrum result = R * brdfcos;
+    return R * brdfcos / cosThetaO;
   }
 
   std::string GaussianBSDF::ToString() const {
@@ -692,19 +696,38 @@ Float FourierBSDF::Pdf(const Vector3f &wo, const Vector3f &wi) const {
   Spectrum GaussianBSDF::Sample_f(const Vector3f &wo, Vector3f *wi,
                                           const Point2f &u, Float *pdf,
                                           BxDFType *sampledType) const {
+    // From FourierBSDF::Sample_f
+    // Mathematically, wi will be normalized (if wo was). However, in
+    // practice, floating-point rounding error can cause some error to
+    // accumulate in the computed value of wi here. This can be
+    // catastrophic: if the ray intersects an object with the FourierBSDF
+    // again and the wo (based on such a wi) is nearly perpendicular to the
+    // surface, then the wi computed at the next intersection can end up
+    // being substantially (like 4x) longer than normalized, which leads to
+    // all sorts of errors, including negative spectral values. Therefore,
+    // we normalize again here.
+    Vector3f wo_normalized = Normalize(wo);
+
     // Sample gaussian orientation $\wh$ and reflected direction $\wi$
-    if (wo.z == 0) return 0.;
-    if (!SameHemisphere(wo, *wi)) return Spectrum(0.f);
-    // Compute PDF of _wi_ for gaussianbsdf reflection
-    *pdf = Pdf(wo, *wi);
-    return f(wo, *wi);
+    *wi = CosineSampleHemisphere(u);
+    *wi = Normalize(*wi);
+    if (wo.z<0) std::cout<<"wo.z<0"<<std::endl;
+    if (wo.z < 0) wi->z *= -1;
+    if (!SameHemisphere(wo_normalized, *wi) || wi->z == 0) return Spectrum(0.f);
+    *pdf = Pdf(wo_normalized, *wi);
+    return f(wo_normalized, *wi);
+
+    // // Sample gaussian orientation $\wh$ and reflected direction $\wi$
+    // if (wo.z == 0) return 0.;
+    // if (!SameHemisphere(wo, *wi)) return Spectrum(0.f);
+    // // Compute PDF of _wi_ for gaussianbsdf reflection
+    // *pdf = Pdf(wo, *wi);
+    // return f(wo, *wi);
   }
 
   // uniform sampling for now (Mandy)
   Float GaussianBSDF::Pdf(const Vector3f &wo, const Vector3f &wi) const {
-    if (!SameHemisphere(wo, wi)) return 0;
-    Vector3f wh = Normalize(wo + wi);
-    return 1.f/(2*M_PI);
+    return SameHemisphere(wo, wi) ? AbsCosTheta(wi) * InvPi : 0;
   }
 
 Spectrum BxDF::rho(const Vector3f &w, int nSamples, const Point2f *u) const {

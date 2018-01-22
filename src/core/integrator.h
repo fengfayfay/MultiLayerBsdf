@@ -46,6 +46,7 @@
 #include "reflection.h"
 #include "sampler.h"
 #include "material.h"
+#include <iostream>
 
 namespace pbrt {
 

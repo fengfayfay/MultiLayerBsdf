@@ -4,6 +4,7 @@
 
 // core/gaussianmixture.cpp*
 #include "gaussianmixture.h"
+#include <iostream>
 
 namespace pbrt {
   // Matrix3x3 Method Definitions
@@ -26,7 +27,7 @@ namespace pbrt {
   Matrix3x3::Matrix3x3(std::vector<Float> v){
     m[0][0] = v[0];
     m[0][1] = v[1];
-    m[0][2] = v[3];
+    m[0][2] = v[2];
     m[1][0] = v[3];
     m[1][1] = v[4];
     m[1][2] = v[5];
@@ -102,17 +103,68 @@ namespace pbrt {
     dimension = 3;
     num_gaussian = 1;
     weights = {1};
-    means = {0,0,0};
+    means = { {0,0,0} };
     covars = {Matrix3x3(1,0,0,0,1,0,0,0,1)};
   }
 
 
-  Gaussianmixture::Gaussianmixture(int dim, int num, std::vector<Float> w, std::vector<std::vector<Float>> m, std::vector<Matrix3x3> c){
+  Gaussianmixture::Gaussianmixture(int dim, int num, Float alpha){
     dimension = dim;
     num_gaussian = num;
+
+    // weights
+    std::vector<Float> w;
+    std::string line;
+    std::ifstream weightfile("weights.txt");
+    if (weightfile.is_open())
+      {
+        while ( getline (weightfile,line) )
+          {
+            w.push_back((Float)std::stod(line));
+          }
+        weightfile.close();
+      }
+    else Error("Unable to open file weights.txt");
     weights = w;
+
+    // means
+    std::vector<std::vector<Float>> m;
+    std::vector<Float> m_cur;
+    std::ifstream meanfile("means.txt");
+    if (meanfile.is_open())
+      {
+        while ( getline (meanfile,line) )
+          {
+            m_cur.push_back((Float)std::stod(line));
+            if (m_cur.size()==dim){
+              m.push_back(m_cur);
+              m_cur = {};
+            }
+          }
+        meanfile.close();
+      }
+    else Error("Unable to open file means.txt");
     means = m;
+
+    // covarians
+    std::vector<Matrix3x3> c;
+    std::vector<Float> c_cur;
+    std::ifstream covfile("covars.txt");
+    if (covfile.is_open())
+      {
+        while ( getline (covfile,line) )
+          {
+            c_cur.push_back((Float)std::stod(line));
+            if (c_cur.size()==dim*dim){
+              c.push_back(Matrix3x3(c_cur));
+              c_cur = {};
+            }
+          }
+        covfile.close();
+      }
+    else Error("Unable to open file covars.txt");
     covars = c;
+
   }
 
   Gaussianmixture::~Gaussianmixture(){}
@@ -131,7 +183,7 @@ namespace pbrt {
   {
     Float p = 0.f;
     for (int i = 0; i < num_gaussian; i++){
-        p += weights[i] * single_gaussian_pdf(sample, i);
+      p += weights[i] * single_gaussian_pdf(x, y, z, i);
     }
     return p;
   }
