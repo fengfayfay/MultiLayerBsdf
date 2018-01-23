@@ -31,7 +31,9 @@
 */
 #include <fstream>
 #include <sstream>
-#include <random>
+#include <time.h>       /* time */
+#include <stdlib.h>     /* srand, rand */
+
 // core/api.cpp*
 #include "api.h"
 #include "parallel.h"
@@ -1475,125 +1477,17 @@ namespace pbrt {
       int numrays = (int) (PbrtOptions.numrays);
       int dimension = (int) (PbrtOptions.dimension);
       float height = 1.f;
-
-      float trand, urand;
       float observe = 6000;
       int maxdepth = 10;
-      float radius = 5;
-      std::ofstream outputx, outputy, outputz, outputweight, outputdepth, outputangle;
+      float radius = 5.f;
 
       if (dimension == 2){
-        // 2d experiment, incidence angle fixed
-        float angle = (float) (PbrtOptions.theta_i);
-        float theta = angle*M_PI/180.f;
-        Point3f center = Point3f(height*tan(theta), 0.f, height);
-        Vector3f dir = Vector3f(-sin(theta), 0.f, -cos(theta));
 
-        std::ostringstream oss1;
-        oss1 << angle << "outputx_" << alpha<<".txt";
-        std::string var1 = oss1.str();
-        outputx.open(var1);
-
-        std::ostringstream oss2;
-        oss2 << angle << "outputy_" << alpha<<".txt";
-        std::string var2 = oss2.str();
-        outputy.open(var2);
-
-        std::ostringstream oss3;
-        oss3 << angle << "outputz_" << alpha<<".txt";
-        std::string var3 = oss3.str();
-        outputz.open(var3);
-
-        std::ostringstream oss4;
-        oss4 << angle << "outputweight_" << alpha<<".txt";
-        std::string var4 = oss4.str();
-        outputweight.open(var4);
-
-        std::ostringstream oss5;
-        oss5 << angle << "outputdepth_" << alpha<<".txt";
-        std::string var5 = oss5.str();
-        outputdepth.open(var5);
-
-        srand (time(NULL));
-        for (int i = 0; i<numrays; ++i){
-          trand = 2 * M_PI * ((float) rand() / (RAND_MAX));
-          urand = (float) rand() / (RAND_MAX);
-
-          Point3f ori = center + Point3f(radius*sqrt(urand)*cos(trand), radius*sqrt(urand)*sin(trand), 0.f);
-          // create a ray
-          Ray ray = Ray(ori, dir);
-          int depth = 0;
-          int weight = 1;
-          SingleLayerMirror(theta,observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth, outputangle);
-          //SingleLayerGlass(theta,observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth, outputangle);
-          //DoubleLayerHeightfield(theta,observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth, outputangle);
-        }
-
-        outputx.close();
-        outputy.close();
-        outputz.close();
-        outputweight.close();
-        outputdepth.close();
+        experiment2d(alpha,numrays,height,observe,maxdepth,radius,*scene);
 
       }else{
-        // 3d experiment
-        std::ostringstream oss1;
-        oss1 <<"3d_outputx_" << alpha<<".txt";
-        std::string var1 = oss1.str();
-        outputx.open(var1);
 
-        std::ostringstream oss2;
-        oss2 <<"3d_outputy_" << alpha<<".txt";
-        std::string var2 = oss2.str();
-        outputy.open(var2);
-
-        std::ostringstream oss3;
-        oss3 <<"3d_outputz_" << alpha<<".txt";
-        std::string var3 = oss3.str();
-        outputz.open(var3);
-
-        std::ostringstream oss4;
-        oss4 <<"3d_outputweight_" << alpha<<".txt";
-        std::string var4 = oss4.str();
-        outputweight.open(var4);
-
-        std::ostringstream oss5;
-        oss5 <<"3d_outputdepth_" << alpha<<".txt";
-        std::string var5 = oss5.str();
-        outputdepth.open(var5);
-
-        std::ostringstream oss6;
-        oss6 <<"3d_outputangle_" << alpha<<".txt";
-        std::string var6 = oss6.str();
-        outputangle.open(var6);
-
-        srand (time(NULL));
-        // normal distribution of incident angle
-        //std::default_random_engine generator;
-        //std::normal_distribution<float> distribution(M_PI/4,M_PI/12);
-        for (int i = 0; i<numrays; ++i){
-          trand = 2 * M_PI * ((float) rand() / (RAND_MAX));
-          urand = (float) rand() / (RAND_MAX);
-
-          // different incident angle
-          float theta = M_PI/2 * ((float) rand() / (RAND_MAX));
-
-          // normal distribution incident angle
-          // float randnum = distribution(generator);
-          // while (randnum<0 || randnum>M_PI/2){
-          //   randnum = distribution(generator);
-          // }
-          // float theta = randnum;
-          Point3f ori = Point3f(height*tan(theta), 0.f, height) + Point3f(radius*sqrt(urand)*cos(trand), radius*sqrt(urand)*sin(trand), 0.f);
-          Vector3f dir = Vector3f(-sin(theta), 0.f, -cos(theta));
-          // create a ray
-          Ray ray = Ray(ori, dir);
-          int depth = 0;
-          int weight = 1;
-          SingleLayerMirror(theta,observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth, outputangle);
-          //SingleLayerGlass(theta,observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth, outputangle);
-          //DoubleLayerHeightfield(theta,observe, ray, *scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth, outputangle);
-        }
+        experiment3d(alpha,numrays,height,observe,maxdepth,radius,*scene);
 
       }
 
@@ -1625,18 +1519,131 @@ namespace pbrt {
       // ProfilerState = ProfToBits(Prof::SceneConstruction);
     }
 
-    // // Clean up after rendering
-    // graphicsState = GraphicsState();
-    // transformCache.Clear();
-    // currentApiState = APIState::OptionsBlock;
+    // // // Clean up after rendering
+    // // graphicsState = GraphicsState();
+    // // transformCache.Clear();
+    // // currentApiState = APIState::OptionsBlock;
 
-    // for (int i = 0; i < MaxTransforms; ++i) curTransform[i] = Transform();
-    // activeTransformBits = AllTransformsBits;
-    // namedCoordinateSystems.erase(namedCoordinateSystems.begin(),
-    //                              namedCoordinateSystems.end());
-    // ImageTexture<Float, Float>::ClearCache();
-    // ImageTexture<RGBSpectrum, Spectrum>::ClearCache();
+    // // for (int i = 0; i < MaxTransforms; ++i) curTransform[i] = Transform();
+    // // activeTransformBits = AllTransformsBits;
+    // // namedCoordinateSystems.erase(namedCoordinateSystems.begin(),
+    // //                              namedCoordinateSystems.end());
+    // // ImageTexture<Float, Float>::ClearCache();
+    // // ImageTexture<RGBSpectrum, Spectrum>::ClearCache();
   }
+
+  // 2d experiment, incidence angle fixed
+  void experiment2d(float alpha, int numrays, float height, float observe, int maxdepth, float radius,const Scene& scene){
+    std::ofstream outputx, outputy, outputz, outputweight, outputdepth,outputangle;
+        float angle = (float) (PbrtOptions.theta_i);
+        float theta = angle*M_PI/180.f;
+        Point3f center = Point3f(height*tan(theta), 0.f, height);
+        Vector3f dir = Vector3f(-sin(theta), 0.f, -cos(theta));
+
+        std::ostringstream oss1;
+        oss1 << angle << "outputx_" << alpha<<".txt";
+        std::string var1 = oss1.str();
+        outputx.open(var1);
+
+        std::ostringstream oss2;
+        oss2 << angle << "outputy_" << alpha<<".txt";
+        std::string var2 = oss2.str();
+        outputy.open(var2);
+
+        std::ostringstream oss3;
+        oss3 << angle << "outputz_" << alpha<<".txt";
+        std::string var3 = oss3.str();
+        outputz.open(var3);
+
+        std::ostringstream oss4;
+        oss4 << angle << "outputweight_" << alpha<<".txt";
+        std::string var4 = oss4.str();
+        outputweight.open(var4);
+
+        std::ostringstream oss5;
+        oss5 << angle << "outputdepth_" << alpha<<".txt";
+        std::string var5 = oss5.str();
+        outputdepth.open(var5);
+
+        float trand, urand;
+        srand (time(NULL));
+        for (int i = 0; i<numrays; ++i){
+          trand = 2 * M_PI * ((float) rand() / (RAND_MAX));
+          urand = (float) rand() / (RAND_MAX);
+          Point3f ori = center + Point3f(radius*sqrt(urand)*cos(trand), radius*sqrt(urand)*sin(trand), 0.f);
+          // create a ray
+          Ray ray = Ray(ori, dir);
+          int depth = 0;
+          int weight = 1;
+          SingleLayerMirror(theta,observe, ray, scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth, outputangle);
+          //SingleLayerGlass(theta,observe, ray, scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth, outputangle);
+          //DoubleLayerHeightfield(theta,observe, ray, scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth, outputangle);
+        }
+        outputx.close();
+        outputy.close();
+        outputz.close();
+        outputweight.close();
+        outputdepth.close();
+}
+
+  // 3d experiment, random incident angle
+  void experiment3d(float alpha, int numrays, float height, float observe, int maxdepth, float radius, const Scene& scene){
+     std::ofstream outputx, outputy, outputz, outputweight, outputdepth, outputangle;
+        std::ostringstream oss1;
+        oss1 <<"3d_outputx_" << alpha<<".txt";
+        std::string var1 = oss1.str();
+        outputx.open(var1);
+
+        std::ostringstream oss2;
+        oss2 <<"3d_outputy_" << alpha<<".txt";
+        std::string var2 = oss2.str();
+        outputy.open(var2);
+
+        std::ostringstream oss3;
+        oss3 <<"3d_outputz_" << alpha<<".txt";
+        std::string var3 = oss3.str();
+        outputz.open(var3);
+
+        std::ostringstream oss4;
+        oss4 <<"3d_outputweight_" << alpha<<".txt";
+        std::string var4 = oss4.str();
+        outputweight.open(var4);
+
+        std::ostringstream oss5;
+        oss5 <<"3d_outputdepth_" << alpha<<".txt";
+        std::string var5 = oss5.str();
+        outputdepth.open(var5);
+
+        std::ostringstream oss6;
+        oss6 <<"3d_outputangle_" << alpha<<".txt";
+        std::string var6 = oss6.str();
+        outputangle.open(var6);
+
+        srand (time(NULL));
+        float trand, urand;
+        for (int i = 0; i<numrays; ++i){
+          trand = 2 * M_PI * ((float) rand() / (RAND_MAX));
+          urand = (float) rand() / (RAND_MAX);
+          // different incident angle
+          float theta = M_PI/2 * ((float) rand() / (RAND_MAX));
+          Point3f ori = Point3f(height*tan(theta), 0.f, height) + Point3f(radius*sqrt(urand)*cos(trand), radius*sqrt(urand)*sin(trand), 0.f);
+          Vector3f dir = Vector3f(-sin(theta), 0.f, -cos(theta));
+          // create a ray
+          Ray ray = Ray(ori, dir);
+          int depth = 0;
+          int weight = 1;
+          SingleLayerMirror(theta,observe, ray, scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth, outputangle);
+          //SingleLayerGlass(theta,observe, ray, scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth, outputangle);
+          //DoubleLayerHeightfield(theta,observe, ray, scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth, outputangle);
+        }
+        outputx.close();
+        outputy.close();
+        outputz.close();
+        outputweight.close();
+        outputdepth.close();
+        outputangle.close();
+  }
+
   void SingleLayerMirror(float theta, float observe, const Ray &r, const Scene& scene, int weight, int depth, int maxdepth, std::ofstream &outputx, std::ofstream &outputy, std::ofstream &outputz, std::ofstream &outputweight, std::ofstream &outputdepth, std::ofstream &outputangle){
     // check intersection
     SurfaceInteraction isect;
@@ -1645,7 +1652,6 @@ namespace pbrt {
       if (depth == 0){
         return;
       }else{
-
         // check intersection with observing sphere
         float t = intersect(r, observe);
         Point3f inter = r.o + r.d * t;
@@ -1671,9 +1677,6 @@ namespace pbrt {
     if (Dot(isect.n, isect.wo) * Dot(isect.shading.n, isect.wo)<=0){
       count++;
       return;
-      // // change to surface normal
-      // normal = isect.n;
-      // entering = Dot(normal, isect.wo)>0;
     }
     Normal3f nl = entering?normal:-normal;
     Vector3f wi = Normalize(2*Dot(Vector3f(nl), isect.wo)*Vector3f(nl) - isect.wo);
@@ -1686,12 +1689,6 @@ namespace pbrt {
     if (Dot(isect.n, wi) * Dot(normal, wi)<=0) {
     	count++;
       return;
-      // change to surface normal
-    	// normal = isect.n;
-    	// entering = Dot(normal, isect.wo)>0;
-    	// nl = entering?normal:-normal;
-    	// wi = Normalize(2*Dot(Vector3f(nl), isect.wo)*Vector3f(nl) - isect.wo);
-    	// reflRay = isect.SpawnRay(wi);
     }
     SingleLayerMirror(theta, observe, reflRay, scene, weight, depth+1, maxdepth, outputx, outputy, outputz, outputweight, outputdepth,outputangle);
     return;
@@ -1741,9 +1738,6 @@ namespace pbrt {
     if (Dot(isect.n, isect.wo) * Dot(isect.shading.n, isect.wo)<=0){
       count++;
       return;
-      // // change to surface normal
-      // normal = isect.n;
-      // entering = Dot(normal, isect.wo)>0;
     }
     Normal3f nl = entering?normal:-normal;
     Vector3f wi = Normalize(2*Dot(Vector3f(nl), isect.wo)*Vector3f(nl) - isect.wo);
@@ -1755,12 +1749,6 @@ namespace pbrt {
     if ((Dot(isect.n, wi) * Dot(normal, wi)<=0) || Dot(isect.n, tdir) * Dot(normal, tdir)<=0){
       count++;
       return;
-      // // change to surface normal
-      // normal = isect.n;
-      // nl = entering?normal:-normal;
-      // wi = Normalize(2*Dot(Vector3f(nl), isect.wo)*Vector3f(nl) - isect.wo);
-      // e = entering? etaI/etaT:etaT/etaI;
-      // tr = Refract(isect.wo, nl, e, &tdir);
     }
 
     // reflection ray
@@ -1842,9 +1830,6 @@ namespace pbrt {
     if (Dot(isect.n, isect.wo) * Dot(isect.shading.n, isect.wo)<=0){
       count++;
       return;
-      // // change to surface normal
-      // normal = isect.n;
-      // entering = Dot(normal, isect.wo)>0;
     }
     Normal3f nl = entering?normal:-normal;
     Vector3f wi = Normalize(2*Dot(Vector3f(nl), isect.wo)*Vector3f(nl) - isect.wo);
@@ -1856,12 +1841,6 @@ namespace pbrt {
     if ((Dot(isect.n, wi) * Dot(normal, wi)<=0) || Dot(isect.n, tdir) * Dot(normal, tdir)<=0){
       count++;
       return;
-      // // change to surface normal
-      // normal = isect.n;
-      // nl = entering?normal:-normal;
-      // wi = Normalize(2*Dot(Vector3f(nl), isect.wo)*Vector3f(nl) - isect.wo);
-      // e = entering? etaI/etaT:etaT/etaI;
-      // tr = Refract(isect.wo, nl, e, &tdir);
     }
 
     // reflection ray
