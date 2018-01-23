@@ -128,6 +128,8 @@ int main(int argc, char *argv[]) {
             options.quickRender = true;
         } else if (!strcmp(argv[i], "--quiet") || !strcmp(argv[i], "-quiet")) {
             options.quiet = true;
+        } else if (!strcmp(argv[i], "--uniformIncidentAngles") || !strcmp(argv[i], "-uniformIncidentAngles")) {
+            options.uniformIncidentAngles = true;
         } else if (!strcmp(argv[i], "--cat") || !strcmp(argv[i], "-cat")) {
             options.cat = true;
         } else if (!strcmp(argv[i], "--toply") || !strcmp(argv[i], "-toply")) {

@@ -33,6 +33,7 @@
 #include <sstream>
 #include <time.h>       /* time */
 #include <stdlib.h>     /* srand, rand */
+#include <random>
 
 // core/api.cpp*
 #include "api.h"
@@ -1540,6 +1541,7 @@ namespace pbrt {
     int raysPerIncidentAngle;
     int samplesPerDegree;
     int maxdepth;
+    bool uniformSampleIncidentAngles;
   };
 
   void pbrtWorldEnd() {
@@ -1577,6 +1579,7 @@ namespace pbrt {
       float radius = 5.f;
 
       SampleSetting setting;
+      setting.uniformSampleIncidentAngles = PbrtOptions.uniformIncidentAngles;
       setting.radius = radius;
       setting.height = height;
       setting.observe = observe;
@@ -1594,7 +1597,6 @@ namespace pbrt {
 
       }else{
 
-        //experiment3d(alpha,numrays,height,observe,maxdepth,radius,*scene, *sampler);
         experiment3d(alpha, setting, *scene);
 
       }
@@ -1757,20 +1759,33 @@ namespace pbrt {
 
         float theta = angle*M_PI/180.f;
         sampleIncidentAngle(theta, setting, scene, output);
-}
-
+  }
 
 
   // 3d experiment, random incident angle
   void experiment3d(float alpha, const SampleSetting& setting,  const Scene& scene){
         ExpOutput output(3, alpha);
-    
-        srand (time(NULL));
-        for (int i = 0 ; i < 90; i++) {
-            for (int j = 0; j < setting.samplesPerDegree; j++){  
-                float angleoffset = ((float) rand()/RAND_MAX);
-                float degree = i + angleoffset;
-                float theta = M_PI/180.0 * degree;
+
+
+        if (setting.uniformSampleIncidentAngles) {
+            srand (time(NULL));
+            for (int i = 0 ; i < 90; i++) {
+                for (int j = 0; j < setting.samplesPerDegree; j++){  
+                    float angleoffset = ((float) rand()/RAND_MAX);
+                    float degree = i + angleoffset;
+                    float theta = M_PI/180.0 * degree;
+                    sampleIncidentAngle(theta, setting, scene, output);
+                }
+            }
+        } else {
+            std::default_random_engine generator;
+            std::normal_distribution<float> distribution(M_PI/4,M_PI/12);
+            for (int i = 0; i < 90 * setting.samplesPerDegree; i++){
+                float randnum = distribution(generator);
+                while (randnum<0 || randnum>M_PI/2){
+                    randnum = distribution(generator);
+                }
+                float theta = randnum;
                 sampleIncidentAngle(theta, setting, scene, output);
             }
         }
