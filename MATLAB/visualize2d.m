@@ -47,40 +47,20 @@ total = sum(weight);
 munum = 100;
 phinum = 400;
 
-% hold on
-% surf(X,Y,f)
-
-sum(depth==1)/total
-
 x = x/observe;
 y = y/observe;
 z = z/observe;
 mu_unit = 1/munum;
 phi_unit = 2*pi/phinum;
 result = zeros(phinum,munum);
-result_d1 = zeros(phinum,munum);
-result_d2 = zeros(phinum,munum);
-result_d3 = zeros(phinum,munum);
-result_d4 = zeros(phinum,munum);
 epsilon = 1e-6;
 for i = 1:length(x)
-    if z(i) >=0 && angle(i) < pi/2/90
+    if z(i) >=0
         phi = atan2(y(i),x(i));
         if phi<0
             phi = phi + 2*pi;
         end
         result(ceil(phi/phi_unit),ceil(z(i)/mu_unit)) = result(ceil(phi/phi_unit),ceil(z(i)/mu_unit)) + 1;
-%         if depth(i)<=1
-%             result_d1(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) = result_d1(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) + weight(i);
-% %         else
-% %             result_d2(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) = result_d2(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) + weight(i);
-%         elseif depth(i)==2
-%             result_d2(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) = result_d2(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) + weight(i);
-%         elseif depth(i)==3
-%             result_d3(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) = result_d2(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) + weight(i);
-%         elseif depth(i)==4
-%             result_d4(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) = result_d2(ceil(theta/phi_unit),ceil(z(i)/mu_unit)) + weight(i);
-%         end
     end
 end
 figure
@@ -93,73 +73,33 @@ xlabel('mu_o')
 ylabel('phi_o')
 colorbar
 
-% figure
-% plot(result_d1(200,:)/total, 'linewidth', 2)
-% title(['Incident angle=', num2str(angle),' alpha =',num2str(alpha), 'r bounce1'])
-% filename = [num2str(angle),'_alpha_',num2str(alpha), 'r_bounce1'];
-% % saveas(gcf,[filename,'.jpeg'])
-% 
-% figure
-% plot(result_d2(200,:)/total, 'linewidth', 2)
-% title(['Incident angle=', num2str(angle),' alpha =',num2str(alpha), 'r bounce2'])
-% filename = [num2str(angle),'_alpha_',num2str(alpha), 'r_bounce2'];
-% % saveas(gcf,[filename,'.jpeg'])
-% 
-% figure
-% plot(result_d3(200,:)/total, 'linewidth', 2)
-% title(['Incident angle=', num2str(angle),' alpha =',num2str(alpha), 'r bounce3'])
-% filename = [num2str(angle),'_alpha_',num2str(alpha), 'r_bounce3'];
-% % saveas(gcf,[filename,'.jpeg'])
-% 
-% figure
-% plot(result_d4(200,:)/total, 'linewidth', 2)
-% title(['Incident angle=', num2str(angle),' alpha =',num2str(alpha), 'r bounce4'])
-% filename = [num2str(angle),'_alpha_',num2str(alpha), 'r_bounce4'];
-% % saveas(gcf,[filename,'.jpeg'])
-
-
-
-% result2 = zeros(phinum,munum);
-% result2_d1 = zeros(phinum,munum);
-% result2_d2 = zeros(phinum,munum);
-% result2_d3 = zeros(phinum,munum);
-% result2_d4 = zeros(phinum,munum);
-% for i = 1:length(x)
-%     if z(i)<0
-%         if abs(x(i))<1e-6 && y(i)>=0
-%             theta = pi/2;
-%         elseif (abs(x(i))<1e-6 && y(i)<0)
-%             theta = 3*pi/2;
-%         else
-%             theta = atan(y(i)/x(i));
-%             if x(i)< 0 
-%                 theta = theta + pi;
-%             else
-%                 if y(i) < 0
-%                 theta = theta + 2*pi;
-%                 end
-%             end
-%         end
-%         result2(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) = result2(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) + weight(i);
-%         if depth(i)<=1
-%             result2_d1(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) = result2_d1(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) + weight(i);
-% %         else
-% %             result2_d2(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) = result2_d2(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) + weight(i);
-%         elseif depth(i)==2
-%             result2_d2(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) = result2_d2(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) + weight(i);
-%         elseif depth(i)==3
-%             result2_d3(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) = result2_d3(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) + weight(i);
-%         elseif depth(i)==4
-%             result2_d4(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) = result2_d4(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) + weight(i);
-%         end
-%     end
-% end
-% figure
-% imagesc(result2/numray)
-% title('transmission lobe')
-% xlabel('mu_o')
-% ylabel('phi_o')
-% colorbar
+% transmission
+result2 = zeros(phinum,munum);
+for i = 1:length(x)
+    if z(i)<0
+        if abs(x(i))<1e-6 && y(i)>=0
+            theta = pi/2;
+        elseif (abs(x(i))<1e-6 && y(i)<0)
+            theta = 3*pi/2;
+        else
+            theta = atan(y(i)/x(i));
+            if x(i)< 0 
+                theta = theta + pi;
+            else
+                if y(i) < 0
+                theta = theta + 2*pi;
+                end
+            end
+        end
+        result2(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) = result2(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) + weight(i);
+    end
+end
+figure
+imagesc(result2/numray)
+title('transmission lobe')
+xlabel('mu_o')
+ylabel('phi_o')
+colorbar
 % % 
 % % figure
 % % plot(result2_d1(200,:)/total, 'linewidth', 2)

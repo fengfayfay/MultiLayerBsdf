@@ -1520,9 +1520,6 @@ namespace pbrt {
           urand = (float) rand() / (RAND_MAX);
 
           Point3f ori = center + Point3f(radius*sqrt(urand)*cos(trand), radius*sqrt(urand)*sin(trand), 0.f);
-
-          // different incident angle
-          theta = M_PI/2 * ((float) rand() / (RAND_MAX));
           // create a ray
           Ray ray = Ray(ori, dir);
           int depth = 0;
