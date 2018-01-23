@@ -1756,34 +1756,12 @@ namespace pbrt {
         ExpOutput output(2, alpha, angle);
 
         float theta = angle*M_PI/180.f;
-        
         sampleIncidentAngle(theta, setting, scene, output);
-
-        /*
-        Point3f center = Point3f(height*tan(theta), 0.f, height);
-        Vector3f dir = Vector3f(-sin(theta), 0.f, -cos(theta));
-
-        float trand, urand;
-        srand (time(NULL));
-        for (int i = 0; i<numrays; ++i){
-          trand = 2 * M_PI * ((float) rand() / (RAND_MAX));
-          urand = (float) rand() / (RAND_MAX);
-          Point3f ori = center + Point3f(radius*sqrt(urand)*cos(trand), radius*sqrt(urand)*sin(trand), 0.f);
-          // create a ray
-          Ray ray = Ray(ori, dir);
-          int depth = 0;
-          int weight = 1;
-          SingleLayerMirror(theta,observe, ray, scene, weight, depth, maxdepth, output);
-          //SingleLayerGlass(theta,observe, ray, scene, weight, depth, maxdepth, output);
-          //DoubleLayerHeightfield(theta,observe, ray, scene, weight, depth, maxdepth, output);
-        }
-        */
 }
 
 
 
   // 3d experiment, random incident angle
-  //void experiment3d(float alpha, const SampleSetting& setting,  const Scene& scene, Sampler& sampler){
   void experiment3d(float alpha, const SampleSetting& setting,  const Scene& scene){
         ExpOutput output(3, alpha);
     
@@ -1796,30 +1774,6 @@ namespace pbrt {
                 sampleIncidentAngle(theta, setting, scene, output);
             }
         }
-
-        /*
-        sampler.StartPixel(Point2i(0, 0));
-        for (int i = 0; i<numrays; ++i){
-          if (!sampler.StartNextSample()) break;
-          sampler.Get2D();
-          // different incident angle
-          float theta = M_PI/2 * sampler.Get1D();
-          Vector3f dir = Vector3f(-sin(theta), 0.f, -cos(theta));
-          //jitter origin
-          //trand = 2 * M_PI * ((float) rand() / (RAND_MAX));
-          //urand = (float) rand() / (RAND_MAX);
-          float trand = 2.0 * M_PI * sampler.Get1D();
-          float urand = sampler.Get1D();
-          Point3f ori = Point3f(height*tan(theta), 0.f, height) + Point3f(radius*sqrt(urand)*cos(trand), radius*sqrt(urand)*sin(trand), 0.f);
-          // create a ray
-          Ray ray = Ray(ori, dir);
-          int depth = 0;
-          int weight = 1;
-          SingleLayerMirror(theta,observe, ray, scene, weight, depth, maxdepth, output);
-          //SingleLayerGlass(theta,observe, ray, scene, weight, depth, maxdepth, output);
-          //DoubleLayerHeightfield(theta,observe, ray, scene, weight, depth, maxdepth, output);
-        }
-        */
   }
 
   void SingleLayerMirror(float theta, float observe, const Ray &r, const Scene& scene, int weight, int depth, int maxdepth, ExpOutput&output){
