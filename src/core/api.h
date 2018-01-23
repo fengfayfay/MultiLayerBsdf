@@ -88,15 +88,18 @@ void pbrtObjectEnd();
 void pbrtObjectInstance(const std::string &name);
 void pbrtWorldEnd();
 
+struct SampleSetting;
+class ExpOutput;
+
 // function used for GaussianHeightField experiment
- void experiment2d(float alpha, int numrays, float height, float observe, int maxdepth, float radius, const Scene& scene);
- void experiment3d(float alpha, int numrays, float height, float observe, int maxdepth, float radius, const Scene& scene);
-float intersect(const Ray &ray, float observe);
- void SingleLayerMirror(float theta, float observe, const Ray &ray, const Scene& scene, int weight,int depth, int maxdepth, std::ofstream &outputx, std::ofstream &outputy, std::ofstream &outputz, std::ofstream &outputweight, std::ofstream &outputdepth, std::ofstream &outputanglex);
+ void experiment2d(float alpha, const SampleSetting&, const Scene& scene);
+ void experiment3d(float alpha, const SampleSetting&, const Scene& scene);
+float observeIntersect(const Ray &ray, float observe);
+ void SingleLayerMirror(float theta, float observe, const Ray &ray, const Scene& scene, int weight,int depth, int maxdepth, ExpOutput&);
 
- void SingleLayerGlass(float theta, float observe, const Ray &ray, const Scene& scene, int weight,int depth, int maxdepth, std::ofstream &outputx, std::ofstream &outputy, std::ofstream &outputz, std::ofstream &outputweight, std::ofstream &outputdepth, std::ofstream &outputangle);
+ void SingleLayerGlass(float theta, float observe, const Ray &ray, const Scene& scene, int weight,int depth, int maxdepth, ExpOutput&);
 
- void DoubleLayerHeightfield(float theta, float observe, const Ray &ray, const Scene& scene, int weight,int depth, int maxdepth, std::ofstream &outputx, std::ofstream &outputy, std::ofstream &outputz, std::ofstream &outputweight, std::ofstream &outputdepth, std::ofstream &outputangle);
+ void DoubleLayerHeightfield(float theta, float observe, const Ray &ray, const Scene& scene, int weight,int depth, int maxdepth, ExpOutput&);
 
 }  // namespace pbrt
 

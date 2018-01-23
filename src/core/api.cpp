@@ -167,6 +167,8 @@ namespace pbrt {
     Scene *MakeScene();
     Camera *MakeCamera() const;
 
+    std::shared_ptr<Sampler> createSampler() const;
+
     // RenderOptions Public Data
     Float transformStartTime = 0, transformEndTime = 1;
     std::string FilterName = "box";
@@ -1450,428 +1452,6 @@ namespace pbrt {
                                     std::make_shared<TransformedPrimitive>(in[0], animatedInstanceToWorld));
     renderOptions->primitives.push_back(prim);
   }
-
-  void pbrtWorldEnd() {
-    VERIFY_WORLD("WorldEnd");
-    // Ensure there are no pushed graphics states
-    while (pushedGraphicsStates.size()) {
-      Warning("Missing end to pbrtAttributeBegin()");
-      pushedGraphicsStates.pop_back();
-      pushedTransforms.pop_back();
-    }
-    while (pushedTransforms.size()) {
-      Warning("Missing end to pbrtTransformBegin()");
-      pushedTransforms.pop_back();
-    }
-
-    // Create scene and render
-    if (PbrtOptions.cat || PbrtOptions.toPly) {
-      printf("%*sWorldEnd\n", catIndentCount, "");
-    } else{
-      //std::unique_ptr<Integrator>integrator(renderOptions->MakeIntegrator());
-      std::unique_ptr<Scene> scene(renderOptions->MakeScene());
-
-      std::cout<<"start Gaussian heightfield experiment"<<std::endl;
-      // ray tracing test
-      float alpha = (float) (PbrtOptions.alpha)/10;
-      int numrays = (int) (PbrtOptions.numrays);
-      int dimension = (int) (PbrtOptions.dimension);
-      float height = 1.f;
-      float observe = 6000;
-      int maxdepth = 10;
-      float radius = 5.f;
-
-      if (dimension == 2){
-
-        experiment2d(alpha,numrays,height,observe,maxdepth,radius,*scene);
-
-      }else{
-
-        experiment3d(alpha,numrays,height,observe,maxdepth,radius,*scene);
-
-      }
-
-      std::cout<<"bad rays "<<count<<std::endl;
-      std::cout<<"rays that go out: "<<count_goout<<std::endl;
-
-      // original rendering process
-      // // This is kind of ugly; we directly override the current profiler
-      // // state to switch from parsing/scene construction related stuff to
-      // // rendering stuff and then switch it back below. The underlying
-      // // issue is that all the rest of the profiling system assumes
-      // // hierarchical inheritance of profiling state; this is the only
-      // // place where that isn't the case.
-      // CHECK_EQ(CurrentProfilerState(), ProfToBits(Prof::SceneConstruction));
-      // ProfilerState = ProfToBits(Prof::IntegratorRender);
-
-      // if (scene && integrator) integrator->Render(*scene);
-
-      // MergeWorkerThreadStats();
-      // ReportThreadStats();
-      // if (!PbrtOptions.quiet) {
-      //     PrintStats(stdout);
-      //     ReportProfilerResults(stdout);
-      //     ClearStats();
-      //     ClearProfiler();
-      // }
-
-      // CHECK_EQ(CurrentProfilerState(), ProfToBits(Prof::IntegratorRender));
-      // ProfilerState = ProfToBits(Prof::SceneConstruction);
-    }
-
-    // // // Clean up after rendering
-    // // graphicsState = GraphicsState();
-    // // transformCache.Clear();
-    // // currentApiState = APIState::OptionsBlock;
-
-    // // for (int i = 0; i < MaxTransforms; ++i) curTransform[i] = Transform();
-    // // activeTransformBits = AllTransformsBits;
-    // // namedCoordinateSystems.erase(namedCoordinateSystems.begin(),
-    // //                              namedCoordinateSystems.end());
-    // // ImageTexture<Float, Float>::ClearCache();
-    // // ImageTexture<RGBSpectrum, Spectrum>::ClearCache();
-  }
-
-  // 2d experiment, incidence angle fixed
-  void experiment2d(float alpha, int numrays, float height, float observe, int maxdepth, float radius,const Scene& scene){
-    std::ofstream outputx, outputy, outputz, outputweight, outputdepth,outputangle;
-        float angle = (float) (PbrtOptions.theta_i);
-        float theta = angle*M_PI/180.f;
-        Point3f center = Point3f(height*tan(theta), 0.f, height);
-        Vector3f dir = Vector3f(-sin(theta), 0.f, -cos(theta));
-
-        std::ostringstream oss1;
-        oss1 << angle << "outputx_" << alpha<<".txt";
-        std::string var1 = oss1.str();
-        outputx.open(var1);
-
-        std::ostringstream oss2;
-        oss2 << angle << "outputy_" << alpha<<".txt";
-        std::string var2 = oss2.str();
-        outputy.open(var2);
-
-        std::ostringstream oss3;
-        oss3 << angle << "outputz_" << alpha<<".txt";
-        std::string var3 = oss3.str();
-        outputz.open(var3);
-
-        std::ostringstream oss4;
-        oss4 << angle << "outputweight_" << alpha<<".txt";
-        std::string var4 = oss4.str();
-        outputweight.open(var4);
-
-        std::ostringstream oss5;
-        oss5 << angle << "outputdepth_" << alpha<<".txt";
-        std::string var5 = oss5.str();
-        outputdepth.open(var5);
-
-        float trand, urand;
-        srand (time(NULL));
-        for (int i = 0; i<numrays; ++i){
-          trand = 2 * M_PI * ((float) rand() / (RAND_MAX));
-          urand = (float) rand() / (RAND_MAX);
-          Point3f ori = center + Point3f(radius*sqrt(urand)*cos(trand), radius*sqrt(urand)*sin(trand), 0.f);
-          // create a ray
-          Ray ray = Ray(ori, dir);
-          int depth = 0;
-          int weight = 1;
-          SingleLayerMirror(theta,observe, ray, scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth, outputangle);
-          //SingleLayerGlass(theta,observe, ray, scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth, outputangle);
-          //DoubleLayerHeightfield(theta,observe, ray, scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth, outputangle);
-        }
-        outputx.close();
-        outputy.close();
-        outputz.close();
-        outputweight.close();
-        outputdepth.close();
-}
-
-  // 3d experiment, random incident angle
-  void experiment3d(float alpha, int numrays, float height, float observe, int maxdepth, float radius, const Scene& scene){
-     std::ofstream outputx, outputy, outputz, outputweight, outputdepth, outputangle;
-        std::ostringstream oss1;
-        oss1 <<"3d_outputx_" << alpha<<".txt";
-        std::string var1 = oss1.str();
-        outputx.open(var1);
-
-        std::ostringstream oss2;
-        oss2 <<"3d_outputy_" << alpha<<".txt";
-        std::string var2 = oss2.str();
-        outputy.open(var2);
-
-        std::ostringstream oss3;
-        oss3 <<"3d_outputz_" << alpha<<".txt";
-        std::string var3 = oss3.str();
-        outputz.open(var3);
-
-        std::ostringstream oss4;
-        oss4 <<"3d_outputweight_" << alpha<<".txt";
-        std::string var4 = oss4.str();
-        outputweight.open(var4);
-
-        std::ostringstream oss5;
-        oss5 <<"3d_outputdepth_" << alpha<<".txt";
-        std::string var5 = oss5.str();
-        outputdepth.open(var5);
-
-        std::ostringstream oss6;
-        oss6 <<"3d_outputangle_" << alpha<<".txt";
-        std::string var6 = oss6.str();
-        outputangle.open(var6);
-
-        srand (time(NULL));
-        float trand, urand;
-        for (int i = 0; i<numrays; ++i){
-          trand = 2 * M_PI * ((float) rand() / (RAND_MAX));
-          urand = (float) rand() / (RAND_MAX);
-          // different incident angle
-          float theta = M_PI/2 * ((float) rand() / (RAND_MAX));
-          Point3f ori = Point3f(height*tan(theta), 0.f, height) + Point3f(radius*sqrt(urand)*cos(trand), radius*sqrt(urand)*sin(trand), 0.f);
-          Vector3f dir = Vector3f(-sin(theta), 0.f, -cos(theta));
-          // create a ray
-          Ray ray = Ray(ori, dir);
-          int depth = 0;
-          int weight = 1;
-          SingleLayerMirror(theta,observe, ray, scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth, outputangle);
-          //SingleLayerGlass(theta,observe, ray, scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth, outputangle);
-          //DoubleLayerHeightfield(theta,observe, ray, scene, weight, depth, maxdepth, outputx, outputy, outputz, outputweight, outputdepth, outputangle);
-        }
-        outputx.close();
-        outputy.close();
-        outputz.close();
-        outputweight.close();
-        outputdepth.close();
-        outputangle.close();
-  }
-
-  void SingleLayerMirror(float theta, float observe, const Ray &r, const Scene& scene, int weight, int depth, int maxdepth, std::ofstream &outputx, std::ofstream &outputy, std::ofstream &outputz, std::ofstream &outputweight, std::ofstream &outputdepth, std::ofstream &outputangle){
-    // check intersection
-    SurfaceInteraction isect;
-    // if not intersect
-    if (!scene.Intersect(r, &isect)){
-      if (depth == 0){
-        return;
-      }else{
-        // check intersection with observing sphere
-        float t = intersect(r, observe);
-        Point3f inter = r.o + r.d * t;
-        outputx << inter.x <<"\n";
-        outputy << inter.y <<"\n";
-        outputz << inter.z <<"\n";
-        outputweight << weight <<"\n";
-        outputdepth << depth <<"\n";
-        outputangle << theta <<"\n";
-        return;
-      }
-    }
-
-    if (depth>maxdepth){
-      float random = ((float) rand() / (RAND_MAX));
-      if ((random)<1./6) weight *= 6;
-      else return;
-    }
-
-    Normal3f normal = isect.shading.n;
-    bool entering = Dot(normal, isect.wo)>0;
-    // check for bad rays
-    if (Dot(isect.n, isect.wo) * Dot(isect.shading.n, isect.wo)<=0){
-      count++;
-      return;
-    }
-    Normal3f nl = entering?normal:-normal;
-    Vector3f wi = Normalize(2*Dot(Vector3f(nl), isect.wo)*Vector3f(nl) - isect.wo);
-
-    // reflection ray
-    RayDifferential reflRay = isect.SpawnRay(wi);
-
-    // mirror case
-    // keep track of bad rays
-    if (Dot(isect.n, wi) * Dot(normal, wi)<=0) {
-    	count++;
-      return;
-    }
-    SingleLayerMirror(theta, observe, reflRay, scene, weight, depth+1, maxdepth, outputx, outputy, outputz, outputweight, outputdepth,outputangle);
-    return;
-  }
-
-  void SingleLayerGlass(float theta, float observe, const Ray &r, const Scene& scene, int weight, int depth, int maxdepth, std::ofstream &outputx, std::ofstream &outputy, std::ofstream &outputz, std::ofstream &outputweight, std::ofstream &outputdepth, std::ofstream &outputangle){
-    float etaI = 1;
-    float etaT = 1.5;
-
-    // check intersection
-    SurfaceInteraction isect;
-    // if not intersect
-    if (!scene.Intersect(r, &isect)){
-      if (depth == 0){
-        return;
-      }else{
-        // check intersection with observing sphere
-        float t = intersect(r, observe);
-        Point3f inter = r.o + r.d * t;
-
-        // check rays that go out
-        bool onedge = std::abs(r.o.x)>9.9 || std::abs(r.o.y)>9.9;
-        if (onedge){
-          count_goout++;
-          return;
-        }
-
-        outputx << inter.x <<"\n";
-        outputy << inter.y <<"\n";
-        outputz << inter.z <<"\n";
-        outputweight << weight <<"\n";
-        outputdepth << depth <<"\n";
-        outputangle << theta <<"\n";
-        return;
-      }
-    }
-
-    if (depth>maxdepth){
-      float random = ((float) rand() / (RAND_MAX));
-      if ((random)<1./6) weight *= 6;
-      else return;
-    }
-
-    Normal3f normal = isect.shading.n;
-    bool entering = Dot(normal, isect.wo)>0;
-    // check for bad rays
-    if (Dot(isect.n, isect.wo) * Dot(isect.shading.n, isect.wo)<=0){
-      count++;
-      return;
-    }
-    Normal3f nl = entering?normal:-normal;
-    Vector3f wi = Normalize(2*Dot(Vector3f(nl), isect.wo)*Vector3f(nl) - isect.wo);
-
-    Vector3f tdir;
-    float e = entering? etaI/etaT:etaT/etaI;
-    bool tr = Refract(isect.wo, nl, e, &tdir);
-    // check bad rays
-    if ((Dot(isect.n, wi) * Dot(normal, wi)<=0) || Dot(isect.n, tdir) * Dot(normal, tdir)<=0){
-      count++;
-      return;
-    }
-
-    // reflection ray
-    RayDifferential reflRay = isect.SpawnRay(wi);
-    // transmission ray
-    RayDifferential tranRay = isect.SpawnRay(tdir);
-
-    // specular reflection + specular refraction
-    float cos = Dot(Vector3f(normal), isect.wo);
-    float rprob = FrDielectric(cos, etaI, etaT);
-    float rt = (float) rand() / (RAND_MAX);
-    if (rt<=rprob){
-      // refelctance ray
-      SingleLayerGlass(theta, observe, reflRay, scene, weight, depth+1, maxdepth, outputx, outputy, outputz, outputweight, outputdepth, outputangle);
-      return;
-    }else{
-      // transmission ray
-      if (tr==false) std::cout<<"in transmission case but transmission is impossible, error!"<<std::endl;
-      SingleLayerGlass(theta, observe, tranRay, scene, weight, depth+1, maxdepth, outputx, outputy, outputz, outputweight, outputdepth, outputangle);
-      return;
-    }
-  }
-
-  void DoubleLayerHeightfield(float theta, float observe, const Ray &r, const Scene& scene, int weight, int depth, int maxdepth, std::ofstream &outputx, std::ofstream &outputy, std::ofstream &outputz, std::ofstream &outputweight, std::ofstream &outputdepth, std::ofstream &outputangle){
-    // check intersection
-    SurfaceInteraction isect;
-    // if not intersect
-    if (!scene.Intersect(r, &isect)){
-      if (depth == 0){
-        return;
-      }else{
-
-        // check intersection with observing sphere
-        float t = intersect(r, observe);
-        Point3f inter = r.o + r.d * t;
-
-        // check rays that go out
-        if (r.o.z>-2 && inter.z<=0){
-          count_goout++;
-          return;
-        }
-
-        outputx << inter.x <<"\n";
-        outputy << inter.y <<"\n";
-        outputz << inter.z <<"\n";
-        outputweight << weight <<"\n";
-        outputdepth << depth <<"\n";
-        outputangle << theta <<"\n";
-        return;
-      }
-    }
-
-    if (depth>maxdepth){
-      float random = ((float) rand() / (RAND_MAX));
-      if ((random)<1./6) weight *= 6;
-      else return;
-    }
-
-    Normal3f normal = isect.shading.n;
-    float cos = Dot(Vector3f(normal), isect.wo);
-    bool entering = cos>0;
-
-    float rprob = 1;
-    // for doublelayer
-    // Feng:
-    // I am cheating to make the first layer a glass and second layer mirror
-    float etaI, etaT;
-    if (isect.p.z>-2){
-      etaI = 1;
-      etaT = 1.5;
-      rprob = FrDielectric(cos, etaI, etaT);
-    }else{
-      etaI = 1.5;
-      etaT = 2;
-      rprob = 1;
-    }
-
-    // check for bad rays
-    if (Dot(isect.n, isect.wo) * Dot(isect.shading.n, isect.wo)<=0){
-      count++;
-      return;
-    }
-    Normal3f nl = entering?normal:-normal;
-    Vector3f wi = Normalize(2*Dot(Vector3f(nl), isect.wo)*Vector3f(nl) - isect.wo);
-
-    Vector3f tdir;
-    float e = entering? etaI/etaT:etaT/etaI;
-    bool tr = Refract(isect.wo, nl, e, &tdir);
-    // check bad rays
-    if ((Dot(isect.n, wi) * Dot(normal, wi)<=0) || Dot(isect.n, tdir) * Dot(normal, tdir)<=0){
-      count++;
-      return;
-    }
-
-    // reflection ray
-    RayDifferential reflRay = isect.SpawnRay(wi);
-    // transmission ray
-    RayDifferential tranRay = isect.SpawnRay(tdir);
-
-    // specular reflection + specular refraction
-    float rt = (float) rand() / (RAND_MAX);
-
-    if (rt<=rprob){
-      // refelctance ray
-      DoubleLayerHeightfield(theta, observe, reflRay, scene, weight, depth+1, maxdepth, outputx, outputy, outputz, outputweight, outputdepth, outputangle);
-      return;
-    }else{
-      // transmission ray
-      if (tr==false) std::cout<<"in transmission case but transmission is impossible, error!"<<std::endl;
-      DoubleLayerHeightfield(theta, observe, tranRay, scene, weight, depth+1, maxdepth, outputx, outputy, outputz, outputweight, outputdepth, outputangle);
-      return;
-    }
-  }
-
-  //observe is the observing radius
-  float intersect(const Ray &r, float observe){
-    // returns distance, 0 if nohit
-    Vector3f op = Vector3f(r.o.x, r.o.y, r.o.z); // Solve t^2*d.d + 2*t*(o-p).d + (o-p).(o-p)-R^2 = 0
-    float t, eps = 1e-4, det = pow(Dot(op, r.d),2) - Dot(r.d, r.d)*(Dot(op,op) - pow(observe,2));
-    if (det<0) return 0; else det=sqrt(det);
-    return (-Dot(op, r.d) + det)/Dot(r.d, r.d);
-  }
-
   Scene *RenderOptions::MakeScene() {
     std::shared_ptr<Primitive> accelerator =
       MakeAccelerator(AcceleratorName, primitives, AcceleratorParams);
@@ -1948,6 +1528,525 @@ namespace pbrt {
                                       renderOptions->transformStartTime,
                                       renderOptions->transformEndTime, film);
     return camera;
+  }
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////raytrace heightfield additions below////////////////////////////////////////////////////////
+  
+  struct SampleSetting {
+    float height;
+    float observe;
+    float radius;
+    int totalRays;
+    int raysPerIncidentAngle;
+    int samplesPerDegree;
+    int maxdepth;
+  };
+
+  void pbrtWorldEnd() {
+    VERIFY_WORLD("WorldEnd");
+    // Ensure there are no pushed graphics states
+    while (pushedGraphicsStates.size()) {
+      Warning("Missing end to pbrtAttributeBegin()");
+      pushedGraphicsStates.pop_back();
+      pushedTransforms.pop_back();
+    }
+    while (pushedTransforms.size()) {
+      Warning("Missing end to pbrtTransformBegin()");
+      pushedTransforms.pop_back();
+    }
+
+    // Create scene and render
+    if (PbrtOptions.cat || PbrtOptions.toPly) {
+      printf("%*sWorldEnd\n", catIndentCount, "");
+    } else{
+      //std::unique_ptr<Integrator>integrator(renderOptions->MakeIntegrator());
+      std::unique_ptr<Scene> scene(renderOptions->MakeScene());
+      std::shared_ptr<Sampler> sampler = renderOptions->createSampler();    
+      int seed = 13;
+      std::unique_ptr<Sampler> tileSampler = sampler->Clone(seed);  
+
+
+      std::cout<<"start Gaussian heightfield experiment"<<std::endl;
+      // ray tracing test
+      float alpha = (float) (PbrtOptions.alpha)/10;
+      int numrays = (int) (PbrtOptions.numrays);
+      int dimension = (int) (PbrtOptions.dimension);
+      float height = 1.f;
+      float observe = 6000;
+      int maxdepth = 10;
+      float radius = 5.f;
+
+      SampleSetting setting;
+      setting.radius = radius;
+      setting.height = height;
+      setting.observe = observe;
+      setting.totalRays = numrays;
+      setting.maxdepth = maxdepth;
+      setting.samplesPerDegree = 10;
+      int angleSamples = dimension == 2? 1 : setting.samplesPerDegree * 90;
+      setting.raysPerIncidentAngle = numrays/ angleSamples;
+      std::cout<<"rays per incident angle " << setting.raysPerIncidentAngle << std::endl;
+      std::cout<<"samples over incident angle range " << angleSamples << std::endl;
+
+      if (dimension == 2){
+
+        experiment2d(alpha, setting, *scene);
+
+      }else{
+
+        //experiment3d(alpha,numrays,height,observe,maxdepth,radius,*scene, *sampler);
+        experiment3d(alpha, setting, *scene);
+
+      }
+
+      std::cout<<"bad rays "<<count<<std::endl;
+      std::cout<<"rays that go out: "<<count_goout<<std::endl;
+
+      // original rendering process
+      // // This is kind of ugly; we directly override the current profiler
+      // // state to switch from parsing/scene construction related stuff to
+      // // rendering stuff and then switch it back below. The underlying
+      // // issue is that all the rest of the profiling system assumes
+      // // hierarchical inheritance of profiling state; this is the only
+      // // place where that isn't the case.
+      // CHECK_EQ(CurrentProfilerState(), ProfToBits(Prof::SceneConstruction));
+      // ProfilerState = ProfToBits(Prof::IntegratorRender);
+
+      // if (scene && integrator) integrator->Render(*scene);
+
+      // MergeWorkerThreadStats();
+      // ReportThreadStats();
+      // if (!PbrtOptions.quiet) {
+      //     PrintStats(stdout);
+      //     ReportProfilerResults(stdout);
+      //     ClearStats();
+      //     ClearProfiler();
+      // }
+
+      // CHECK_EQ(CurrentProfilerState(), ProfToBits(Prof::IntegratorRender));
+      // ProfilerState = ProfToBits(Prof::SceneConstruction);
+    }
+
+    // // // Clean up after rendering
+    // // graphicsState = GraphicsState();
+    // // transformCache.Clear();
+    // // currentApiState = APIState::OptionsBlock;
+
+    // // for (int i = 0; i < MaxTransforms; ++i) curTransform[i] = Transform();
+    // // activeTransformBits = AllTransformsBits;
+    // // namedCoordinateSystems.erase(namedCoordinateSystems.begin(),
+    // //                              namedCoordinateSystems.end());
+    // // ImageTexture<Float, Float>::ClearCache();
+    // // ImageTexture<RGBSpectrum, Spectrum>::ClearCache();
+  }
+
+  class ExpOutput {
+  public:
+    ExpOutput(int dimension = 3, float alpha = .5, float angle = 0): outputCount(0) {
+        if (dimension == 3) {
+            init3D(alpha);
+        } else {
+            init2D(alpha, angle);
+        }
+    }
+
+    int addOutput(Point3f inter, float weight, float depth, float theta) {
+        outputx << inter.x <<"\n";
+        outputy << inter.y <<"\n";
+        outputz << inter.z <<"\n";
+        outputweight << weight <<"\n";
+        outputdepth << depth <<"\n";
+        outputangle << theta <<"\n";
+        return outputCount++;
+    }
+
+    void init2D(float alpha, float angle) {
+        std::ostringstream oss1;
+        oss1 << angle << "outputx_" << alpha<<".txt";
+        std::string var1 = oss1.str();
+        outputx.open(var1);
+
+        std::ostringstream oss2;
+        oss2 << angle << "outputy_" << alpha<<".txt";
+        std::string var2 = oss2.str();
+        outputy.open(var2);
+
+        std::ostringstream oss3;
+        oss3 << angle << "outputz_" << alpha<<".txt";
+        std::string var3 = oss3.str();
+        outputz.open(var3);
+
+        std::ostringstream oss4;
+        oss4 << angle << "outputweight_" << alpha<<".txt";
+        std::string var4 = oss4.str();
+        outputweight.open(var4);
+
+        std::ostringstream oss5;
+        oss5 << angle << "outputdepth_" << alpha<<".txt";
+        std::string var5 = oss5.str();
+        outputdepth.open(var5);
+    }
+
+    void init3D(float alpha) {
+        std::ostringstream oss1;
+        oss1 <<"3d_outputx_" << alpha<<".txt";
+        std::string var1 = oss1.str();
+        outputx.open(var1);
+
+        std::ostringstream oss2;
+        oss2 <<"3d_outputy_" << alpha<<".txt";
+        std::string var2 = oss2.str();
+        outputy.open(var2);
+
+        std::ostringstream oss3;
+        oss3 <<"3d_outputz_" << alpha<<".txt";
+        std::string var3 = oss3.str();
+        outputz.open(var3);
+
+        std::ostringstream oss4;
+        oss4 <<"3d_outputweight_" << alpha<<".txt";
+        std::string var4 = oss4.str();
+        outputweight.open(var4);
+
+        std::ostringstream oss5;
+        oss5 <<"3d_outputdepth_" << alpha<<".txt";
+        std::string var5 = oss5.str();
+        outputdepth.open(var5);
+
+        std::ostringstream oss6;
+        oss6 <<"3d_outputangle_" << alpha<<".txt";
+        std::string var6 = oss6.str();
+        outputangle.open(var6);
+
+    }
+    void closeOutput() {
+        outputx.close();
+        outputy.close();
+        outputz.close();
+        outputweight.close();
+        outputdepth.close();
+        outputangle.close();
+    }
+    std::ofstream outputx, outputy, outputz, outputweight, outputdepth, outputangle;
+    int outputCount;
+  };
+
+  void sampleIncidentAngle(float theta, const SampleSetting& setting, const Scene&scene, ExpOutput&output) {
+        Point3f center = Point3f(setting.height*tan(theta), 0.f, setting.height);
+        Vector3f dir = Vector3f(-sin(theta), 0.f, -cos(theta));
+
+        float trand, urand;
+        srand (time(NULL));
+        for (int i = 0; i<setting.raysPerIncidentAngle; ++i){
+          trand = 2 * M_PI * ((float) rand() / (RAND_MAX));
+          urand = (float) rand() / (RAND_MAX);
+          Point3f ori = center + Point3f(setting.radius*sqrt(urand)*cos(trand), setting.radius*sqrt(urand)*sin(trand), 0.f);
+          // create a ray
+          Ray ray = Ray(ori, dir);
+          int depth = 0;
+          int weight = 1;
+          SingleLayerMirror(theta, setting.observe, ray, scene, weight, depth, setting.maxdepth, output);
+          //SingleLayerGlass(theta, settig.observe, ray, scene, weight, depth, setting.maxdepth, output);
+          //DoubleLayerHeightfield(theta,setting.observe, ray, scene, weight, depth, setting.maxdepth, output);
+        }
+  } 
+  // 2d experiment, incidence angle fixed
+  void experiment2d(float alpha, const SampleSetting& setting, const Scene& scene){
+        float angle = (float) (PbrtOptions.theta_i);
+        ExpOutput output(2, alpha, angle);
+
+        float theta = angle*M_PI/180.f;
+        
+        sampleIncidentAngle(theta, setting, scene, output);
+
+        /*
+        Point3f center = Point3f(height*tan(theta), 0.f, height);
+        Vector3f dir = Vector3f(-sin(theta), 0.f, -cos(theta));
+
+        float trand, urand;
+        srand (time(NULL));
+        for (int i = 0; i<numrays; ++i){
+          trand = 2 * M_PI * ((float) rand() / (RAND_MAX));
+          urand = (float) rand() / (RAND_MAX);
+          Point3f ori = center + Point3f(radius*sqrt(urand)*cos(trand), radius*sqrt(urand)*sin(trand), 0.f);
+          // create a ray
+          Ray ray = Ray(ori, dir);
+          int depth = 0;
+          int weight = 1;
+          SingleLayerMirror(theta,observe, ray, scene, weight, depth, maxdepth, output);
+          //SingleLayerGlass(theta,observe, ray, scene, weight, depth, maxdepth, output);
+          //DoubleLayerHeightfield(theta,observe, ray, scene, weight, depth, maxdepth, output);
+        }
+        */
+}
+
+
+
+  // 3d experiment, random incident angle
+  //void experiment3d(float alpha, const SampleSetting& setting,  const Scene& scene, Sampler& sampler){
+  void experiment3d(float alpha, const SampleSetting& setting,  const Scene& scene){
+        ExpOutput output(3, alpha);
+    
+        srand (time(NULL));
+        for (int i = 0 ; i < 90; i++) {
+            for (int j = 0; j < setting.samplesPerDegree; j++){  
+                float angleoffset = ((float) rand()/RAND_MAX);
+                float degree = i + angleoffset;
+                float theta = M_PI/180.0 * degree;
+                sampleIncidentAngle(theta, setting, scene, output);
+            }
+        }
+
+        /*
+        sampler.StartPixel(Point2i(0, 0));
+        for (int i = 0; i<numrays; ++i){
+          if (!sampler.StartNextSample()) break;
+          sampler.Get2D();
+          // different incident angle
+          float theta = M_PI/2 * sampler.Get1D();
+          Vector3f dir = Vector3f(-sin(theta), 0.f, -cos(theta));
+          //jitter origin
+          //trand = 2 * M_PI * ((float) rand() / (RAND_MAX));
+          //urand = (float) rand() / (RAND_MAX);
+          float trand = 2.0 * M_PI * sampler.Get1D();
+          float urand = sampler.Get1D();
+          Point3f ori = Point3f(height*tan(theta), 0.f, height) + Point3f(radius*sqrt(urand)*cos(trand), radius*sqrt(urand)*sin(trand), 0.f);
+          // create a ray
+          Ray ray = Ray(ori, dir);
+          int depth = 0;
+          int weight = 1;
+          SingleLayerMirror(theta,observe, ray, scene, weight, depth, maxdepth, output);
+          //SingleLayerGlass(theta,observe, ray, scene, weight, depth, maxdepth, output);
+          //DoubleLayerHeightfield(theta,observe, ray, scene, weight, depth, maxdepth, output);
+        }
+        */
+  }
+
+  void SingleLayerMirror(float theta, float observe, const Ray &r, const Scene& scene, int weight, int depth, int maxdepth, ExpOutput&output){
+    // check intersection
+    SurfaceInteraction isect;
+    // if not intersect
+    if (!scene.Intersect(r, &isect)){
+      if (depth == 0){
+        return;
+      }else{
+        // check intersection with observing sphere
+        float t = observeIntersect(r, observe);
+        Point3f inter = r.o + r.d * t;
+        output.addOutput(inter, weight, depth, theta);
+        return;
+      }
+    }
+
+    if (depth>maxdepth){
+      float random = ((float) rand() / (RAND_MAX));
+      if ((random)<1./6) weight *= 6;
+      else return;
+    }
+
+    Normal3f normal = isect.shading.n;
+    bool entering = Dot(normal, isect.wo)>0;
+    // check for bad rays
+    if (Dot(isect.n, isect.wo) * Dot(isect.shading.n, isect.wo)<=0){
+      count++;
+      return;
+    }
+    Normal3f nl = entering?normal:-normal;
+    Vector3f wi = Normalize(2*Dot(Vector3f(nl), isect.wo)*Vector3f(nl) - isect.wo);
+
+    // reflection ray
+    RayDifferential reflRay = isect.SpawnRay(wi);
+
+    // mirror case
+    // keep track of bad rays
+    if (Dot(isect.n, wi) * Dot(normal, wi)<=0) {
+    	count++;
+      return;
+    }
+    SingleLayerMirror(theta, observe, reflRay, scene, weight, depth+1, maxdepth, output);
+    return;
+  }
+
+  void SingleLayerGlass(float theta, float observe, const Ray &r, const Scene& scene, int weight, int depth, int maxdepth, ExpOutput& output) {
+    float etaI = 1;
+    float etaT = 1.5;
+
+    // check intersection
+    SurfaceInteraction isect;
+    // if not intersect
+    if (!scene.Intersect(r, &isect)){
+      if (depth == 0){
+        return;
+      }else{
+        // check intersection with observing sphere
+        float t = observeIntersect(r, observe);
+        Point3f inter = r.o + r.d * t;
+
+        // check rays that go out
+        bool onedge = std::abs(r.o.x)>9.9 || std::abs(r.o.y)>9.9;
+        if (onedge){
+          count_goout++;
+          return;
+        }
+        output.addOutput(inter, weight, depth, theta);
+        return;
+      }
+    }
+
+    if (depth>maxdepth){
+      float random = ((float) rand() / (RAND_MAX));
+      if ((random)<1./6) weight *= 6;
+      else return;
+    }
+
+    Normal3f normal = isect.shading.n;
+    bool entering = Dot(normal, isect.wo)>0;
+    // check for bad rays
+    if (Dot(isect.n, isect.wo) * Dot(isect.shading.n, isect.wo)<=0){
+      count++;
+      return;
+    }
+    Normal3f nl = entering?normal:-normal;
+    Vector3f wi = Normalize(2*Dot(Vector3f(nl), isect.wo)*Vector3f(nl) - isect.wo);
+
+    Vector3f tdir;
+    float e = entering? etaI/etaT:etaT/etaI;
+    bool tr = Refract(isect.wo, nl, e, &tdir);
+    // check bad rays
+    if ((Dot(isect.n, wi) * Dot(normal, wi)<=0) || Dot(isect.n, tdir) * Dot(normal, tdir)<=0){
+      count++;
+      return;
+    }
+
+    // reflection ray
+    RayDifferential reflRay = isect.SpawnRay(wi);
+    // transmission ray
+    RayDifferential tranRay = isect.SpawnRay(tdir);
+
+    // specular reflection + specular refraction
+    float cos = Dot(Vector3f(normal), isect.wo);
+    float rprob = FrDielectric(cos, etaI, etaT);
+    float rt = (float) rand() / (RAND_MAX);
+    if (rt<=rprob){
+      // refelctance ray
+      SingleLayerGlass(theta, observe, reflRay, scene, weight, depth+1, maxdepth, output);
+      return;
+    }else{
+      // transmission ray
+      if (tr==false) std::cout<<"in transmission case but transmission is impossible, error!"<<std::endl;
+      SingleLayerGlass(theta, observe, tranRay, scene, weight, depth+1, maxdepth, output);
+      return;
+    }
+  }
+
+  void DoubleLayerHeightfield(float theta, float observe, const Ray &r, const Scene& scene, int weight, int depth, int maxdepth, ExpOutput& output) {
+    // check intersection
+    SurfaceInteraction isect;
+    // if not intersect
+    if (!scene.Intersect(r, &isect)){
+      if (depth == 0){
+        return;
+      }else{
+
+        // check intersection with observing sphere
+        float t = observeIntersect(r, observe);
+        Point3f inter = r.o + r.d * t;
+
+        // check rays that go out
+        if (r.o.z>-2 && inter.z<=0){
+          count_goout++;
+          return;
+        }
+        output.addOutput(inter, weight, depth, theta);
+        return;
+      }
+    }
+
+    if (depth>maxdepth){
+      float random = ((float) rand() / (RAND_MAX));
+      if ((random)<1./6) weight *= 6;
+      else return;
+    }
+
+    Normal3f normal = isect.shading.n;
+    float cos = Dot(Vector3f(normal), isect.wo);
+    bool entering = cos>0;
+
+    float rprob = 1;
+    // for doublelayer
+    // Feng:
+    // I am cheating to make the first layer a glass and second layer mirror
+    float etaI, etaT;
+    if (isect.p.z>-2){
+      etaI = 1;
+      etaT = 1.5;
+      rprob = FrDielectric(cos, etaI, etaT);
+    }else{
+      etaI = 1.5;
+      etaT = 2;
+      rprob = 1;
+    }
+
+    // check for bad rays
+    if (Dot(isect.n, isect.wo) * Dot(isect.shading.n, isect.wo)<=0){
+      count++;
+      return;
+    }
+    Normal3f nl = entering?normal:-normal;
+    Vector3f wi = Normalize(2*Dot(Vector3f(nl), isect.wo)*Vector3f(nl) - isect.wo);
+
+    Vector3f tdir;
+    float e = entering? etaI/etaT:etaT/etaI;
+    bool tr = Refract(isect.wo, nl, e, &tdir);
+    // check bad rays
+    if ((Dot(isect.n, wi) * Dot(normal, wi)<=0) || Dot(isect.n, tdir) * Dot(normal, tdir)<=0){
+      count++;
+      return;
+    }
+
+    // reflection ray
+    RayDifferential reflRay = isect.SpawnRay(wi);
+    // transmission ray
+    RayDifferential tranRay = isect.SpawnRay(tdir);
+
+    // specular reflection + specular refraction
+    float rt = (float) rand() / (RAND_MAX);
+
+    if (rt<=rprob){
+      // refelctance ray
+      DoubleLayerHeightfield(theta, observe, reflRay, scene, weight, depth+1, maxdepth, output);
+      return;
+    }else{
+      // transmission ray
+      if (tr==false) std::cout<<"in transmission case but transmission is impossible, error!"<<std::endl;
+      DoubleLayerHeightfield(theta, observe, tranRay, scene, weight, depth+1, maxdepth, output);
+      return;
+    }
+  }
+
+  //observe is the observing radius
+  float observeIntersect(const Ray &r, float observe){
+    // returns distance, 0 if nohit
+    Vector3f op = Vector3f(r.o.x, r.o.y, r.o.z); // Solve t^2*d.d + 2*t*(o-p).d + (o-p).(o-p)-R^2 = 0
+    float t, eps = 1e-4, det = pow(Dot(op, r.d),2) - Dot(r.d, r.d)*(Dot(op,op) - pow(observe,2));
+    if (det<0) return 0; else det=sqrt(det);
+    return (-Dot(op, r.d) + det)/Dot(r.d, r.d);
+  }
+  
+  std::shared_ptr<Sampler> RenderOptions::createSampler() const {
+    std::shared_ptr<const Camera> camera(MakeCamera());
+    if (!camera) {
+      Error("Unable to create camera");
+      return nullptr;
+    }
+
+    std::shared_ptr<Sampler> sampler =
+      MakeSampler(SamplerName, SamplerParams, camera->film);
+    if (!sampler) {
+      Error("Unable to create sampler.");
+      return nullptr;
+    }
+    return sampler;
   }
 
 }  // namespace pbrt
