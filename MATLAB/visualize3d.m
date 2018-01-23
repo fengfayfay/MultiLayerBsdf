@@ -75,8 +75,9 @@ for k = 4
     mu_unit = 1/munum;
     phi_unit = 2*pi/phinum;
     result = zeros(phinum,munum);
+    angleslice = 1;
     for i = 1:length(x)
-        if z(i) >=0 && angle(i)<90*pi/2/90 && angle(i)>89*pi/2/90
+        if z(i) >=0 && angle(i)<angleslice*pi/2/90 && angle(i)>(angleslice-1)*pi/2/90
             phi = atan2(y(i),x(i));
             if phi<0
                 phi = phi + 2*pi;
