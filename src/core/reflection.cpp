@@ -408,12 +408,8 @@ bool FourierBSDFTable::GetWeightsAndOffset(Float cosTheta, int *offset,
     Float dydmu = (-sin(phi)*mu/sintheta_o*(wi.z + mu) - (wi.y + sintheta_o*sin(phi)))/pow(wi.z + mu, 2);
 
     // Jacobian
-    Float J;
-    if (sintheta_o == 0){
-      J = 1.f/pow(wi.z+1.f,2);
-    }else J = dxdphi*dydmu - dxdmu*dydphi;
+    Float J = (mu * wi.z + sintheta_o * sin(phi) * wi.y + sintheta_o * cos(phi) * wi.x + 1)/pow(wi.z + mu, 3);
     Float brdfcos = p * J;
-    
     // return the brdf value
     Spectrum result = R * brdfcos;
     return R * brdfcos / cosThetaO;
