@@ -53,28 +53,10 @@ for k = 4
     C4 = textscan(fileID,'%f');
     fclose(fileID);
     
-    filename = ['index_', num2str(alpha),'.txt'];
-    fileID = fopen(filename);
-    C5 = textscan(fileID,'%f');
-    fclose(fileID);
-    
-    filename = ['index0_', num2str(alpha),'.txt'];
-    fileID = fopen(filename);
-    C6 = textscan(fileID,'%f');
-    fclose(fileID);
-    
-    filename = ['inputangle_', num2str(alpha),'.txt'];
-    fileID = fopen(filename);
-    C7 = textscan(fileID,'%f');
-    fclose(fileID);
-    
     x = C1{1};
     y = C2{1};
     z = C3{1};
     angle = C4{1};
-    index = C5{1};
-    index0 = C6{1};
-    inputangle = C7{1};
     observe = 6000;
     x = x/observe;
     y = y/observe;

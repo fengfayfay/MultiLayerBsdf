@@ -16,11 +16,11 @@ end
 
 result = result/sum(result(:));
 
-% figure
-% scatter3(testx, testy, testangle,'filled')
-% xlabel('hx/hz')
-% ylabel('hy/hz')
-% zlabel('incident angle')
+figure
+scatter3(testx, testy, testangle,'filled')
+xlabel('hx/hz')
+ylabel('hy/hz')
+zlabel('incident angle')
 
 figure
 imagesc(result(:,:,1))

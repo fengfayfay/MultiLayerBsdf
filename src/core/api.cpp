@@ -1540,7 +1540,6 @@ namespace pbrt {
 
       }else{
         // 3d experiment
-
         std::ostringstream oss1;
         oss1 <<"3d_outputx_" << alpha<<".txt";
         std::string var1 = oss1.str();

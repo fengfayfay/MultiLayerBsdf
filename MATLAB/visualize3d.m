@@ -6,8 +6,8 @@ mirror = true;
 
 if mirror
     % mirror dir
-    datadir = '/Users/mandy/Github/MultiLayerBsdf/build_clang';
-    %     datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror_3d/';
+%     datadir = '/Users/mandy/Github/MultiLayerBsdf/build_clang';
+        datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror_3d/';
 else
     % glass dir
     % datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SingleLayer/pi:3/output';
@@ -76,7 +76,7 @@ for k = 4
     phi_unit = 2*pi/phinum;
     result = zeros(phinum,munum);
     for i = 1:length(x)
-        if z(i) >=0 && angle(i)<pi/2/90
+        if z(i) >=0 && angle(i)<90*pi/2/90 && angle(i)>89*pi/2/90
             phi = atan2(y(i),x(i));
             if phi<0
                 phi = phi + 2*pi;
