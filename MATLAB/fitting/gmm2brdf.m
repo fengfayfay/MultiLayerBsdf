@@ -29,14 +29,10 @@ for i = 1:phinum
         % conditioned on this incident angle
         p = p/(1/(pi/2));
 
-        % Jacobian
-        dxdphi = -sintheta*sin(PHI(i,j))/((wi(3)+MU(i,j)));
-        dxdmu = (-cos(PHI(i,j))*MU(i,j)/sintheta*(wi(3)+MU(i,j)) - (wi(1)+sintheta*cos(PHI(i,j))))/((wi(3)+MU(i,j))^2);
-        dydphi = sintheta*cos(PHI(i,j))/(wi(3) + MU(i,j));
-        dydmu = (-sin(PHI(i,j))*MU(i,j)/sintheta*(wi(3)+MU(i,j)) - (wi(2)+sintheta*sin(PHI(i,j))))/((wi(3)+MU(i,j))^2);
-        J = [dxdphi, dxdmu; dydphi, dydmu];
-        
-        brdfcos(i,j)= p*det(J);
+        % Jacobian        
+        detJ = (MU(i,j) * wi(3) + sintheta*sin(PHI(i,j))*wi(2) + sintheta*cos(PHI(i,j))*wi(1) + 1)/(wi(3)+MU(i,j))^3;
+        brdfcos(i,j)= p*detJ;
+        fprintf('det1 is %4.6f, det2 is %4.6f\n',detJ, detJ1)
     end
 end
 
