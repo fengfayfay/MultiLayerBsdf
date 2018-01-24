@@ -56,10 +56,12 @@ while 1
    while 1
       while 1
          [W,M,R,logl,part,time] = em_step_partition(X,W,M,R,0,part,1:k,time);
+         
+         % Print running information (Mandy)
          iter = iter+1;
-         if mod(iter,20)==0 && iter>0
+         if mod(iter,40)==0 && iter>0
              fprintf('\nNumber of iterations: %4d \n', iter)
-             fprintf('\nLast 20 iterations used time: %4.4f \n', toc(t1))
+             fprintf('\nLast 40 iterations used time: %4.4f \n', toc(t1))
              F1(iter) = abs(logl/oldlogl-1);
              t1 = tic;
          end

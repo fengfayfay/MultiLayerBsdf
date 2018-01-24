@@ -509,22 +509,6 @@ if length(X(1,:))==3
    % incident angle initialization be around 45 degree
    C(:,1) = C(:,1) + 45;
 end
-% index = zeros(k,1);
-% C(1,:) = zeros(1,length(X(1,:)));
-% index(1) = 0;
-% minDist = inf(size(X,1),1);            
-% % Select the rest of the seeds by a probabilistic model
-% for ii = 2:k
-%     minDist = min(minDist,distfun(X,C(ii-1,:),initVar));
-%     denominator = sum(minDist);
-%     if denominator==0 || denominator==Inf
-%         C(ii:k,:) = datasample(X,k-ii+1,1,'Replace',false);
-%         break;
-%     end
-%     sampleProbability = minDist/denominator;             
-%     [C(ii,:), index(ii)] = datasample(X,1,1,'Replace',false,...
-%         'Weights',sampleProbability);
-% end
 
 initPara.mu = C;
 

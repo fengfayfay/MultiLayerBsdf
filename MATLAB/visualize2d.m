@@ -1,10 +1,22 @@
-% close all
-% cd('/Users/mandy/Github/MultiLayerBsdf/build');
-cd('/Users/mandy/Github/MultiLayerBsdf/build_clang')
-% cd('/Users/mandy/Github/pixar/ritest/GaussianHeightField/SingleLayer/pi:3/output')
-% cd('/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror/pi:3/output')
-alpha = 0.5;
-angle = 60;
+%
+%   Visualize fixed incident angle heightfield data from pbrt heightfield experiment
+%
+
+close all
+clear
+clc
+
+mirror = true;
+
+if mirror
+    dir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror/pi:3/output';
+else
+    dir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SingleLayer/pi:3/output';
+end
+cd(dir)
+
+alpha = 0.5;    % roughness value
+angle = 60;     % incident angle in degree
 filename = [num2str(angle), 'outputx_', num2str(alpha),'.txt'];
 fileID = fopen(filename);
 C1 = textscan(fileID,'%f');
@@ -40,13 +52,24 @@ depth = C5{1};
 observe = 6000;
 total = sum(weight);
 
-% visualization parameters
-munum = 100;
-phinum = 400;
-
 x = x/observe;
 y = y/observe;
 z = z/observe;
+
+if mirror
+    if sum(z<0)/length(z)>0.01
+        msg = 'More than 1% rays go down, not mirror data.';
+        error(msg)
+    end
+    % only take z>=0 data
+    x = x(z>=0);
+    y = y(z>=0);
+    z = z(z>=0);
+end
+
+% visualization parameters
+munum = 100;
+phinum = 400;
 mu_unit = 1/munum;
 phi_unit = 2*pi/phinum;
 result = zeros(phinum,munum);
@@ -57,120 +80,92 @@ for i = 1:length(x)
         if phi<0
             phi = phi + 2*pi;
         end
-        result(ceil(phi/phi_unit),ceil(z(i)/mu_unit)) = result(ceil(phi/phi_unit),ceil(z(i)/mu_unit)) + 1;
+        result(ceil(phi/phi_unit),ceil(z(i)/mu_unit)) = result(ceil(phi/phi_unit),ceil(z(i)/mu_unit)) + weight(i);
     end
 end
+
+% energy plot
 figure
-% energy
-% imagesc(result/total)
-% brdf*cos
-imagesc(result/length(x)*(2*pi/(phinum*munum)))
-title('reflection lobe')
+imagesc(result/total)
+if mirror
+    title(['relfect energy, alpha = ',num2str(alpha),' angle = ', num2str(angle),' mirror'])
+else
+    title(['relfect energy, alpha = ',num2str(alpha),' angle = ', num2str(angle)])
+end
 xlabel('mu_o')
 ylabel('phi_o')
 colorbar
 
-% % transmission
-% result2 = zeros(phinum,munum);
-% for i = 1:length(x)
-%     if z(i)<0
-%         if abs(x(i))<1e-6 && y(i)>=0
-%             theta = pi/2;
-%         elseif (abs(x(i))<1e-6 && y(i)<0)
-%             theta = 3*pi/2;
-%         else
-%             theta = atan(y(i)/x(i));
-%             if x(i)< 0 
-%                 theta = theta + pi;
-%             else
-%                 if y(i) < 0
-%                 theta = theta + 2*pi;
-%                 end
-%             end
-%         end
-%         result2(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) = result2(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) + weight(i);
-%     end
-% end
-% figure
-% imagesc(result2/numray)
-% title('transmission lobe')
-% xlabel('mu_o')
-% ylabel('phi_o')
-% colorbar
-% % % 
-% % % figure
-% % % plot(result2_d1(200,:)/total, 'linewidth', 2)
-% % % title(['Incident angle=', num2str(angle),' alpha =',num2str(alpha), 't bounce1'])
-% % % filename = [num2str(angle),'_alpha_',num2str(alpha), 't_bounce1'];
-% % % saveas(gcf,[filename,'.jpeg'])
-% % % 
-% % % figure
-% % % plot(result2_d2(200,:)/total, 'linewidth', 2)
-% % % title(['Incident angle=', num2str(angle),' alpha =',num2str(alpha), 't bounce2'])
-% % % filename = [num2str(angle),'_alpha_',num2str(alpha), 't_bounce2'];
-% % % saveas(gcf,[filename,'.jpeg'])
-% % % 
-% % % figure
-% % % plot(result2_d3(200,:)/total, 'linewidth', 2)
-% % % title(['Incident angle=', num2str(angle),' alpha =',num2str(alpha), 't bounce3'])
-% % % filename = [num2str(angle),'_alpha_',num2str(alpha), 't_bounce3'];
-% % % saveas(gcf,[filename,'.jpeg'])
-% % % 
-% % % figure
-% % % plot(result2_d4(200,:)/total, 'linewidth', 2)
-% % % title(['Incident angle=', num2str(angle),' alpha =',num2str(alpha), 't bounce4'])
-% % % filename = [num2str(angle),'_alpha_',num2str(alpha), 't_bounce4'];
-% % % saveas(gcf,[filename,'.jpeg'])
-% % 
-% % 
-% % % filename = [num2str(angle),'reflect_', num2str(alpha),'.txt'];
-% % % fid = fopen(filename,'w');
-% % % fprintf(fid,'%6f\n',result);
-% % % fclose(fid);
-% % % 
-% % % filename = [num2str(angle),'transmit_', num2str(alpha),'.txt'];
-% % % fid = fopen(filename,'w');
-% % % fprintf(fid,'%6f\n',result2);
-% % % fclose(fid);
-% % % 
-% % % filename = [num2str(angle),'reflect1_', num2str(alpha),'.txt'];
-% % % fid = fopen(filename,'w');
-% % % fprintf(fid,'%6f\n',result_d1);
-% % % fclose(fid);
-% % % 
-% % % filename = [num2str(angle),'reflect2_', num2str(alpha),'.txt'];
-% % % fid = fopen(filename,'w');
-% % % fprintf(fid,'%6f\n',result_d2);
-% % % fclose(fid);
-% % % 
-% % % filename = [num2str(angle),'transmit1_', num2str(alpha),'.txt'];
-% % % fid = fopen(filename,'w');
-% % % fprintf(fid,'%6f\n',result2_d1);
-% % % fclose(fid);
-% % % 
-% % % filename = [num2str(angle),'transmit2_', num2str(alpha),'.txt'];
-% % % fid = fopen(filename,'w');
-% % % fprintf(fid,'%6f\n',result2_d2);
-% % % fclose(fid);
-% % 
-% % 
-% % % depth_r = depth(z>0);
-% % % depth_t = depth(z<0);
-% % % yt = 0:0.1:1;
-% % % figure
-% % % histogram(depth,'Normalization','cdf');
-% % % title(['accumulated energy percentage from reflectance, alpha=', num2str(alpha)])
-% % % % set(gca, 'YTick', yt);
-% % % filename = [num2str(angle),'_alpha_',num2str(alpha), 'mirror_hist'];
-% % % % saveas(gcf,[filename,'.jpeg'])
-% % % 
-% % % figure
-% % % % histogram(depth_r,'Normalization','cdf');
-% % % histogram(depth_r);
-% % % title(['accumulated energy percentage from reflectance, alpha =',num2str(alpha)])
-% % % % set(gca, 'YTick', yt);
-% % % figure
-% % % % histogram(depth_t,'Normalization','cdf');
-% % % histogram(depth_t);
-% % % title(['accumulated energy percentage from transmission, alpha =',num2str(alpha)])
-% % % % set(gca, 'YTick', yt);
+% brdf*cos plot
+figure
+imagesc(result/total*(2*pi/(phinum*munum)))
+if mirror
+    title(['reflect brdf*cos, alpha = ',num2str(alpha),' angle = ', num2str(angle),' mirror'])
+else
+    title(['reflect brdf*cos, alpha = ',num2str(alpha),' angle = ', num2str(angle)])
+end
+xlabel('mu_o')
+ylabel('phi_o')
+colorbar
+
+if ~mirror
+    % transmission
+    result2 = zeros(phinum,munum);
+    for i = 1:length(x)
+        if z(i)<0
+            if abs(x(i))<1e-6 && y(i)>=0
+                theta = pi/2;
+            elseif (abs(x(i))<1e-6 && y(i)<0)
+                theta = 3*pi/2;
+            else
+                theta = atan(y(i)/x(i));
+                if x(i)< 0
+                    theta = theta + pi;
+                else
+                    if y(i) < 0
+                        theta = theta + 2*pi;
+                    end
+                end
+            end
+            result2(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) = result2(ceil(theta/phi_unit),abs(floor(z(i)/mu_unit))) + weight(i);
+        end
+    end
+    % energy plot
+    figure
+    imagesc(result2/total)
+    title(['transmit energy, alpha = ',num2str(alpha),' angle = ', num2str(angle)])
+    xlabel('mu_o')
+    ylabel('phi_o')
+    colorbar
+    
+    % brdf*cos plot
+    figure
+    imagesc(result2/total*(2*pi/(phinum*munum)))
+    title(['transmit brdf*cos, alpha = ',num2str(alpha),' angle = ', num2str(angle)])
+    xlabel('mu_o')
+    ylabel('phi_o')
+    colorbar
+end
+
+% hitogram of energy percentage
+depth_r = depth(z>0);
+yt = 0:0.1:1;
+figure
+histogram(depth,'Normalization','cdf');
+title(['accumulated energy percentage r+t, alpha=', num2str(alpha)])
+xlabel('depth')
+ylabel('energy ratio')
+figure
+histogram(depth_r,'Normalization','cdf');
+title(['accumulated energy percentage from reflectance, alpha =',num2str(alpha)])
+xlabel('depth')
+ylabel('energy ratio')
+
+if ~mirror
+    depth_t = depth(z<0);
+    figure
+    histogram(depth_t,'Normalization','cdf');
+    title(['accumulated energy percentage from transmission, alpha =',num2str(alpha)])
+    xlabel('depth')
+    ylabel('energy ratio')
+end

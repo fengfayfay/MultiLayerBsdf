@@ -1,5 +1,11 @@
+%
+% plot ellipsoid representing the mixture of gaussians
+% without plotting their weights
+%
+
+numGaussian = 50;
 figure
 hold on
-for i = 1:100
-    plot_gaussian_ellipsoid(M(i,:), reshape(R(i,:),3,3))
+for i = 1:numGaussian
+    plot_gaussian_ellipsoid(obj.mu(i,:), obj.Sigma(:,:,i))
 end
