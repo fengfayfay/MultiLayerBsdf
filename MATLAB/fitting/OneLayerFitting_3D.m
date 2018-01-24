@@ -25,6 +25,8 @@ trainnum = 1e6;
 generatenum = 1e7;
 gaussiannumvec = 50; % number of gaussians vector
 accelerated = true; % if true uses accelerated em, otherwise uses customized gmcluster
+maxiter = 1000;
+tol = 1e-5;
 alphavec = [0.1, 0.2, 0.4, 0.5, 0.7, 0.9];
 alpharange = 1:length(alphavec);
 for k = 4
@@ -78,7 +80,7 @@ for k = 4
         input = [x,y,z,angle];
         
         fitting_halfvector_z13D(datadir,fundir,alpha,input,...
-            trainnum, generatenum, gaussiannumvec,xnum, ynum, znum,accelerated);
+            trainnum, generatenum, gaussiannumvec,xnum, ynum, znum,accelerated,maxiter,tol);
         
     else% glass case
         

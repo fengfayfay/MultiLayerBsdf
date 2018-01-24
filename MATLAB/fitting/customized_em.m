@@ -1,4 +1,4 @@
-function obj = customized_em(maxiter,tol,train,numGaussian)
+function obj = customized_em(train,numGaussian,maxiter,tol)
     % use matlab gmcluster for em fitting
     tic
     options = statset('MaxIter',maxiter, 'Display','final','TolFun',tol);

@@ -10,7 +10,7 @@ close all
 clear
 clc
 
-mirror = false;
+mirror = true;
 
 if mirror
     % datadir = '/Users/mandy/Github/MultiLayerBsdf/build_clang/';
@@ -25,7 +25,9 @@ addpath(datadir,fundir)
 trainnum = 1e6; % number of data for training
 generatenum = 1e6;  % number of data for testing
 gaussiannumvec = 5; % number of gaussians vector
-accelerated = true; % if true uses accelerated em, otherwise uses customized gmcluster
+accelerated = true; % if true uses accelerated em, othe
+maxiter = 500;
+tol = 1e-5;
 alphavec = [0.1, 0.2, 0.4, 0.5, 0.7, 0.9];
 anglevec = [0, 10, 20, 30, 40, 50, 60, 70, 80 ,89];
 alpharange = 1:length(alphavec);
@@ -84,13 +86,13 @@ for j = 7
         if mirror
             
             fitting_halfvector_z1(datadir,fundir,alpha,angle,input,...
-                trainnum, generatenum, gaussiannumvec, xnum, ynum,accelerated);
+                trainnum, generatenum, gaussiannumvec, xnum, ynum,accelerated,maxiter,tol);
             
         else
             
             ior = 1.5;
             Glass_fitting_halfvector_z1(datadir,fundir,alpha,angle,input,...
-                trainnum, generatenum, gaussiannumvec, xnum, ynum,ior,accelerated);
+                trainnum, generatenum, gaussiannumvec, xnum, ynum,ior,accelerated,maxiter,tol);
             
         end
     end

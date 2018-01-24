@@ -1,5 +1,5 @@
 function Glass_fitting_halfvector_z1(dir, fundir, alpha,angle,input,...
-    trainnum, generatenum, gaussiannumvec, xnum, ynum,ior,accelerated)
+    trainnum, generatenum, gaussiannumvec, xnum, ynum,ior,accelerated,maxiter,tol)
 
 % fitting 2d galss heightfield data in slope domain using a mixture of gaussians
 %
@@ -54,13 +54,11 @@ for j = 1:length(gaussiannumvec)
     if accelerated
         aemdir = [fundir,'accelerated_greedy_EM'];
         addpath(aemdir);
-        reflect_obj = accelerated_em(reflect_train,trainnum,numGaussian);
-        transmit_obj = accelerated_em(transmit_train,trainnum,numGaussian);
+        reflect_obj = accelerated_em(reflect_train,trainnum,numGaussian,maxiter,tol);
+        transmit_obj = accelerated_em(transmit_train,trainnum,numGaussian,maxiter,tol);
     else
-        maxiter = 500;
-        tol = 1e-5;
-        reflect_obj = customized_em(maxiter,tol,reflect_train,numGaussian);
-        transmit_obj = customized_em(maxiter,tol,transmit_train,numGaussian);
+        reflect_obj = customized_em(reflect_train,numGaussian,maxiter,tol);
+        transmit_obj = customized_em(transmit_train,numGaussian,maxiter,tol);
     end
     
     % generate points from fitted model
