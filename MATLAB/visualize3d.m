@@ -65,8 +65,9 @@ for k = 4
         % only take z>=0 data
         x = x(z>=0);
         y = y(z>=0);
-        z = z(z>=0);
         angle = angle(z>=0);
+        %z selection must happen after x y angle are processed
+        z = z(z>=0);
     end
     
     % visualization parameters

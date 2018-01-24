@@ -72,8 +72,9 @@ for k = 4
         % only take z>= data
         x = x(z>=0);
         y = y(z>=0);
-        z = z(z>=0);
         angle = angle(z>=0);
+        % please be careful when using z as selector to subselect itself after the others are taken care of
+        z = z(z>=0);
         
         % preprocess raw data to eliminate extreme hx/hz hy/hz values for
         % each incident angle
