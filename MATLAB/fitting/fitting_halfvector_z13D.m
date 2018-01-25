@@ -24,9 +24,13 @@ countvec = zeros(1,length(gaussiannumvec));
 
 boundary_ratio = 99/100;
 zmax = pi/2;
-zmin = 0;
+if reflectdata
+    zmin = -pi/2;
+else
+    zmin = 0;
+end
 [train, test,test2,range,x_unit,y_unit,z_unit] = preprocess(input,...
-    boundary_ratio,xnum,ynum,znum,zmax,zmin,trainnum,generatenum);
+    boundary_ratio,xnum,ynum,znum,zmax,zmin,trainnum,generatenum,reflectdata);
 
 [~,result] = bygrid3d(test,xnum,ynum,znum,range,zmax,zmin,x_unit,y_unit,z_unit);
 result = result/sum(result(:));
@@ -41,13 +45,13 @@ xlabel('hx/hz')
 ylabel('hy/hz')
 zlabel('incident angle')
 
-for i = 1:ceil(znum/9):znum
-    
-    titlestring = ['Gaussian Heightfiled mirror ray distribution, alpha=', num2str(alpha),'angle~',num2str(i)];
-    filename = [dir,'3d_mirror_reflect_alpha_',num2str(alpha), '~',num2str(i)];
-    plot_near_angle(result,i,titlestring,filename);
-    
-end
+% for i = 1:ceil(znum/9):znum
+%     
+%     titlestring = ['Gaussian Heightfiled mirror ray distribution, alpha=', num2str(alpha),'angle~',num2str(i)];
+%     filename = [dir,'3d_mirror_reflect_alpha_',num2str(alpha), '~',num2str(i)];
+%     plot_near_angle(result,i,titlestring,filename);
+%     
+% end
 
 for j = 1:length(gaussiannumvec)
     %% fit mixture of Gaussians using half vector
@@ -63,7 +67,7 @@ for j = 1:length(gaussiannumvec)
     end
     
     % save gm result
-    filename = [dir,'3dhalf_projected_z1_alpha_',num2str(alpha), '_#G',num2str(numGaussian),'.mat'];
+    filename = [dir,'3dhalf_projected_z1_alpha_',num2str(alpha), '_#G',num2str(numGaussian),'_reflect_',num2str(reflectdata),'.mat'];
     save(filename,'obj')
     
     %% generate points from fitted model
@@ -87,38 +91,38 @@ for j = 1:length(gaussiannumvec)
         eself(i) = relativel2err(result(:,:,i),result2(:,:,i));
     end
     figure
-    plot(1:znum*90/znum,e,'linewidth',2)
+    plot(e,'linewidth',2)
     hold on
-    plot(1:znum*90/znum,eself,'linewidth',2)
+    plot(eself,'linewidth',2)
     title('relative l2 error for each incident angle bin')
     xlabel('angle bin')
     ylabel('relative l2 error')
     grid on
     legend('fitting error','self error')
-    filename = [dir,'3drelativel2error_alpha',num2str(alpha)];
+    filename = [dir,'3drelativel2error_alpha',num2str(alpha),'_reflect_',num2str(reflectdata)];
     saveas(gcf,[filename,'.jpeg'])
     
     
-    for i = 1:ceil(znum/9):znum
-        
-        titlestring = ['GMM mirror ray distribution, alpha=', num2str(alpha),'angle~',num2str(i)];
-        filename = [dir,'3d_mirror_predict_alpha_',num2str(alpha), '~',num2str(i)];
-        plot_near_angle(predict,i,titlestring,filename);
-        
-    end
+%     for i = 1:ceil(znum/9):znum
+%         
+%         titlestring = ['GMM mirror ray distribution, alpha=', num2str(alpha),'angle~',num2str(i)];
+%         filename = [dir,'3d_mirror_predict_alpha_',num2str(alpha), '~',num2str(i)];
+%         plot_near_angle(predict,i,titlestring,filename);
+%         
+%     end
     
 end
 
 % save error and count file
-errvec_filename = [dir,'3dhalf_projected_z1',num2str(alpha),'_err.mat'];
-countvec_filename = [dir,'half_projected_z1',num2str(alpha),'_badcount.mat'];
-save(errvec_filename,'errvec')
+errvec_filename = [dir,'3dhalf_projected_z1',num2str(alpha),'_reflect_',num2str(reflectdata),'_err.mat'];
+countvec_filename = [dir,'half_projected_z1',num2str(alpha),'_reflect_',num2str(reflectdata),'_badcount.mat'];
+save(errvec_filename,'errvec');
 save(countvec_filename,'count')
 
 end
 
 function [train, test,test2,range,x_unit,y_unit,z_unit] = preprocess(input,...
-    boundary_ratio,xnum,ynum,znum,zmax,zmin,trainnum,generatenum)
+    boundary_ratio,xnum,ynum,znum,zmax,zmin,trainnum,generatenum,reflectdata)
 % preprocess raw data to eliminate extreme hx/hz hy/hz values for
 % each incident angle
 angle = input(:,4);
@@ -154,18 +158,28 @@ ydividez_test = ydividez(indexrange);
 angle_test = angle(indexrange);
 
 indexrange2 = trainnum+generatenum+1:trainnum+2*generatenum;
+xdividez_test2 = xdividez(indexrange2);
+ydividez_test2 = ydividez(indexrange2);
+angle_test2 = angle(indexrange2);
 
-% % relfection around normal incidence
-% xdividez_train_new = [xdividez_train_new;xdividez_train_new];
-% ydividez_train_new = [ydividez_train_new;ydividez_train_new];
-% angle_train_new = [angle_train_new;-angle_train_new];
-% xdividez_test = [xdividez_test;xdividez_test];
-% ydividez_test = [ydividez_test;ydividez_test];
-% angle_test = [angle_test;-angle_test];
+if reflectdata
+    % relfection around normal incidence
+    xdividez_train_new = [xdividez_train_new;xdividez_train_new];
+    ydividez_train_new = [ydividez_train_new;ydividez_train_new];
+    angle_train_new = [angle_train_new;-angle_train_new];
+    xdividez_test = [xdividez_test;xdividez_test];
+    ydividez_test = [ydividez_test;ydividez_test];
+    angle_test = [angle_test;-angle_test];
+end
+
+xdividez_test2 = [xdividez_test2;xdividez_test2];
+ydividez_test2 = [ydividez_test2;ydividez_test2];
+angle_test2 = [angle_test2;-angle_test2];
+
 
 train = [xdividez_train_new,ydividez_train_new,angle_train_new];
 test = [xdividez_test,ydividez_test,angle_test];
-test2 = [xdividez(indexrange2),ydividez(indexrange2),angle(indexrange2)];
+test2 = [xdividez_test2,ydividez_test2,angle_test2];
 
 end
 

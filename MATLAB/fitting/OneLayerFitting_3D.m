@@ -22,9 +22,9 @@ addpath(datadir,fundir)
 
 trainnum = 1e6;
 generatenum = 1e7;
-gaussiannumvec = 50; % number of gaussians vector
+gaussiannumvec = 100; % number of gaussians vector
 accelerated = true; % if true uses accelerated em, otherwise uses customized gmcluster
-reflectdata = false;
+reflectdata = true;
 maxiter = 1000;
 tol = 1e-5;
 alphavec = [0.1, 0.2, 0.4, 0.5, 0.7, 0.9];
@@ -64,6 +64,9 @@ for k = 4
     xnum = 100;
     ynum = 100;
     znum = 90;
+    if reflectdata
+        znum = znum*2;
+    end
     
     if mirror
         % for mirror
