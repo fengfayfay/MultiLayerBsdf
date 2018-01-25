@@ -1,6 +1,4 @@
-function [f,x,y] = randomsurface(N,rL,h,clx,cly)
-%
-% [f,x,y] = rsgeng2D(N,rL,h,clx,cly) 
+function [f,x,y] = randomsurface(N,rL,h,clx,cly,dir,offset)
 %
 % generates a square 2-dimensional random rough surface f(x,y) with NxN 
 % surface points. The surface has a Gaussian height distribution function 
@@ -16,8 +14,6 @@ function [f,x,y] = randomsurface(N,rL,h,clx,cly)
 % Output:   f  - surface heights
 %           x  - surface points
 %           y  - surface points
-%
-% Last updated: 2010-07-26 (David Bergström).  
 %
 
 format long;
@@ -49,9 +45,7 @@ elseif nargin == 5
     f = 2/sqrt(pi)*rL/N/sqrt(clx)/sqrt(cly)*ifft2(fft2(Z).*fft2(F));
     
 end
-figure
-surf(f)
-cd('/Users/mandy/Github/MultiLayerBsdf/build_clang');
+cd(dir);
 filename = ['pz', num2str(h/clx), '.txt'];
 pz = fopen(filename,'w');
 fprintf(pz,'%5f %5f %5f %5f %5f %5f %5f %5f\n',f);
@@ -59,5 +53,5 @@ fclose(pz);
 
 filename = ['pz', num2str(h/clx), '_2.txt'];
 pz = fopen(filename,'w');
-fprintf(pz,'%5f %5f %5f %5f %5f %5f %5f %5f\n',f-5);
+fprintf(pz,'%5f %5f %5f %5f %5f %5f %5f %5f\n',f + offset);
 fclose(pz);

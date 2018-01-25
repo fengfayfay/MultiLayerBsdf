@@ -1,3 +1,7 @@
+%
+%   plot gaussian mixture regression result and validate
+%
+
 generatenum=1e6;
 for j = 1:9
     obj = gmdistribution(expData(1:2,(j-1)*10+1)',expSigma(:,:,(j-1)*10+1),1);
