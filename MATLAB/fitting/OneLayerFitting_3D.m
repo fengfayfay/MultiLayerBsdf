@@ -13,7 +13,6 @@ clc
 mirror = true;
 
 if mirror
-    %     datadir = '/Users/mandy/Github/MultiLayerBsdf/build_clang';
     datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror_3d/';
 else
     datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SingleLayer/pi:3/output/';
@@ -25,6 +24,7 @@ trainnum = 1e6;
 generatenum = 1e7;
 gaussiannumvec = 50; % number of gaussians vector
 accelerated = true; % if true uses accelerated em, otherwise uses customized gmcluster
+reflectdata = false;
 maxiter = 1000;
 tol = 1e-5;
 alphavec = [0.1, 0.2, 0.4, 0.5, 0.7, 0.9];
@@ -79,8 +79,11 @@ for k = 4
         
         input = [x,y,z,angle];
         
+        % randomly permute input data
+        input = input(randperm(length(input)),:);
+        
         fitting_halfvector_z13D(datadir,fundir,alpha,input,...
-            trainnum, generatenum, gaussiannumvec,xnum, ynum, znum,accelerated,maxiter,tol);
+            trainnum, generatenum, gaussiannumvec,xnum, ynum, znum,accelerated,reflectdata,maxiter,tol);
         
     else% glass case
         

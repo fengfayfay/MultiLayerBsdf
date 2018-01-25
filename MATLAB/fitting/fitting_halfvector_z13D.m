@@ -1,5 +1,5 @@
 function fitting_halfvector_z13D(dir,fundir,alpha,input,...
-    trainnum, generatenum, gaussiannumvec,xnum, ynum, znum,accelerated,maxiter,tol)
+    trainnum, generatenum, gaussiannumvec,xnum, ynum, znum,accelerated,reflectdata,maxiter,tol)
 
 % fitting 3d mirror heightfield data in slope domain using a mixture of gaussians
 %
@@ -25,11 +25,14 @@ countvec = zeros(1,length(gaussiannumvec));
 boundary_ratio = 99/100;
 zmax = pi/2;
 zmin = 0;
-[train, test,range,x_unit,y_unit,z_unit] = preprocess(input,...
+[train, test,test2,range,x_unit,y_unit,z_unit] = preprocess(input,...
     boundary_ratio,xnum,ynum,znum,zmax,zmin,trainnum,generatenum);
 
 [~,result] = bygrid3d(test,xnum,ynum,znum,range,zmax,zmin,x_unit,y_unit,z_unit);
 result = result/sum(result(:));
+
+[~,result2] = bygrid3d(test2,xnum,ynum,znum,range,zmax,zmin,x_unit,y_unit,z_unit);
+result2 = result2/sum(result2(:));
 
 % 3d point distribution visualization
 figure
@@ -76,15 +79,22 @@ for j = 1:length(gaussiannumvec)
     errvec(j) = err;
     countvec(j) = count;
     
+    % plot error by incident angle bin
+    e = zeros(znum,1);
+    eself = zeros(znum,1);
     for i = 1:znum
         e(i) = relativel2err(result(:,:,i),predict(:,:,i));
+        eself(i) = relativel2err(result(:,:,i),result2(:,:,i));
     end
     figure
     plot(1:znum*90/znum,e,'linewidth',2)
+    hold on
+    plot(1:znum*90/znum,eself,'linewidth',2)
     title('relative l2 error for each incident angle bin')
     xlabel('angle bin')
     ylabel('relative l2 error')
     grid on
+    legend('fitting error','self error')
     filename = [dir,'3drelativel2error_alpha',num2str(alpha)];
     saveas(gcf,[filename,'.jpeg'])
     
@@ -107,7 +117,7 @@ save(countvec_filename,'count')
 
 end
 
-function [train, test,range,x_unit,y_unit,z_unit] = preprocess(input,...
+function [train, test,test2,range,x_unit,y_unit,z_unit] = preprocess(input,...
     boundary_ratio,xnum,ynum,znum,zmax,zmin,trainnum,generatenum)
 % preprocess raw data to eliminate extreme hx/hz hy/hz values for
 % each incident angle
@@ -143,6 +153,8 @@ xdividez_test = xdividez(indexrange);
 ydividez_test = ydividez(indexrange);
 angle_test = angle(indexrange);
 
+indexrange2 = trainnum+generatenum+1:trainnum+2*generatenum;
+
 % % relfection around normal incidence
 % xdividez_train_new = [xdividez_train_new;xdividez_train_new];
 % ydividez_train_new = [ydividez_train_new;ydividez_train_new];
@@ -153,6 +165,7 @@ angle_test = angle(indexrange);
 
 train = [xdividez_train_new,ydividez_train_new,angle_train_new];
 test = [xdividez_test,ydividez_test,angle_test];
+test2 = [xdividez(indexrange2),ydividez(indexrange2),angle(indexrange2)];
 
 end
 
