@@ -3,13 +3,13 @@
 %
 
 clear
-close all
+% close all
 clc
 
 dim = 3;
 numg = 50;
 alpha = 0.5;
-angle = 60;
+angle = 0;
 theta = angle*pi/180;
 wi = [sin(theta), 0, cos(theta)];
 munum = 100;
@@ -54,7 +54,7 @@ for i = 1:phinum
 end
 
 figure
-imagesc(brdfcos)
+imagesc(2*brdfcos)
 colorbar()
 xlabel('mu')
 ylabel('phi')

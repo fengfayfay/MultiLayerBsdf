@@ -84,23 +84,8 @@ for j = 1:length(gaussiannumvec)
     countvec(j) = count;
     
     % plot error by incident angle bin
-    e = zeros(znum,1);
-    eself = zeros(znum,1);
-    for i = 1:znum
-        e(i) = relativel2err(result(:,:,i),predict(:,:,i));
-        eself(i) = relativel2err(result(:,:,i),result2(:,:,i));
-    end
-    figure
-    plot(e,'linewidth',2)
-    hold on
-    plot(eself,'linewidth',2)
-    title('relative l2 error for each incident angle bin')
-    xlabel('angle bin')
-    ylabel('relative l2 error')
-    grid on
-    legend('fitting error','self error')
     filename = [dir,'3drelativel2error_alpha',num2str(alpha),'_reflect_',num2str(reflectdata)];
-    saveas(gcf,[filename,'.jpeg'])
+    plot_error_by_angle(result,result2,predict,znum,reflectdata,filename)
     
     
 %     for i = 1:ceil(znum/9):znum
@@ -208,4 +193,34 @@ colorbar()
 title(titlestring)
 saveas(gcf,[filename,'.jpeg'])
 
+end
+
+function plot_error_by_angle(result,result2,predict,znum,reflectdata,filename)
+
+if reflectdata
+    e = zeros(znum/2,1);
+    eself = zeros(znum/2,1);
+    for i = znum/2+1:znum
+        e(i-znum/2) = relativel2err(result(:,:,i),predict(:,:,i));
+        eself(i-znum/2) = relativel2err(result(:,:,i),result2(:,:,i));
+    end
+else
+    e = zeros(znum,1);
+    eself = zeros(znum,1);
+    for i = 1:znum
+        e(i) = relativel2err(result(:,:,i),predict(:,:,i));
+        eself(i) = relativel2err(result(:,:,i),result2(:,:,i));
+    end
+end
+
+figure
+plot(e,'linewidth',2)
+hold on
+plot(eself,'linewidth',2)
+title('relative l2 error for each incident angle bin')
+xlabel('angle bin')
+ylabel('relative l2 error')
+grid on
+legend('fitting error','self error')
+saveas(gcf,[filename,'.jpeg'])
 end
