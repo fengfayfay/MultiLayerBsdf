@@ -71,7 +71,7 @@ void GaussianMaterial::ComputeScatteringFunctions(SurfaceInteraction *si,
             ARENA_ALLOC(arena, SpecularTransmission)(kt, 1.f, e, mode));
 }
 
-GaussianMaterial *CreateGaussianMaterial(const TextureParams &mp) {
+  GaussianMaterial *CreateGaussianMaterial(const TextureParams &mp) {
     std::shared_ptr<Texture<Spectrum>> Kd =
         mp.GetSpectrumTexture("Kd", Spectrum(0.25f));
     std::shared_ptr<Texture<Spectrum>> Ks =
@@ -94,11 +94,14 @@ GaussianMaterial *CreateGaussianMaterial(const TextureParams &mp) {
         mp.GetFloatTextureOrNull("bumpmap");
     bool remapRoughness = mp.FindBool("remaproughness", true);
 
+    bool reflectdata = mp.FindBool("reflectdata", true);
+
     // isotropic roughu = roughv
     int dim = 3;
-    int num = 100;
-    bool reflectdata = true;
-    Gaussianmixture *gm = new Gaussianmixture(dim,num,0.5,reflectdata);
+    Float alpha = 0.5;
+    int num;
+    if (reflectdata) num = 100; else num = 50;
+    Gaussianmixture *gm = new Gaussianmixture(dim,num,alpha,reflectdata);
     return new GaussianMaterial(Kd, Ks, Kr, Kt, roughness, uroughness, vroughness,
                                 opacity, eta, bumpMap, remapRoughness,gm);
 }

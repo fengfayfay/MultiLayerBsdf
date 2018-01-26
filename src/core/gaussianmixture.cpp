@@ -114,10 +114,21 @@ namespace pbrt {
     num_gaussian = num;
     reflectdata = reflect;
 
+    std::string wf,mf,cf;
+    if (reflect){
+      wf = "weights_reflect.txt";
+      mf = "means_reflect.txt";
+      cf = "covars_reflect.txt";
+    }else{
+      wf = "weights.txt";
+      mf = "means.txt";
+      cf = "covars.txt";
+    }
+
     // weights
     std::vector<Float> w;
     std::string line;
-    std::ifstream weightfile("weights_reflect.txt");
+    std::ifstream weightfile(wf);
     if (weightfile.is_open())
       {
         while ( getline (weightfile,line) )
@@ -127,12 +138,13 @@ namespace pbrt {
         weightfile.close();
       }
     else Error("Unable to open file weights.txt");
+    CHECK_EQ(w.size(), num);
     weights = w;
 
     // means
     std::vector<std::vector<Float>> m;
     std::vector<Float> m_cur;
-    std::ifstream meanfile("means_reflect.txt");
+    std::ifstream meanfile(mf);
     if (meanfile.is_open())
       {
         while ( getline (meanfile,line) )
@@ -146,12 +158,13 @@ namespace pbrt {
         meanfile.close();
       }
     else Error("Unable to open file means.txt");
+    CHECK_EQ(m.size(), num);
     means = m;
 
     // covarians
     std::vector<Matrix3x3> c;
     std::vector<Float> c_cur;
-    std::ifstream covfile("covars_reflect.txt");
+    std::ifstream covfile(cf);
     if (covfile.is_open())
       {
         while ( getline (covfile,line) )
@@ -165,6 +178,7 @@ namespace pbrt {
         covfile.close();
       }
     else Error("Unable to open file covars.txt");
+    CHECK_EQ(c.size(), num);
     covars = c;
 
   }

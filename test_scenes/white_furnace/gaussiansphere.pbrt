@@ -15,7 +15,7 @@ AttributeBegin
 AttributeEnd
 
 AttributeBegin
-Material "gaussian" "rgb Kd" [0 0 0] "rgb Ks" [1 1 1] "float roughness" [0.1] "bool remaproughness" "false"
+Material "gaussian" "rgb Kd" [0 0 0] "rgb Ks" [1 1 1] "float roughness" [0.1] "bool remaproughness" "false" "bool reflectdata" "true"
 Translate 0 1 0
 Rotate 60 1 1 1
 Scale .9 .9 .9
