@@ -47,9 +47,9 @@ for i = 1:phinum
             % conditioned on this incident angle
             p = p/(1/(pi/2));
         end
-
+    
         % Jacobian        
-        detJ = (MU(i,j) * wi(3) + sintheta*sin(PHI(i,j))*wi(2) + sintheta*cos(PHI(i,j))*wi(1) + 1)/(wi(3)+MU(i,j))^3;
+        detJ = (MU(i,j) * wi(3) + wo(2)*wi(2) + wo(1)*wi(1) + 1)/(wi(3)+MU(i,j))^3;
         brdfcos(i,j)= (reflect+1)*p*detJ;
     end
 end
