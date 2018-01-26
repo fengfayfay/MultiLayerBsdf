@@ -385,6 +385,8 @@ bool FourierBSDFTable::GetWeightsAndOffset(Float cosTheta, int *offset,
 
     // handle degenerate cases
     if (cosThetaI == 0 || cosThetaO == 0) return Spectrum(0.);
+
+    //if (wi.z <=0 || wo.z <= 0) return Spectrum(0.);
     if (wh.z == 0) return Spectrum(0.);
 
     wh = Normalize(wh);
@@ -392,23 +394,17 @@ bool FourierBSDFTable::GetWeightsAndOffset(Float cosTheta, int *offset,
     // calculate probability in slope domain using fitted GMM
     Float x = wh.x/abs(wh.z);
     Float y = wh.y/abs(wh.z);
-    Float z = acos(abs(wo.z));
+    Float z = acos(abs(wi.z));
     Float p = gm->prob(x,y,z);
     // probability conditioned on a particular incident angle
     // uniform distributed incident angle prob = 1/(pi/2)
     p /= 1.f/(M_PI/2);
 
-    // convert to brdf*cos value
-    Float phi = atan2(wi.y,wi.x);    // atan2 gives -pi to pi
-    Float mu = wi.z;
-    Float sintheta_i = sqrt(1-pow(mu,2));
-
-    // Jacobian
-    Float J = (mu * wo.z + sintheta_i * sin(phi) * wo.y + sintheta_i * cos(phi) * wo.x + 1)/pow(wo.z + mu, 3);
+    Float J = (wo.z * wi.z + wi.y * wo.y + wi.x * wo.x + 1)/pow(wi.z + wo.z, 3);
 
     Float brdfcos = p * J;
     // return the brdf value
-    return R * brdfcos / cosThetaI;
+    return  brdfcos / cosThetaI;
   }
 
   std::string GaussianBSDF::ToString() const {
