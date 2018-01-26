@@ -4,12 +4,13 @@
 
 clear
 % close all
-clc
+% clc
 
 dim = 3;
-numg = 50;
+numg = 100;
+reflect = true;
 alpha = 0.5;
-angle = 0;
+angle = 89;
 theta = angle*pi/180;
 wi = [sin(theta), 0, cos(theta)];
 munum = 100;
@@ -28,7 +29,7 @@ if dim == 2
 else
     % 3d gm data
     dir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror_3d/';
-    filename = [dir,'3dhalf_projected_z1_alpha_',num2str(alpha), '_#G',num2str(numg),'.mat'];
+    filename = [dir,'3dhalf_projected_z1_alpha_',num2str(alpha), '_#G',num2str(numg),'_reflect_',num2str(reflect),'.mat'];
 end
 load(filename,'obj')
 
@@ -49,13 +50,15 @@ for i = 1:phinum
 
         % Jacobian        
         detJ = (MU(i,j) * wi(3) + sintheta*sin(PHI(i,j))*wi(2) + sintheta*cos(PHI(i,j))*wi(1) + 1)/(wi(3)+MU(i,j))^3;
-        brdfcos(i,j)= p*detJ;
+        brdfcos(i,j)= (reflect+1)*p*detJ;
     end
 end
 
 figure
-imagesc(2*brdfcos)
+imagesc(brdfcos)
 colorbar()
 xlabel('mu')
 ylabel('phi')
 title(['brdf*cos angle=',num2str(angle), ' alpha=', num2str(alpha)])
+
+fprintf('at angle %2d, %4.4f energy is perserved\n',angle,sum(brdfcos(:))*2*pi/(phinum*munum));
