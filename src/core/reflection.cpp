@@ -230,9 +230,9 @@ Spectrum MicrofacetReflection::f(const Vector3f &wo, const Vector3f &wi) const {
     if (cosThetaI == 0 || cosThetaO == 0) return Spectrum(0.);
     if (wh.x == 0 && wh.y == 0 && wh.z == 0) return Spectrum(0.);
     wh = Normalize(wh);
-    Spectrum F = fresnel->Evaluate(Dot(wi, wh));
+    //Spectrum F = fresnel->Evaluate(Dot(wi, wh));
     // set fresnel to be 1 for white furnace test
-    //Spectrum F = 1;
+    Spectrum F = 1;
     return R * distribution->D(wh) * distribution->G(wo, wi) * F /
            (4 * cosThetaI * cosThetaO);
 }
@@ -394,7 +394,7 @@ bool FourierBSDFTable::GetWeightsAndOffset(Float cosTheta, int *offset,
     // calculate probability in slope domain using fitted GMM
     Float x = wh.x/abs(wh.z);
     Float y = wh.y/abs(wh.z);
-    Float z = acos(abs(wi.z));
+    Float z = acos(abs(wo.z));
     Float p = gm->prob(x,y,z);
     // probability conditioned on a particular incident angle
     // uniform distributed incident angle prob = 1/(pi/2)
@@ -404,7 +404,7 @@ bool FourierBSDFTable::GetWeightsAndOffset(Float cosTheta, int *offset,
 
     Float brdfcos = p * J;
     // return the brdf value
-    return  brdfcos / cosThetaI;
+    return brdfcos / cosThetaI;
   }
 
   std::string GaussianBSDF::ToString() const {
