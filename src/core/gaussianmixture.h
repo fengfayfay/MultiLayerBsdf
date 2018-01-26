@@ -98,7 +98,7 @@ namespace pbrt {
 
   public:
     Gaussianmixture();
-    Gaussianmixture(int dim, int num, Float alpha);
+    Gaussianmixture(int dim, int num, Float alpha, bool reflectdata);
     ~Gaussianmixture();
     Float single_gaussian_pdf(Float x, Float y, Float z, int index) const;
     Float prob(Float x, Float y, Float z) const;
@@ -109,6 +109,7 @@ namespace pbrt {
     std::vector<Float> weights;
     std::vector<std::vector<Float>> means;
     std::vector<Matrix3x3> covars;
+    bool reflectdata;
   };
 
 }// namespace pbrt

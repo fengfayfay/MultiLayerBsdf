@@ -15,6 +15,9 @@
 namespace pbrt {
 
 // GaussianMaterial Definitions
+GaussianMaterial::~GaussianMaterial(){
+  delete gm;
+}
 void GaussianMaterial::ComputeScatteringFunctions(SurfaceInteraction *si,
                                               MemoryArena &arena,
                                               TransportMode mode,
@@ -52,10 +55,6 @@ void GaussianMaterial::ComputeScatteringFunctions(SurfaceInteraction *si,
             roughv = roughu;
 
         // use Gaussian BSDF (Mandy)
-        int dim = 3;
-        int num = 50;
-        Gaussianmixture *gm =
-          ARENA_ALLOC(arena, Gaussianmixture)(dim, num, roughu);
         BxDF *spec = ARENA_ALLOC(arena, GaussianBSDF)(ks,gm);
         si->bsdf->Add(spec);
     }
@@ -94,8 +93,14 @@ GaussianMaterial *CreateGaussianMaterial(const TextureParams &mp) {
     std::shared_ptr<Texture<Float>> bumpMap =
         mp.GetFloatTextureOrNull("bumpmap");
     bool remapRoughness = mp.FindBool("remaproughness", true);
+
+    // isotropic roughu = roughv
+    int dim = 3;
+    int num = 100;
+    bool reflectdata = true;
+    Gaussianmixture *gm = new Gaussianmixture(dim,num,0.5,reflectdata);
     return new GaussianMaterial(Kd, Ks, Kr, Kt, roughness, uroughness, vroughness,
-                            opacity, eta, bumpMap, remapRoughness);
+                                opacity, eta, bumpMap, remapRoughness,gm);
 }
 
 }  // namespace pbrt

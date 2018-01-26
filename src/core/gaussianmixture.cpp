@@ -105,17 +105,19 @@ namespace pbrt {
     weights = {1};
     means = { {0,0,0} };
     covars = {Matrix3x3(1,0,0,0,1,0,0,0,1)};
+    reflectdata = false;
   }
 
 
-  Gaussianmixture::Gaussianmixture(int dim, int num, Float alpha){
+  Gaussianmixture::Gaussianmixture(int dim, int num, Float alpha, bool reflect){
     dimension = dim;
     num_gaussian = num;
+    reflectdata = reflect;
 
     // weights
     std::vector<Float> w;
     std::string line;
-    std::ifstream weightfile("weights.txt");
+    std::ifstream weightfile("weights_reflect.txt");
     if (weightfile.is_open())
       {
         while ( getline (weightfile,line) )
@@ -130,7 +132,7 @@ namespace pbrt {
     // means
     std::vector<std::vector<Float>> m;
     std::vector<Float> m_cur;
-    std::ifstream meanfile("means.txt");
+    std::ifstream meanfile("means_reflect.txt");
     if (meanfile.is_open())
       {
         while ( getline (meanfile,line) )
@@ -149,7 +151,7 @@ namespace pbrt {
     // covarians
     std::vector<Matrix3x3> c;
     std::vector<Float> c_cur;
-    std::ifstream covfile("covars.txt");
+    std::ifstream covfile("covars_reflect.txt");
     if (covfile.is_open())
       {
         while ( getline (covfile,line) )
@@ -185,6 +187,7 @@ namespace pbrt {
     for (int i = 0; i < num_gaussian; i++){
       p += weights[i] * single_gaussian_pdf(x, y, z, i);
     }
+    if (reflectdata) p *= 2;
     return p;
   }
 

@@ -534,7 +534,7 @@ inline int BSDF::NumComponents(BxDFType flags) const {
 class GaussianBSDF : public BxDF{
  public:
  // GaussianBSDF Public Methods
- GaussianBSDF(const Spectrum &R, Gaussianmixture *gm)
+ GaussianBSDF(const Spectrum &R, const Gaussianmixture *gm)
    : BxDF(BxDFType(BSDF_REFLECTION)),R(R),gm(gm){}
 
  Spectrum f(const Vector3f &wo, const Vector3f &wi) const;

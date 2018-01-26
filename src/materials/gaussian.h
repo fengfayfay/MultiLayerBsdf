@@ -30,7 +30,7 @@ class GaussianMaterial : public Material {
                  const std::shared_ptr<Texture<Spectrum>> &opacity,
                  const std::shared_ptr<Texture<Float>> &eta,
                  const std::shared_ptr<Texture<Float>> &bumpMap,
-                 bool remapRoughness)
+                 bool remapRoughness,Gaussianmixture *gm)
         : Kd(Kd),
           Ks(Ks),
           Kr(Kr),
@@ -41,7 +41,8 @@ class GaussianMaterial : public Material {
           roughnessv(roughnessv),
           eta(eta),
           bumpMap(bumpMap),
-          remapRoughness(remapRoughness) {}
+          remapRoughness(remapRoughness),gm(gm) {}
+   ~GaussianMaterial();
 
     void ComputeScatteringFunctions(SurfaceInteraction *si, MemoryArena &arena,
                                     TransportMode mode,
@@ -53,6 +54,7 @@ class GaussianMaterial : public Material {
     std::shared_ptr<Texture<Float>> roughness, roughnessu, roughnessv, eta,
         bumpMap;
     bool remapRoughness;
+    Gaussianmixture *gm;
 };
 
 GaussianMaterial *CreateGaussianMaterial(const TextureParams &mp);
