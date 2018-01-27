@@ -1,5 +1,5 @@
 /*
-  Gaussian mixture for gaussianbsdf (Mandy)
+  Gaussian mixture for gaussianbsdf (Mandy, Feng)
 */
 #if defined(_MSC_VER)
 #define NOMINMAX
@@ -17,6 +17,8 @@
 #include <vector>
 
 namespace pbrt {
+
+struct Matrix3x3;
 
   // Matrix3x3 Declarations
   struct Matrix3x3 {
@@ -92,6 +94,7 @@ namespace pbrt {
 
 
     Float m[3][3];
+    Float m_determinant;
   };
 
   // Gaussianmixture class declaration
@@ -110,6 +113,9 @@ namespace pbrt {
     std::vector<Float> weights;
     std::vector<Vector3f> means;
     std::vector<Matrix3x3> covars;
+    std::vector<Matrix3x3> covars_inverse;
+
+    Float gaussian_norm_factor;
     bool reflectdata;
   };
 

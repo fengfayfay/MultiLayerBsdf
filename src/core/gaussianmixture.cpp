@@ -5,6 +5,7 @@
 // core/gaussianmixture.cpp*
 #include "gaussianmixture.h"
 #include <iostream>
+#include <stdarg.h>
 
 namespace pbrt {
   // Matrix3x3 Method Definitions
@@ -109,10 +110,11 @@ namespace pbrt {
   }
 
 
-  Gaussianmixture::Gaussianmixture(int dim, int num, Float alpha, bool reflect){
-    dimension = dim;
-    num_gaussian = num;
-    reflectdata = reflect;
+  Gaussianmixture::Gaussianmixture(int dim, int num, Float alpha, bool reflect): dimension(dim), num_gaussian(num), reflectdata(reflect){
+    weights.resize(num_gaussian);
+    means.resize(num_gaussian);
+    covars.resize(num_gaussian);
+    covars_inverse.resize(num_gaussian);
 
     std::string wf,mf,cf;
     if (reflect){
@@ -131,39 +133,38 @@ namespace pbrt {
     std::ifstream weightfile(wf);
     if (weightfile.is_open())
       {
+        int weightCount = 0;
         while ( getline (weightfile,line) )
           {
-            w.push_back((Float)std::stod(line));
+            assert(weightCount < num_gaussian);
+            weights[weightCount++] = (Float)std::stod(line);
           }
+        CHECK_EQ(weightCount, num_gaussian);
         weightfile.close();
       }
     else Error("Unable to open file weights.txt");
-    CHECK_EQ(w.size(), num);
-    weights = w;
+
+    std::cout<<"finished weights\n";
 
     // means
     std::vector<Vector3f> m;
     std::ifstream meanfile(mf);
     if (meanfile.is_open())
       {
-        int ng = num_gaussian;
-        for (int i = 0; i < ng; i++) {
-            m.push_back(Vector3f(0, 0, 0));
-        }
         int lineCount = 0;
         while ( getline (meanfile,line) )
         {
             Float v = (Float)std::stod(line);
-            int index = lineCount/ng;
-            m[lineCount%ng][index] = v;
+            int index = lineCount/num_gaussian;
+            means[lineCount%num_gaussian][index] = v;
             lineCount++;
         }
-        CHECK_EQ(lineCount, ng*3);
+        CHECK_EQ(lineCount, num_gaussian*3);
         meanfile.close();
       }
     else Error("Unable to open file means.txt");
-    CHECK_EQ(m.size(), num);
-    means = m;
+    CHECK_EQ(means.size(), num);
+    std::cout<<"finished means\n";
 
     // covarians
     std::vector<Matrix3x3> c;
@@ -171,22 +172,32 @@ namespace pbrt {
     std::ifstream covfile(cf);
     if (covfile.is_open())
       {
+        int matCount = 0;
         while ( getline (covfile,line) )
           {
             c_cur.push_back((Float)std::stod(line));
             if (c_cur.size()==dim*dim){
               Matrix3x3 test(c_cur);
-            
-              c.push_back(Matrix3x3(c_cur));
-              //c.push_back(Transpose(test));
+              test.m_determinant = test.determinant();
+              covars[matCount] = test; 
+              covars_inverse[matCount] = Inverse(test);
+              matCount++;
               c_cur = {};
             }
           }
         covfile.close();
+        CHECK_EQ(matCount, num_gaussian);
       }
     else Error("Unable to open file covars.txt");
-    CHECK_EQ(c.size(), num);
-    covars = c;
+    std::cout<<"finished covariant matrices\n";
+    fflush(stdout);
+   
+    //our gaussians is conditioned uniformly over incident angle in (0,.5pi) range 
+    gaussian_norm_factor = 2.f/M_PI;
+    //scale by regular gaussian normalization factor over n dimension 
+    for (int i=0; i< dimension; i++) {
+        gaussian_norm_factor *= 2.0 * M_PI;
+    }
 
   }
 
@@ -195,9 +206,9 @@ namespace pbrt {
   Float Gaussianmixture::single_gaussian_pdf(Float x, Float y, Float z, int index) const
   {
     Float p = 1.0f;
-    p *= 1.0 / sqrt( pow(2*M_PI,dimension) * covars[index].determinant());
+    p *= 1.0 / sqrt( gaussian_norm_factor * covars[index].m_determinant);
     std::vector<Float> diff = {x - means[index][0], y-means[index][1], z-means[index][2]};
-    std::vector<Float> middle = Matrix3x3::Mul(Inverse(covars[index]), diff);
+    std::vector<Float> middle = Matrix3x3::Mul(covars_inverse[index], diff);
     p *= exp(-0.5 * (diff[0]*middle[0] + diff[1]*middle[1] + diff[2]*middle[2]));
     return p;
   }

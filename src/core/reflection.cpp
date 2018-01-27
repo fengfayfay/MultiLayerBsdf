@@ -410,13 +410,13 @@ bool FourierBSDFTable::GetWeightsAndOffset(Float cosTheta, int *offset,
     Float x = wh.x/abs(wh.z);
     Float y = wh.y/abs(wh.z);
     Float zo = acos(abs(wo.z));
-    Float zi = acos(abs(wi.z));
     assert(zo >=0 && zo <= M_PI * .5);
-    assert(zi >=0 && zi <= M_PI * .5);
     Float p = gm->prob(x,y,zo);
-    Float pi = gm->prob(x,y,zi);
 
     /*
+    Float zi = acos(abs(wi.z));
+    assert(zi >=0 && zi <= M_PI * .5);
+    Float pi = gm->prob(x,y,zi);
     Float recp = fabs(p /cosThetaI - pi/cosThetaO);
     if (recp > 1e-3){
         printf("reciprocity failure\n");
@@ -426,9 +426,11 @@ bool FourierBSDFTable::GetWeightsAndOffset(Float cosTheta, int *offset,
     
     // probability conditioned on a particular incident angle
     // uniform distributed incident angle prob = 1/(pi/2)
-    p /= 1.f/(M_PI/2);
+    //p /= 1.f/(M_PI/2);
 
-    Float J = (wo.z * wi.z + wi.y * wo.y + wi.x * wo.x + 1)/pow(wi.z + wo.z, 3);
+    Float denom = wi.z + wo.z;
+    denom = denom * denom * denom;
+    Float J = (wo.z * wi.z + wi.y * wo.y + wi.x * wo.x + 1)/denom;
 
     Float brdfcos = p * J;
     // return the brdf value
