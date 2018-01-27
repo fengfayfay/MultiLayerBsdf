@@ -115,6 +115,7 @@ namespace pbrt {
     means.resize(num_gaussian);
     covars.resize(num_gaussian);
     covars_inverse.resize(num_gaussian);
+    norm_factors.resize(num_gaussian);
 
     std::string wf,mf,cf;
     if (reflect){
@@ -193,20 +194,22 @@ namespace pbrt {
     fflush(stdout);
    
     //our gaussians is conditioned uniformly over incident angle in (0,.5pi) range 
-    gaussian_norm_factor = 2.f/M_PI;
+    Float gaussian_norm_factor = 2.f/M_PI;
     //scale by regular gaussian normalization factor over n dimension 
     for (int i=0; i< dimension; i++) {
         gaussian_norm_factor *= 2.0 * M_PI;
     }
 
+    for (int i = 0; i<num_gaussian; i++) {
+        norm_factors[i] = 1.0 / sqrt( gaussian_norm_factor * covars[i].m_determinant);
+    }
   }
 
   Gaussianmixture::~Gaussianmixture(){}
 
   Float Gaussianmixture::single_gaussian_pdf(Float x, Float y, Float z, int index) const
   {
-    Float p = 1.0f;
-    p *= 1.0 / sqrt( gaussian_norm_factor * covars[index].m_determinant);
+    Float p = norm_factors[index];
     std::vector<Float> diff = {x - means[index][0], y-means[index][1], z-means[index][2]};
     std::vector<Float> middle = Matrix3x3::Mul(covars_inverse[index], diff);
     p *= exp(-0.5 * (diff[0]*middle[0] + diff[1]*middle[1] + diff[2]*middle[2]));

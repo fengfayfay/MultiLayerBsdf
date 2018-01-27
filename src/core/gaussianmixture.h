@@ -115,7 +115,7 @@ struct Matrix3x3;
     std::vector<Matrix3x3> covars;
     std::vector<Matrix3x3> covars_inverse;
 
-    Float gaussian_norm_factor;
+    std::vector<Float> norm_factors;
     bool reflectdata;
   };
 
