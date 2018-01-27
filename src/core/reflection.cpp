@@ -377,10 +377,25 @@ bool FourierBSDFTable::GetWeightsAndOffset(Float cosTheta, int *offset,
     return CatmullRomWeights(nMu, mu, cosTheta, offset, weights);
 }
 
+
+
+
   // Add GaussianBSDF f and ToString methods (Mandy)
-  Spectrum GaussianBSDF::f(const Vector3f &wo, const Vector3f &wi) const {
-    if (!SameHemisphere(wo, wi)) return Spectrum(0);  // now reflection only
+  Spectrum GaussianBSDF::f(const Vector3f &woO, const Vector3f &wiO) const {
+    if (!SameHemisphere(woO, wiO)) return Spectrum(0);  // now reflection only
+
+    Vector3f wo = woO;
+    Vector3f wi = wiO;
+
+    Float phi = atan2(wo.y, wo.x);
+    if (fabs(phi) > 1e-5) {
+        Transform rotation = RotateZ(phi);
+        wo = rotation(wo);
+        assert(fabs(wo.y) < 1e-5);
+        wi = rotation(wi);
+    }
     Float cosThetaO = AbsCosTheta(wo), cosThetaI = AbsCosTheta(wi);
+
     Vector3f wh = wi + wo;
 
     // handle degenerate cases
@@ -394,8 +409,21 @@ bool FourierBSDFTable::GetWeightsAndOffset(Float cosTheta, int *offset,
     // calculate probability in slope domain using fitted GMM
     Float x = wh.x/abs(wh.z);
     Float y = wh.y/abs(wh.z);
-    Float z = acos(abs(wo.z));
-    Float p = gm->prob(x,y,z);
+    Float zo = acos(abs(wo.z));
+    Float zi = acos(abs(wi.z));
+    assert(zo >=0 && zo <= M_PI * .5);
+    assert(zi >=0 && zi <= M_PI * .5);
+    Float p = gm->prob(x,y,zo);
+    Float pi = gm->prob(x,y,zi);
+
+    /*
+    Float recp = fabs(p /cosThetaI - pi/cosThetaO);
+    if (recp > 1e-3){
+        printf("reciprocity failure\n");
+        fflush(stdout);
+    }
+    */
+    
     // probability conditioned on a particular incident angle
     // uniform distributed incident angle prob = 1/(pi/2)
     p /= 1.f/(M_PI/2);

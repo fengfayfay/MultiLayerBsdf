@@ -1,5 +1,5 @@
 /*
-  gaussianmixture definition (Mandy)
+  gaussianmixture definition (Mandy, Feng)
  */
 
 // core/gaussianmixture.cpp*
@@ -142,19 +142,23 @@ namespace pbrt {
     weights = w;
 
     // means
-    std::vector<std::vector<Float>> m;
-    std::vector<Float> m_cur;
+    std::vector<Vector3f> m;
     std::ifstream meanfile(mf);
     if (meanfile.is_open())
       {
+        int ng = num_gaussian;
+        for (int i = 0; i < ng; i++) {
+            m.push_back(Vector3f(0, 0, 0));
+        }
+        int lineCount = 0;
         while ( getline (meanfile,line) )
-          {
-            m_cur.push_back((Float)std::stod(line));
-            if (m_cur.size()==dim){
-              m.push_back(m_cur);
-              m_cur = {};
-            }
-          }
+        {
+            Float v = (Float)std::stod(line);
+            int index = lineCount/ng;
+            m[lineCount%ng][index] = v;
+            lineCount++;
+        }
+        CHECK_EQ(lineCount, ng*3);
         meanfile.close();
       }
     else Error("Unable to open file means.txt");
@@ -171,7 +175,10 @@ namespace pbrt {
           {
             c_cur.push_back((Float)std::stod(line));
             if (c_cur.size()==dim*dim){
+              Matrix3x3 test(c_cur);
+            
               c.push_back(Matrix3x3(c_cur));
+              //c.push_back(Transpose(test));
               c_cur = {};
             }
           }
@@ -187,8 +194,8 @@ namespace pbrt {
 
   Float Gaussianmixture::single_gaussian_pdf(Float x, Float y, Float z, int index) const
   {
-    Float p = 1;
-    p *= 1 / sqrt( pow(2*M_PI,dimension) * covars[index].determinant());
+    Float p = 1.0f;
+    p *= 1.0 / sqrt( pow(2*M_PI,dimension) * covars[index].determinant());
     std::vector<Float> diff = {x - means[index][0], y-means[index][1], z-means[index][2]};
     std::vector<Float> middle = Matrix3x3::Mul(Inverse(covars[index]), diff);
     p *= exp(-0.5 * (diff[0]*middle[0] + diff[1]*middle[1] + diff[2]*middle[2]));

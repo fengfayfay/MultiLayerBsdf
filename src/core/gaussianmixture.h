@@ -11,6 +11,7 @@
 
 // core/gaussianmixture.h*
 #include "pbrt.h"
+#include "geometry.h"
 #include "stringprint.h"
 #include <fstream>
 #include <vector>
@@ -107,7 +108,7 @@ namespace pbrt {
     int dimension;
     int num_gaussian;
     std::vector<Float> weights;
-    std::vector<std::vector<Float>> means;
+    std::vector<Vector3f> means;
     std::vector<Matrix3x3> covars;
     bool reflectdata;
   };
