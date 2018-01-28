@@ -203,12 +203,15 @@ namespace pbrt {
     for (int i = 0; i<num_gaussian; i++) {
         norm_factors[i] = 1.0 / sqrt( gaussian_norm_factor * covars[i].m_determinant);
     }
+
+    // calculate brdf*cos value and write to file for testing
+    testbrdfcos(400,100);
+
   }
 
   Gaussianmixture::~Gaussianmixture(){}
 
-  Float Gaussianmixture::single_gaussian_pdf(Float x, Float y, Float z, int index) const
-  {
+  Float Gaussianmixture::single_gaussian_pdf(Float x, Float y, Float z, int index) const{
     Float p = norm_factors[index];
     std::vector<Float> diff = {x - means[index][0], y-means[index][1], z-means[index][2]};
     std::vector<Float> middle = Matrix3x3::Mul(covars_inverse[index], diff);
@@ -216,8 +219,7 @@ namespace pbrt {
     return p;
   }
 
-  Float Gaussianmixture::prob(Float x, Float y, Float z) const
-  {
+  Float Gaussianmixture::prob(Float x, Float y, Float z) const{
     Float p = 0.f;
     for (int i = 0; i < num_gaussian; i++){
       p += weights[i] * single_gaussian_pdf(x, y, z, i);
@@ -225,5 +227,87 @@ namespace pbrt {
     if (reflectdata) p *= 2;
     return p;
   }
+
+  Spectrum Gaussianmixture:: brdfcos(const Vector3f &wo, const Vector3f &wi) const{
+    Float cosThetaO = std::abs(wo.z), cosThetaI = std::abs(wi.z);
+
+    Vector3f wh = wi + wo;
+
+    // handle degenerate cases
+    if (cosThetaI == 0 || cosThetaO == 0) return Spectrum(0.);
+
+    //if (wi.z <=0 || wo.z <= 0) return Spectrum(0.);
+    if (wh.z == 0) return Spectrum(0.);
+
+    wh = Normalize(wh);
+
+    // calculate probability in slope domain using fitted GMM
+    Float x = wh.x/abs(wh.z);
+    Float y = wh.y/abs(wh.z);
+    Float zo = acos(abs(wo.z));
+    assert(zo >=0 && zo <= M_PI * .5);
+    Float p = this->prob(x,y,zo);
+
+    /*
+      Float zi = acos(abs(wi.z));
+      assert(zi >=0 && zi <= M_PI * .5);
+      Float pi = gm->prob(x,y,zi);
+      Float recp = fabs(p /cosThetaI - pi/cosThetaO);
+      if (recp > 1e-3){
+      printf("reciprocity failure\n");
+      fflush(stdout);
+      }
+    */
+    
+    // probability conditioned on a particular incident angle
+    // uniform distributed incident angle prob = 1/(pi/2)
+    //p /= 1.f/(M_PI/2);
+
+    Float denom = wi.z + wo.z;
+    denom = denom * denom * denom;
+    Float J = (wo.z * wi.z + wi.y * wo.y + wi.x * wo.x + 1)/denom;
+
+    return p * J;
+  }
+
+  void Gaussianmixture::testbrdfcos(int phinum, int munum) const{
+    // wo is incident direction
+
+    // precompute phi mu vec
+    Float phivec[phinum];
+    Float muvec[munum];
+    Float phi_unit = 2 * M_PI / phinum;
+    Float mu_unit = 1.0 / munum;
+
+    for (int i = 0; i < phinum; ++i){
+      phivec[i] = 2 * M_PI * 0.5 / phinum + phi_unit * i;
+      std::cout<<phivec[i]<<std::endl;
+    }
+
+    for (int i = 0; i < munum; ++i){
+      muvec[i] = 0.5 / munum + mu_unit * i;
+    }
+
+
+    // // mu vec
+    // mu = (linspace(0,munum,munum+1)+0.5)/munum;
+
+    // for (int i = 0; i < phinum; ++i){
+    //   for (int j = 0; j < munum; ++j){
+    //     // wi is exit direction
+    //     Float phi = phivec[i];
+    //     Float mu = muvec[j];
+
+    //     Float sintheta = sqrt(1 - mu * mu);
+    //     Vector3f wi = {sintheta * cos(phi), sintheta*sin(phi), mu};
+    //     Spectrum brdfcos = this->brdfcos(wo,wi);
+
+    //     // write to file
+
+    //   }
+    // }
+  }
+
+
 
 } // namespace pbrt

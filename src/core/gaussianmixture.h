@@ -13,6 +13,7 @@
 #include "pbrt.h"
 #include "geometry.h"
 #include "stringprint.h"
+#include "spectrum.h"
 #include <fstream>
 #include <vector>
 
@@ -106,6 +107,8 @@ struct Matrix3x3;
     ~Gaussianmixture();
     Float single_gaussian_pdf(Float x, Float y, Float z, int index) const;
     Float prob(Float x, Float y, Float z) const;
+    Spectrum brdfcos(const Vector3f &wo, const Vector3f &wi) const;
+    void testbrdfcos(int phinum, int munum) const;
 
   private:
     int dimension;
