@@ -10,7 +10,7 @@ dim = 3;
 numg = 100;
 reflect = true;
 alpha = 0.5;
-angle = 89;
+angle = 60;
 theta = angle*pi/180;
 wi = [sin(theta), 0, cos(theta)];
 munum = 100;
@@ -62,3 +62,29 @@ ylabel('phi')
 title(['brdf*cos angle=',num2str(angle), ' alpha=', num2str(alpha)])
 
 fprintf('at angle %2d, %4.4f energy is perserved\n',angle,sum(brdfcos(:))*2*pi/(phinum*munum));
+
+
+%% pbrt output
+dir = '/Users/mandy/Github/MultiLayerBsdf/build/';
+filename = [dir,num2str(angle),'brdfcos.txt'];
+fileID = fopen(filename);
+C1 = textscan(fileID,'%f');
+fclose(fileID);
+
+brdfcos1 = C1{1};
+brdfcos1 = reshape(brdfcos1,munum,phinum);
+
+figure
+imagesc(brdfcos1)
+colorbar()
+xlabel('mu')
+ylabel('phi')
+title(['brdf*cos angle=',num2str(angle), ' pbrt'])
+
+diff = abs(brdfcos - brdfcos1);
+figure
+imagesc(diff)
+colorbar()
+xlabel('mu')
+ylabel('phi')
+title(['brdf*cos diff, angle=',num2str(angle)])
