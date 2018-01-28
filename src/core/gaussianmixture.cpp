@@ -205,7 +205,9 @@ namespace pbrt {
     }
 
     // calculate brdf*cos value and write to file for testing
-    testbrdfcos(400,100);
+    testbrdfcos(90,400,100);
+    std::cout<<"finished output brdfcos\n";
+    fflush(stdout);
 
   }
 
@@ -270,8 +272,17 @@ namespace pbrt {
     return p * J;
   }
 
-  void Gaussianmixture::testbrdfcos(int phinum, int munum) const{
+  void Gaussianmixture::testbrdfcos(int thetanum, int phinum, int munum) const{
     // wo is incident direction
+    Float thetavec[thetanum];
+    Float theta_unit = M_PI/2/thetanum;
+    for (int i = 0; i < thetanum; ++i){
+      thetavec[i] = i * theta_unit;
+    }
+
+    // fix wo theta for 60 degree for now
+    float angle = 60;
+    Vector3f wo = {(float) sin(angle * M_PI/180), 0.f, (float) cos(angle * M_PI/180)};
 
     // precompute phi mu vec
     Float phivec[phinum];
@@ -281,32 +292,36 @@ namespace pbrt {
 
     for (int i = 0; i < phinum; ++i){
       phivec[i] = 2 * M_PI * 0.5 / phinum + phi_unit * i;
-      std::cout<<phivec[i]<<std::endl;
     }
 
     for (int i = 0; i < munum; ++i){
       muvec[i] = 0.5 / munum + mu_unit * i;
     }
 
+    // output file
+    std::ofstream output;
+    std::ostringstream oss;
+    oss << angle << "brdfcos.txt";
+    std::string var = oss.str();
+    output.open(var);
 
-    // // mu vec
-    // mu = (linspace(0,munum,munum+1)+0.5)/munum;
+    for (int i = 0; i < phinum; ++i){
+      for (int j = 0; j < munum; ++j){
+        // wi is exit direction
+        Float phi = phivec[i];
+        Float mu = muvec[j];
 
-    // for (int i = 0; i < phinum; ++i){
-    //   for (int j = 0; j < munum; ++j){
-    //     // wi is exit direction
-    //     Float phi = phivec[i];
-    //     Float mu = muvec[j];
+        Float sintheta = sqrt(1 - mu * mu);
+        Vector3f wi = {sintheta * cos(phi), sintheta*sin(phi), mu};
+        Spectrum brdfcos = this->brdfcos(wo,wi);
 
-    //     Float sintheta = sqrt(1 - mu * mu);
-    //     Vector3f wi = {sintheta * cos(phi), sintheta*sin(phi), mu};
-    //     Spectrum brdfcos = this->brdfcos(wo,wi);
-
-    //     // write to file
-
-    //   }
-    // }
+        // write to file
+        output << brdfcos[0] <<"\n";
+      }
+    }
+    output.close();
   }
+
 
 
 
