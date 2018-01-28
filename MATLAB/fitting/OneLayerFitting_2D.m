@@ -85,8 +85,13 @@ for j = 7
 
         if mirror
             
-            fitting_halfvector_z1(datadir,fundir,alpha,angle,input,...
-                trainnum, generatenum, gaussiannumvec, xnum, ynum,accelerated,maxiter,tol);
+%             fitting_halfvector_z1(datadir,fundir,alpha,angle,input,...
+%                 trainnum, generatenum, gaussiannumvec, xnum, ynum,accelerated,maxiter,tol);
+            
+            thetanum = 100;
+            angle = 60;
+            fitting_tanthetah(datadir,fundir,alpha,angle,input,trainnum, ...
+    generatenum, gaussiannumvec, thetanum,accelerated,maxiter,tol);
             
         else
             
