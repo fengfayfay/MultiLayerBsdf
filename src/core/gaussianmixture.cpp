@@ -194,7 +194,7 @@ namespace pbrt {
     fflush(stdout);
    
     //our gaussians is conditioned uniformly over incident angle in (0,.5pi) range 
-    Float gaussian_norm_factor = 2.f/M_PI;
+    Float gaussian_norm_factor = M_PI / 2;
     //scale by regular gaussian normalization factor over n dimension 
     for (int i=0; i< dimension; i++) {
         gaussian_norm_factor *= 2.0 * M_PI;
@@ -305,11 +305,11 @@ namespace pbrt {
     std::string var = oss.str();
     output.open(var);
 
-    for (int i = 0; i < phinum; ++i){
-      for (int j = 0; j < munum; ++j){
+    for (int i = 0; i < munum; ++i){
+      for (int j = 0; j < phinum; ++j){
         // wi is exit direction
-        Float phi = phivec[i];
-        Float mu = muvec[j];
+        Float phi = phivec[j];
+        Float mu = muvec[i];
 
         Float sintheta = sqrt(1 - mu * mu);
         Vector3f wi = {sintheta * cos(phi), sintheta*sin(phi), mu};
