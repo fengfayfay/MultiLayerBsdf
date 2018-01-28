@@ -194,14 +194,15 @@ namespace pbrt {
     fflush(stdout);
    
     //our gaussians is conditioned uniformly over incident angle in (0,.5pi) range 
-    Float gaussian_norm_factor = M_PI / 2;
-    //scale by regular gaussian normalization factor over n dimension 
+    Float angleprob = 2.f/M_PI;
+    //scale by regular gaussian normalization factor over n dimension
+    Float gaussian_norm_factor = 1.f;
     for (int i=0; i< dimension; i++) {
         gaussian_norm_factor *= 2.0 * M_PI;
     }
 
     for (int i = 0; i<num_gaussian; i++) {
-        norm_factors[i] = 1.0 / sqrt( gaussian_norm_factor * covars[i].m_determinant);
+        norm_factors[i] = 1.0 / sqrt( gaussian_norm_factor * covars[i].m_determinant) * 1.0/angleprob;
     }
 
     // calculate brdf*cos value and write to file for testing
@@ -310,7 +311,6 @@ namespace pbrt {
         // wi is exit direction
         Float phi = phivec[j];
         Float mu = muvec[i];
-
         Float sintheta = sqrt(1 - mu * mu);
         Vector3f wi = {sintheta * cos(phi), sintheta*sin(phi), mu};
         Spectrum brdfcos = this->brdfcos(wo,wi);
