@@ -46,11 +46,11 @@ ylabel('hy/hz')
 zlabel('incident angle')
 
 % for i = 1:ceil(znum/9):znum
-%     
+%
 %     titlestring = ['Gaussian Heightfiled mirror ray distribution, alpha=', num2str(alpha),'angle~',num2str(i)];
 %     filename = [dir,'3d_mirror_reflect_alpha_',num2str(alpha), '~',num2str(i)];
 %     plot_near_angle(result,i,titlestring,filename);
-%     
+%
 % end
 
 for j = 1:length(gaussiannumvec)
@@ -88,13 +88,13 @@ for j = 1:length(gaussiannumvec)
     plot_error_by_angle(result,result2,predict,znum,reflectdata,filename)
     
     
-%     for i = 1:ceil(znum/9):znum
-%         
-%         titlestring = ['GMM mirror ray distribution, alpha=', num2str(alpha),'angle~',num2str(i)];
-%         filename = [dir,'3d_mirror_predict_alpha_',num2str(alpha), '~',num2str(i)];
-%         plot_near_angle(predict,i,titlestring,filename);
-%         
-%     end
+    %     for i = 1:ceil(znum/9):znum
+    %
+    %         titlestring = ['GMM mirror ray distribution, alpha=', num2str(alpha),'angle~',num2str(i)];
+    %         filename = [dir,'3d_mirror_predict_alpha_',num2str(alpha), '~',num2str(i)];
+    %         plot_near_angle(predict,i,titlestring,filename);
+    %
+    %     end
     
 end
 
@@ -155,12 +155,10 @@ if reflectdata
     xdividez_test = [xdividez_test;xdividez_test];
     ydividez_test = [ydividez_test;ydividez_test];
     angle_test = [angle_test;-angle_test];
+    xdividez_test2 = [xdividez_test2;xdividez_test2];
+    ydividez_test2 = [ydividez_test2;ydividez_test2];
+    angle_test2 = [angle_test2;-angle_test2];
 end
-
-xdividez_test2 = [xdividez_test2;xdividez_test2];
-ydividez_test2 = [ydividez_test2;ydividez_test2];
-angle_test2 = [angle_test2;-angle_test2];
-
 
 train = [xdividez_train_new,ydividez_train_new,angle_train_new];
 test = [xdividez_test,ydividez_test,angle_test];
