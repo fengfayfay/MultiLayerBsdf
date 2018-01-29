@@ -22,12 +22,12 @@ addpath(datadir,fundir)
 
 trainnum = 1e6;
 %trainnum = 1e4;
-generatenum = 1e7;
+generatenum = 1e6;
 %generatenum = 1e4;
-gaussiannumvec = 20; % number of gaussians vector
+gaussiannumvec = 5; % number of gaussians vector
 accelerated = true; % if true uses accelerated em, otherwise uses customized gmcluster
 reflectdata = false;
-maxiter = 1000;
+maxiter = 2000;
 tol = 1e-5;
 alphavec = [0.1, 0.2, 0.4, 0.5, 0.7, 0.9];
 alpharange = 1:length(alphavec);
@@ -48,6 +48,11 @@ for k = 4
     C3 = textscan(fileID,'%f');
     fclose(fileID);
     
+    filename = ['3d_outputdepth_', num2str(alpha),'.txt'];
+    fileID = fopen(filename);
+    C5 = textscan(fileID,'%f');
+    fclose(fileID);
+    
     filename = ['3d_outputangle_', num2str(alpha),'.txt'];
     fileID = fopen(filename);
     C4 = textscan(fileID,'%f');
@@ -61,11 +66,14 @@ for k = 4
     x = x/observe;
     y = y/observe;
     z = z/observe;
+
+    depth = C5{1};
+    disp(length(x));
     
     % plotting parameters
-    xnum = 100;
+    xnum = 1000;
     ynum = 100;
-    znum = 90;
+    znum = 900;
     if reflectdata
         znum = znum*2;
     end
@@ -77,6 +85,11 @@ for k = 4
             error(msg)
         end
         % only take z>= data
+        angle = angle(depth>1);
+        x = x(depth>1);
+        y = y(depth>1);
+        z = z(depth>1);
+
         angle = angle(z>=0);
         x = x(z>=0);
         y = y(z>=0);
