@@ -72,7 +72,7 @@ C1 = textscan(fileID,'%f');
 fclose(fileID);
 
 brdfcos1 = C1{1};
-brdfcos1 = reshape(brdfcos1,munum,phinum);
+brdfcos1 = reshape(brdfcos1,phinum,munum);
 
 figure
 imagesc(brdfcos1)
