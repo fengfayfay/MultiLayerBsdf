@@ -10,13 +10,12 @@ dim = 3;
 numg = 100;
 reflect = true;
 alpha = 0.5;
+
+phinum = 360;
+phi = 2*pi*((0:1:phinum-1)+0.5)/phinum;
+
 munum = 100;
-phinum = 400;
-mu = (linspace(0,munum,munum+1)+0.5)/munum;
-mu = mu(1:munum);
-phi = 2*pi*(linspace(0,phinum,phinum+1)+0.5)/phinum;
-phi = phi(1:phinum);
-[MU,PHI] = meshgrid(mu,phi);
+mu = ((0:1:munum-1)+0.5)/munum;
 
 if dim == 2
     % 2d gm data
@@ -25,7 +24,7 @@ if dim == 2
 else
     % 3d gm data
     dir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror_3d/';
-    filename = [dir,'3dhalf_projected_z1_alpha_',num2str(alpha), '_#G',num2str(numg),'_reflect_',num2str(reflect),'.mat'];
+    filename = [dir,'3dhalf_projected_z1_alpha_',num2str(alpha), '_#G',num2str(numg),'_reflect_',num2str(reflect),'_accelerated.mat'];
 end
 load(filename,'obj')
 
@@ -38,8 +37,8 @@ for k = 1:length(anglevec)
     
     for i = 1:phinum
         for j = 1:munum
-            sintheta = sqrt(1 - MU(i,j)^2);
-            wo = [sintheta*cos(PHI(i,j)), sintheta*sin(PHI(i,j)), MU(i,j)];
+            sintheta = sqrt(1 - mu(j)^2);
+            wo = [sintheta*cos(phi(i)), sintheta*sin(phi(i)), mu(j)];
             h1 = (wi + wo)/2;
             h = h1/norm(h1);
             
@@ -47,12 +46,12 @@ for k = 1:length(anglevec)
                 p = pdf(obj,[h(1)/h(3),h(2)/h(3)]);
             else
                 p = pdf(obj,[h(1)/h(3),h(2)/h(3),theta]);
-                % conditioned on this incident angle
+                conditioned on this incident angle
                 p = p/(1/(pi/2));
             end
             
-            % Jacobian
-            detJ = (MU(i,j) * wi(3) + wo(2)*wi(2) + wo(1)*wi(1) + 1)/(wi(3)+MU(i,j))^3;
+            Jacobian
+            detJ = (mu(j) * wi(3) + wo(2)*wi(2) + wo(1)*wi(1) + 1)/(wi(3)+mu(j))^3;
             brdfcos(i,j)= (reflect+1)*p*detJ;
         end
     end
@@ -65,6 +64,9 @@ for k = 1:length(anglevec)
     title(['brdf*cos angle=',num2str(angle), ' alpha=', num2str(alpha)])
     
     fprintf('at angle %2d, %4.4f energy is perserved\n',angle,sum(brdfcos(:))*2*pi/(phinum*munum));
+    
+    
+    
     
     
     %% pbrt output
@@ -93,3 +95,44 @@ for k = 1:length(anglevec)
     ylabel('phi')
     title(['brdf*cos diff, angle=',num2str(angle)])
 end
+
+
+%% plot brdf*cos on phi(0,2*pi) theta(-pi,pi) domain 
+thetanum = 360;
+thetarange = 2*pi;
+thetavec = thetarange * ((0:1:thetanum-1)+0.5)/thetanum - thetarange/2;
+
+% wi is incident
+angle = 89;
+theta_i = angle*pi/180;
+wi = [sin(theta_i), 0, cos(theta_i)];
+brdfcos = zeros(phinum,munum);
+
+for i = 1:phinum
+    for j = 1:thetanum
+        wo = [sin(thetavec(j))*cos(phi(i)), sin(thetavec(j))*sin(phi(i)), cos(thetavec(j))];
+        h1 = (wi + wo)/2;
+        h = h1/norm(h1);
+        
+        if dim==2
+            p = pdf(obj,[h(1)/h(3),h(2)/h(3)]);
+        else
+            p = pdf(obj,[h(1)/h(3),h(2)/h(3),theta_i]);
+            % conditioned on this incident angle
+            p = p/(1/(pi/2));
+        end
+        
+        % Jacobian
+        detJ = (cos(thetavec(j)) * wi(3) + wo(2)*wi(2) + wo(1)*wi(1) + 1)/(wi(3)+cos(thetavec(j)))^3;
+        brdfcos(i,j)= (reflect+1)*p*detJ;
+    end
+end
+
+figure
+imagesc(brdfcos)
+colorbar()
+xlabel('theta')
+ylabel('phi')
+title(['brdf*cos angle=',num2str(angle), ' alpha=', num2str(alpha)])
+
+fprintf('at angle %2d, %4.4f energy is perserved\n',angle,sum(brdfcos(:))*2*pi/(phinum*munum));
