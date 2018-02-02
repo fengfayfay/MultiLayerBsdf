@@ -13,18 +13,18 @@ clc
 mirror = true;
 
 if mirror
-    datadir = '/Users/fengxie/work/Github/GaussianData/HeightFieldData/singleLayerUniform/';
+    datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror_3d/';
 else
-    datadir = '/Users/fengxie/Github/GaussianData/GaussianHeightField/SingleLayer/pi:3/output/';
+    datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SingleLayer/pi:3/output/';
 end
-fundir = '/Users/fengxie/work/Github/GaussianClean/MATLAB/fitting/';
+fundir = '/Users/mandy/Github/MultiLayerBsdf/MATLAB/fitting/';
 addpath(datadir,fundir)
 
 trainnum = 1e6;
 generatenum = 1e7;
 gaussiannumvec = 100; % number of gaussians vector
 accelerated = true; % if true uses accelerated em, otherwise uses customized gmcluster
-reflectdata = false;
+reflectdata = true;
 maxiter = 1000;
 tol = 1e-5;
 alphavec = [0.1, 0.2, 0.4, 0.5, 0.7, 0.9];
