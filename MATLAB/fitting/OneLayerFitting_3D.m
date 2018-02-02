@@ -13,7 +13,7 @@ clc
 mirror = true;
 
 if mirror
-    datadir = '/Users/fengxie/work/Github/GaussianData/HeightFieldData/singleLayerUniformReflect/';
+    datadir = '/Users/fengxie/work/Github/GaussianData/HeightFieldData/singleLayerUniform/';
 else
     datadir = '/Users/fengxie/Github/GaussianData/GaussianHeightField/SingleLayer/pi:3/output/';
 end
@@ -24,7 +24,7 @@ trainnum = 1e6;
 generatenum = 1e7;
 gaussiannumvec = 100; % number of gaussians vector
 accelerated = true; % if true uses accelerated em, otherwise uses customized gmcluster
-reflectdata = true;
+reflectdata = false;
 maxiter = 1000;
 tol = 1e-5;
 alphavec = [0.1, 0.2, 0.4, 0.5, 0.7, 0.9];
