@@ -13,11 +13,11 @@ clc
 mirror = true;
 
 if mirror
-    datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror_3d/';
+    datadir = '/Users/fengxie/work/Github/GaussianData/HeightFieldData/singleLayerUniformReflect/';
 else
-    datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SingleLayer/pi:3/output/';
+    datadir = '/Users/fengxie/Github/GaussianData/GaussianHeightField/SingleLayer/pi:3/output/';
 end
-fundir = '/Users/mandy/Github/MultiLayerBsdf/MATLAB/fitting/';
+fundir = '/Users/fengxie/work/Github/GaussianClean/MATLAB/fitting/';
 addpath(datadir,fundir)
 
 trainnum = 1e6;

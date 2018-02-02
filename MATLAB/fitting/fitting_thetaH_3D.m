@@ -1,5 +1,5 @@
-function fitting_halfvector_z13D(dir,fundir,alpha,input,...
-    trainnum, generatenum, gaussiannumvec,xnum, znum,accelerated,reflectdata,maxiter,tol)
+function [paramMid, angleValues, rayleighPoly, range]  =  fitting_thetaH_3D(input,...
+    xnum, znum, trainnum, generatenum)
 
 % fitting 3d mirror heightfield data in slope domain using a mixture of gaussians
 %
@@ -19,95 +19,63 @@ function fitting_halfvector_z13D(dir,fundir,alpha,input,...
 %
 
 % initialize error and count vector
-errvec = zeros(1,length(gaussiannumvec));
-countvec = zeros(1,length(gaussiannumvec));
 
-boundary_ratio = 99/100;
+boundary_ratio = 999/1000;
 zmax = pi/2;
 zmin = 0;
 
-[train, test,test2,range,x_unit,z_unit] = preprocess(input,...
-    boundary_ratio,xnum,znum,zmax,zmin,trainnum,generatenum,reflectdata);
+[xdividez, ydividez, tanThetaH, angle, range] = preprocess(input,boundary_ratio);
+%[xparam, xdistPoly] = rayleighPolyFit(xdividez, angle);
+%[yparam, ydistPoly] = rayleighPolyFit(ydividez, angle);
+[tanparam, tanDist] = rayleighPolyFit(tanThetaH, angle);
+paramMid = tanparam;
+rayleighPoly = tanDist;
+angleValues = unique(angle);
+    
 
-[invalidCount,trainresult] = bygrid2d(train,xnum,znum,range,zmax,zmin,x_unit,z_unit);
-disp(invalidCount);
-
-[invalidTestCount,result] = bygrid2d(test,xnum,znum,range,zmax,zmin,x_unit,z_unit);
+%{
+generatenum = 10000;
+[invalidTestCount,result] = bygrid2d(finalTest,xnum,znum,range,zmax,zmin);
 result = result/sum(result(:));
 disp(invalidTestCount);
 plot_A(result, "GaussianHeightField", "HeightField");
 
-
-[~,result2] = bygrid2d(test2,xnum,znum,range,zmax,zmin,x_unit,z_unit);
-result2 = result2/sum(result2(:));
-
-% for i = 1:ceil(znum/9):znum
-%     
-%     titlestring = ['Gaussian Heightfiled mirror ray distribution, alpha=', num2str(alpha),'angle~',num2str(i)];
-%     filename = [dir,'3d_mirror_reflect_alpha_',num2str(alpha), '~',num2str(i)];
-%     plot_near_angle(result,i,titlestring,filename);
-%     
-% end
-
-for j = 1:length(gaussiannumvec)
-    %% fit mixture of Gaussians using half vector
-    numGaussian = gaussiannumvec(j);
-    fprintf('using %4d Gaussians\n',numGaussian)
-    
-    if accelerated
-        aemdir = [fundir,'accelerated_greedy_EM'];
-        addpath(aemdir);
-        obj = accelerated_em(train,trainnum,numGaussian,maxiter,tol);
-    else
-        obj = customized_em(train,numGaussian,maxiter,tol);
-    end
-    
-    % save gm result
-    filename = [dir,'3dhalf_projected_z1_alpha_',num2str(alpha), '_#G',num2str(numGaussian),'_reflect_',num2str(reflectdata),'.mat'];
-    save(filename,'obj')
-    
-    %% generate points from fitted model
-    Y = random(obj,length(test));
-    
-    % calculate predict matrix
-    [count,predict] = bygrid2d(Y,xnum,znum,range,zmax,zmin,x_unit,z_unit);
-    predict = predict/sum(predict(:));
-    plot_A(predict, "GMM", "GMM");
-    
-    % calculate relative L2 error
-    err = relativel2err(result,predict);
-    fprintf('error is %4.6f\n', err)
-    errvec(j) = err;
-    countvec(j) = count;
-    
-    % plot error by incident angle bin
-    %filename = [dir,'3drelativel2error_alpha',num2str(alpha),'_reflect_',num2str(reflectdata)];
-    %plot_error_by_angle(result,result2,predict,znum,reflectdata,filename)
-    
-    
-%     for i = 1:ceil(znum/9):znum
-%         
-%         titlestring = ['GMM mirror ray distribution, alpha=', num2str(alpha),'angle~',num2str(i)];
-%         filename = [dir,'3d_mirror_predict_alpha_',num2str(alpha), '~',num2str(i)];
-%         plot_near_angle(predict,i,titlestring,filename);
-%         
-%     end
-    
+generatenum = 10000;
+angleSample = zeros(generatenum,1);
+tanSample = zeros(generatenum,1);
+%tsample = 1;
+%angleUnit = pi/2/length(angleValues);
+disp(rayleighPoly);
+for i = 1:generatenum
+    ia = rand() * (zmax-zmin) + zmin; 
+    b = rayleighPoly(ia);
+    tandist = makedist('Rayleigh', 'b', b);
+    y = random(tandist, 1);
+    angleSample(i) = ia;
+    tanSample(i) = y;
 end
+generateTest = [tanSample,angleSample];
 
-% save error and count file
-errvec_filename = [dir,'3dhalf_projected_z1',num2str(alpha),'_err.mat'];
-countvec_filename = [dir,'half_projected_z1',num2str(alpha),'_badcount.mat'];
-save(errvec_filename,'errvec');
-save(countvec_filename,'count')
+
+[invalidCount,gresult] = bygrid2d(generateTest,xnum/2,znum/2,range,zmax,zmin);
+gresult = gresult/sum(gresult(:));
+disp(invalidCount);
+plot_A(gresult, "RayleighInterp", "HeightField");
+
+%}
+
+%tan2brdf(rayleighPoly);
 
 end
 
-function [train, test,test2, range,x_unit,z_unit] = preprocess(input,...
-    boundary_ratio,xnum, znum, zmax,zmin,trainnum,generatenum,reflectdata)
+
+function [xdividez, ydividez, tanThetaH, angle, range ] = preprocess(input, boundary_ratio)
+
 % preprocess raw data to eliminate extreme hx/hz hy/hz values for
 % each incident angle
 angle = input(:,4);
+disp(length(angle));
+
 incident = [sin(angle), zeros(length(angle),1), cos(angle)];
 h = input(:,1:3) + incident;
 %h = (input(:,1:3) + incident)/2;
@@ -117,51 +85,66 @@ xdividez = h(:,1)./h(:,3);
 ydividez = h(:,2)./h(:,3);
 xsq = times(xdividez, xdividez);
 ysq = times(ydividez, ydividez);
+disp(length(xsq));
 tanThetaHSQ = xsq + ysq;
 tanThetaH = sqrt(tanThetaHSQ);
+%tanThetaH = xdividez;
 disp(length(tanThetaH));
-
  
 sortedtan = sort(tanThetaH);
-tanrange = sortedtan(ceil(boundary_ratio*length(tanThetaH)));
+tanrange = sortedtan(ceil(boundary_ratio*length(tanThetaH)) - 1);
 disp(tanrange);
-cutoff = tanrange;
-range = cutoff;
+range = tanrange;
 disp(range);
-x_unit = range/xnum;
-disp(x_unit);
-z_unit = (zmax-zmin)/znum;
+end
 
+function [paramMid, rayleighPoly] = rayleighPolyFit(ydata, angle)
 
-tanThetaH_train = tanThetaH(1:trainnum);
-angle_train = angle(1:trainnum);
+angleSamples = 300;
+angleValues = zeros(angleSamples, 1);
+angleUnit = (pi/2) /length(angleValues);
+for i = 1:angleSamples
+    angleValues(i) = 0 + (i-1) * angleUnit;
+end
+angleValues = unique(angle);
+angleUnit = (pi/2) /length(angleValues) * .5;
+    
+paramLower = zeros(length(angleValues), 1);
+paramHigher = zeros(length(angleValues), 1);
 
-trainindex = tanThetaH_train<=cutoff;
-tanThetaH_train_new = tanThetaH_train(trainindex);
-angle_train_new = angle_train(trainindex);
+trainnum = floor(length(ydata) / 3);
+trainnum = trainnum * 2;
+disp(trainnum);
+dataTrain = ydata(1:trainnum);
+angleTrain = angle(1:trainnum);
 
-indexrange = trainnum+1:trainnum+generatenum;
-tanThetaH_test = tanThetaH(indexrange);
-angle_test = angle(indexrange);
+for i = 1:100:length(angleValues)
+    train = dataTrain(abs(angleTrain - angleValues(i)) < angleUnit);
+    disp(length(train));
+    pd = fitdist(train, 'Rayleigh'); 
+    disp(pd);
+    tan2brdf(pd, angleValues(i));
+    ci = paramci(pd, 'Alpha', .05);
+    paramLower(i) = ci(1);
+    paramHigher(i) = ci(2);
+end
 
-%indexrange2 = trainnum+generatenum+1:trainnum+2*generatenum;
-%tanThetaH_test2 = tanThetaH(indexrange2);
-%angle_test2 = angle(indexrange2);
-
-train = [tanThetaH_train_new,angle_train_new];
-test = [tanThetaH_test,angle_test];
-test2 = [tanThetaH_test,angle_test];
-%test2 = [tanThetaH_test2,angle_test2];
+paramMid = paramLower + paramHigher;
+paramMid = paramMid * .5;
+rayleighPoly = fit(angleValues, paramMid, 'poly4');
 
 end
 
-function [count,result] = bygrid2d(A,xnum,znum,range,zmax,zmin,x_unit,z_unit)
-
+function [count,result] = bygrid2d(A,xnum,znum,range,zmax,zmin)
+x_unit = range/xnum;
+z_unit = (zmax - zmin)/znum;
 count = 0;
-result = zeros(xnum,znum);
+result = zeros(xnum, znum);
 for i = 1:length(A)
     if A(i,1)<range && A(i, 1) > 0 && A(i,2)<zmax && A(i,2)>zmin
-        result(ceil(A(i,1)/x_unit),ceil((A(i,2)-zmin)/z_unit)) = result(ceil(A(i,1)/x_unit), ceil((A(i,2)-zmin)/z_unit)) + 1;
+        xc = ceil((A(i,2)-zmin)/z_unit);
+        yc = ceil(A(i,1)/x_unit);
+        result(yc, xc) = result(yc, xc) + 1;
     else
         count = count + 1;
     end
@@ -181,23 +164,14 @@ title(titlestring)
 
 end
 
-function plot_error_by_angle(result,result2,predict,znum,reflectdata,filename)
+function plot_error_by_angle(result,result2,predict,znum,filename)
 
-if reflectdata
-    e = zeros(znum/2,1);
-    eself = zeros(znum/2,1);
-    for i = znum/2+1:znum
-        e(i-znum/2) = relativel2err(result(:,i),predict(:,i));
-        eself(i-znum/2) = relativel2err(result(:,i),result2(:,i));
-    end
-else
     e = zeros(znum,1);
     eself = zeros(znum,1);
     for i = 1:znum
         e(i) = relativel2err(result(:,i),predict(:,i));
         eself(i) = relativel2err(result(:,i),result2(:,i));
     end
-end
 
 figure
 plot(e,'linewidth',2)
