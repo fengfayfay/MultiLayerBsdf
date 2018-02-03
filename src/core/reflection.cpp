@@ -381,24 +381,63 @@ bool FourierBSDFTable::GetWeightsAndOffset(Float cosTheta, int *offset,
 
 
   // Add GaussianBSDF f and ToString methods (Mandy)
-  Spectrum GaussianBSDF::f(const Vector3f &woO, const Vector3f &wiO) const {
-    if (!SameHemisphere(woO, wiO)) return Spectrum(0);  // now reflection only
+Spectrum GaussianBSDF::f(const Vector3f &woO, const Vector3f &wiO) const {
+    //if (!SameHemisphere(woO, wiO)) return Spectrum(0);  // now reflection only
 
     Vector3f wo = woO;
     Vector3f wi = wiO;
+    Float cosThetaI = AbsCosTheta(wi);
+    Float cosThetaO = AbsCosTheta(wo);
+    // handle degenerate cases
+    if (cosThetaI == 0 || cosThetaO == 0) return Spectrum(0.);
 
     Float phi = atan2(wo.y, wo.x);
+    if (phi < 0) phi += 2.0 * M_PI;
     if (fabs(phi) > 1e-5) {
-        Transform rotation = RotateZ(phi);
+        phi = Degrees(phi);
+        Transform rotation = RotateZ(-phi);
         wo = rotation(wo);
+        if (fabs(wo.y) > 1e-3) {
+            std::cout << "phi: " << phi << "mu: " << cosThetaO << "\n";
+            std::cout<< "woO " << woO<< " wo " << wo << "\n";
+            std::cout<< "rotation" << rotation << "\n";
+            fflush(stdout);
+        }
         assert(fabs(wo.y) < 1e-5);
         wi = rotation(wi);
     }
+    Vector3f wh = wi + wo;
+    
+    if (wh.z == 0) return Spectrum(0.);
+    
+    Float denom = wi.z + wo.z;
+    if (denom < 1e-3) return Spectrum(0);
+    denom = denom * denom * denom;
+    Float J = (wo.z * wi.z + wi.y * wo.y + wi.x * wo.x + 1)/denom;
+    
+    wh = Normalize(wh);
+    
+    // calculate probability in slope domain using fitted GMM
+    Float x = wh.x/wh.z;
+    Float y = wh.y/wh.z;
+    Float zo = acos(abs(wo.z)); 
+    assert(zo >=0 && zo <= M_PI * .5);
+    Float p = gm->prob(x,y,zo);
 
-    Float cosThetaI = AbsCosTheta(wi);
-    Spectrum brdfcos = gm->brdfcos(wo,wi);
+    /*
+    Float dist = distribution->D(wh) * distribution->G(wo, wi);
+    if (dist > .1 && p < 1e-4) {
+        std::cout << "phi: " << phi << "mu: " << cosThetaO << "\n";
+        std::cout << wo << "\n";
+        std::cout << wi << "\n";
+        fflush(stdout);
+    }
+    Spectrum beck = dist/(4.0 * cosThetaO * cosThetaI);
+    //return beck;
+    */
+    Spectrum brdfcos = p * J;
     return brdfcos / cosThetaI;
-  }
+}
 
   std::string GaussianBSDF::ToString() const {
     // return std::string("[ MicrofacetReflection R: ") + R.ToString() +

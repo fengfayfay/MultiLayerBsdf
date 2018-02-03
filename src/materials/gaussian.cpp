@@ -43,7 +43,7 @@ void GaussianMaterial::ComputeScatteringFunctions(SurfaceInteraction *si,
 
     Spectrum ks = op * Ks->Evaluate(*si).Clamp();
     if (!ks.IsBlack()) {
-        Fresnel *fresnel = ARENA_ALLOC(arena, FresnelDielectric)(1.f, e);
+        //Fresnel *fresnel = ARENA_ALLOC(arena, FresnelDielectric)(1.f, e);
         Float roughu, roughv;
         if (roughnessu)
             roughu = roughnessu->Evaluate(*si);
@@ -54,8 +54,10 @@ void GaussianMaterial::ComputeScatteringFunctions(SurfaceInteraction *si,
         else
             roughv = roughu;
 
+        MicrofacetDistribution *distrib =
+          ARENA_ALLOC(arena, BeckmannDistribution)(roughu, roughv, false);
         // use Gaussian BSDF (Mandy)
-        BxDF *spec = ARENA_ALLOC(arena, GaussianBSDF)(ks,gm);
+        BxDF *spec = ARENA_ALLOC(arena, GaussianBSDF)(ks,gm,distrib);
         si->bsdf->Add(spec);
     }
 

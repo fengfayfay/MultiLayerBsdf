@@ -533,20 +533,21 @@ inline int BSDF::NumComponents(BxDFType flags) const {
 // Fitted GMM BSDF class declaration (Mandy)
 class GaussianBSDF : public BxDF{
  public:
- // GaussianBSDF Public Methods
- GaussianBSDF(const Spectrum &R, const Gaussianmixture *gm)
-   : BxDF(BxDFType(BSDF_REFLECTION)),R(R),gm(gm){}
+    // GaussianBSDF Public Methods
+    GaussianBSDF(const Spectrum &R, const Gaussianmixture *gm, MicrofacetDistribution *distribution)
+        : BxDF(BxDFType(BSDF_REFLECTION)),R(R),gm(gm), distribution(distribution){}
 
- Spectrum f(const Vector3f &wo, const Vector3f &wi) const;
- Spectrum Sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &u,
+    Spectrum f(const Vector3f &wo, const Vector3f &wi) const;
+    Spectrum Sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &u,
                    Float *pdf, BxDFType *sampledType) const;
- Float Pdf(const Vector3f &wo, const Vector3f &wi) const;
- std::string ToString() const;
+    Float Pdf(const Vector3f &wo, const Vector3f &wi) const;
+    std::string ToString() const;
 
  private:
  // GaussianBSDF Private Data
- const Spectrum R;
- const Gaussianmixture *gm;
+    const Spectrum R;
+    const Gaussianmixture *gm;
+    const MicrofacetDistribution *distribution;
 };
 
 }  // namespace pbrt

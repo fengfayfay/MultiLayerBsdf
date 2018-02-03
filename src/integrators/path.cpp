@@ -123,7 +123,7 @@ Spectrum PathIntegrator::Li(const RayDifferential &r, const Scene &scene,
                                                        sampler, false, distrib);
             VLOG(2) << "Sampled direct lighting Ld = " << Ld;
             if (Ld.IsBlack()) ++zeroRadiancePaths;
-            CHECK_GE(Ld.y(), 0.f);
+            //CHECK_GE(Ld.y(), 0.f);
             L += Ld;
         }
 

@@ -77,15 +77,11 @@ void UberMaterial::ComputeScatteringFunctions(SurfaceInteraction *si,
             roughv = roughnessv->Evaluate(*si);
         else
             roughv = roughu;
-        if (remapRoughness) {
-            roughu = TrowbridgeReitzDistribution::RoughnessToAlpha(roughu);
-            roughv = TrowbridgeReitzDistribution::RoughnessToAlpha(roughv);
-        }
         //MicrofacetDistribution *distrib =
         //ARENA_ALLOC(arena, TrowbridgeReitzDistribution)(roughu, roughv);
         // invoke Beckmann distribution instead of GGX for testing (Mandy)
         MicrofacetDistribution *distrib =
-          ARENA_ALLOC(arena, BeckmannDistribution)(roughu, roughv);
+          ARENA_ALLOC(arena, BeckmannDistribution)(roughu, roughv, false);
         BxDF *spec =
             ARENA_ALLOC(arena, MicrofacetReflection)(ks, distrib, fresnel);
         // use Gaussian BSDF (Mandy)
@@ -126,7 +122,7 @@ UberMaterial *CreateUberMaterial(const TextureParams &mp) {
         mp.GetSpectrumTexture("opacity", 1.f);
     std::shared_ptr<Texture<Float>> bumpMap =
         mp.GetFloatTextureOrNull("bumpmap");
-    bool remapRoughness = mp.FindBool("remaproughness", true);
+    bool remapRoughness = mp.FindBool("remaproughness", false);
     return new UberMaterial(Kd, Ks, Kr, Kt, roughness, uroughness, vroughness,
                             opacity, eta, bumpMap, remapRoughness);
 }

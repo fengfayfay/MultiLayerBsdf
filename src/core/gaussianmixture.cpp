@@ -239,37 +239,21 @@ namespace pbrt {
     // handle degenerate cases
     if (cosThetaI == 0 || cosThetaO == 0) return Spectrum(0.);
 
-    //if (wi.z <=0 || wo.z <= 0) return Spectrum(0.);
     if (wh.z == 0) return Spectrum(0.);
+    
+    Float denom = wi.z + wo.z;
+    if (denom < 1e-3) return Spectrum(0);
+    denom = denom * denom * denom;
+    Float J = (wo.z * wi.z + wi.y * wo.y + wi.x * wo.x + 1)/denom;
 
     wh = Normalize(wh);
 
     // calculate probability in slope domain using fitted GMM
-    Float x = wh.x/abs(wh.z);
-    Float y = wh.y/abs(wh.z);
+    Float x = wh.x/wh.z;
+    Float y = wh.y/wh.z;
     Float zo = acos(abs(wo.z));
     assert(zo >=0 && zo <= M_PI * .5);
     Float p = this->prob(x,y,zo);
-
-    /*
-      Float zi = acos(abs(wi.z));
-      assert(zi >=0 && zi <= M_PI * .5);
-      Float pi = gm->prob(x,y,zi);
-      Float recp = fabs(p /cosThetaI - pi/cosThetaO);
-      if (recp > 1e-3){
-      printf("reciprocity failure\n");
-      fflush(stdout);
-      }
-    */
-    
-    // probability conditioned on a particular incident angle
-    // uniform distributed incident angle prob = 1/(pi/2)
-    //p /= 1.f/(M_PI/2);
-
-    Float denom = wi.z + wo.z;
-    denom = denom * denom * denom;
-    Float J = (wo.z * wi.z + wi.y * wo.y + wi.x * wo.x + 1)/denom;
-
     return p * J;
   }
 
