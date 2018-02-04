@@ -93,8 +93,8 @@ namespace pbrt {
         ++pos;
       }
     }
-    std::cout<<"max: "<<maxvalue<<std::endl;
-    std::cout<<"min: "<<minvalue<<std::endl;
+    // std::cout<<"max: "<<maxvalue<<std::endl;
+    // std::cout<<"min: "<<minvalue<<std::endl;
 
     // Fill in heightfield vertex offset array
     int *vp = indices.get();
@@ -105,7 +105,7 @@ namespace pbrt {
     Vector3f dp02, dp12;
     Normal3f normal1,normal2;
 
-    float slopesum = 0;
+    // float slopesum = 0;
 
     for (int y = 0; y < ny - 1; ++y) {
       for (int x = 0; x < nx - 1; ++x) {
@@ -127,12 +127,12 @@ namespace pbrt {
         dp12 = p1 - p2;
         normal1 = Normal3f(Normalize(Cross(dp02, dp12)));
 
-        float costheta = Dot(normal1,Normal3f(0.f,0.f,1.f));
-        if (costheta<0){
-        std::cout<<"downside normal!"<<std::endl;
-        }
-        float sintheta = sqrt(1 - pow(costheta,2.f));
-        slopesum += sintheta/costheta;
+        // float costheta = Dot(normal1,Normal3f(0.f,0.f,1.f));
+        // if (costheta<0){
+        // std::cout<<"downside normal!"<<std::endl;
+        // }
+        // float sintheta = sqrt(1 - pow(costheta,2.f));
+        // slopesum += sintheta/costheta;
 
         p0 = P[VERT(x, y)];
         p1 = P[VERT(x + 1, y+1)];
@@ -141,12 +141,12 @@ namespace pbrt {
         dp12 = p1 - p2;
         normal2 = Normal3f(Normalize(Cross(dp02, dp12)));
 
-        costheta = Dot(normal2,Normal3f(0.f,0.f,1.f));
-        if (costheta<0){
-        std::cout<<"downside normal!"<<std::endl;
-        }
-        sintheta = sqrt(1 - pow(costheta,2.f));
-        slopesum += sintheta/costheta;
+        // costheta = Dot(normal2,Normal3f(0.f,0.f,1.f));
+        // if (costheta<0){
+        // std::cout<<"downside normal!"<<std::endl;
+        // }
+        // sintheta = sqrt(1 - pow(costheta,2.f));
+        // slopesum += sintheta/costheta;
 
         N[VERT(x, y)] += normal1 + normal2;
         N[VERT(x + 1, y)] += normal1;
@@ -161,8 +161,8 @@ namespace pbrt {
 #undef VERT
     }
 
-    slopesum /= ntris;
-    std::cout<<"average slope: "<<slopesum<<std::endl;
+    // slopesum /= ntris;
+    // std::cout<<"average slope: "<<slopesum<<std::endl;
 
     // average vertex normal
     pos = 0;
