@@ -40,6 +40,8 @@
 
 // shapes/heightfield.h*
 #include "shape.h"
+#include <ctime>
+#include <fftw3.h>
 
 namespace pbrt {
 
@@ -49,6 +51,8 @@ std::vector<std::shared_ptr<Shape>> CreateHeightfield(const Transform *o2w,
                                                       bool ro,
                                                       const ParamSet &params);
 
-}  // namespace pbrt
+ void randomsurface(int N, float rL, float h, float cl, std::unique_ptr<Point3f[]>& P);
+
+}// namespace pbrt
 
 #endif  // PBRT_SHAPES_HEIGHTFIELD_H

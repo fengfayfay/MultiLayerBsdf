@@ -50,43 +50,40 @@ namespace pbrt {
     int nx = params.FindOneInt("nu", -1);
     int ny = params.FindOneInt("nv", -1);
     int nitems = nx * ny;
-    float* z = new float[nitems];
-    std::fstream myfile(filename, std::ios_base::in);
-    float a;
-    int co = 0;
-    while (myfile >> a){
-      //printf("%f ", a);
-      z[co] = a;
-      co++;
-    }
 
-    // int nx = params.FindOneInt("nu", -1);
-    // int ny = params.FindOneInt("nv", -1);
-    // int nitems;
-    // const Float *z = params.FindFloat("Pz", &nitems);
-    // CHECK_EQ(nitems, nx * ny);
-    CHECK(nx != -1 && ny != -1 && z != nullptr);
+    float alpha = params.FindOneFloat("alpha", 0.5);
+
+    float rL = 20;            // heightfield edge length
+    float cl = 0.1;           // auto correlation length
+    float h = alpha * cl;     // height
+
+    std::unique_ptr<Point3f[]> P(new Point3f[nx * ny]);
+    randomsurface(nx,rL,h,cl,P);
+
+    CHECK(nx != -1 && ny != -1);
 
     int ntris = 2 * (nx - 1) * (ny - 1);
     std::unique_ptr<int[]> indices(new int[3 * ntris]);
-    std::unique_ptr<Point3f[]> P(new Point3f[nx * ny]);
     std::unique_ptr<Point2f[]> uvs(new Point2f[nx * ny]);
     //     for vertex normal
     std::unique_ptr<Normal3f[]> N(new Normal3f[nx*ny]);
     int nverts = nx * ny;
-    // Compute heightfield vertex positions
+
     int pos = 0;
-    float rL = 10;
     for (int y = 0; y < ny; ++y) {
       for (int x = 0; x < nx; ++x) {
-        P[pos].x = uvs[pos].x = (float)x / (float)(nx - 1)*2*rL-rL;
-        P[pos].y = uvs[pos].y = (float)y / (float)(ny - 1)*2*rL-rL;
-        P[pos].z = z[pos];
+        // move set x y z in randomsurface function
+        //P[pos].x =  (float)x / (float)(nx - 1)*2*rL-rL;
+        //P[pos].y =  (float)y / (float)(ny - 1)*2*rL-rL;
+        //P[pos].z = z[pos];
+
+        uvs[pos].x = (float)x / (float) (nx - 1);
+        uvs[pos].y = (float)y / (float) (ny - 1);
         ++pos;
       }
     }
 
-    //     Fill in heightfield vertex offset array
+    // Fill in heightfield vertex offset array
     int *vp = indices.get();
     // for vertex normal computation
     int* count = new int[nitems];
@@ -95,12 +92,7 @@ namespace pbrt {
     Vector3f dp02, dp12;
     Normal3f normal1,normal2;
 
-    // std::ofstream slopefile;
-
-    // std::ostringstream oss1;
-    // oss1 <<"slope.txt";
-    // std::string var1 = oss1.str();
-    // slopefile.open(var1);
+    float slopesum = 0;
 
     for (int y = 0; y < ny - 1; ++y) {
       for (int x = 0; x < nx - 1; ++x) {
@@ -122,14 +114,12 @@ namespace pbrt {
         dp12 = p1 - p2;
         normal1 = Normal3f(Normalize(Cross(dp02, dp12)));
 
-        // float costheta = Dot(normal1,Normal3f(0.f,0.f,1.f));
-        // if (costheta<0){
-          // std::cout<<"downside normal!"<<std::endl;
-        // }
-        // float sintheta = sqrt(1 - pow(costheta,2.f));
-        // float slope = sintheta/costheta;
-
-        // slopefile<<slope<<"\n";
+        float costheta = Dot(normal1,Normal3f(0.f,0.f,1.f));
+        if (costheta<0){
+        std::cout<<"downside normal!"<<std::endl;
+        }
+        float sintheta = sqrt(1 - pow(costheta,2.f));
+        slopesum += sintheta/costheta;
 
         p0 = P[VERT(x, y)];
         p1 = P[VERT(x + 1, y+1)];
@@ -138,13 +128,12 @@ namespace pbrt {
         dp12 = p1 - p2;
         normal2 = Normal3f(Normalize(Cross(dp02, dp12)));
 
-        // costheta = Dot(normal2,Normal3f(0.f,0.f,1.f));
-        // if (costheta<0){
-          // std::cout<<"downside normal!"<<std::endl;
-        // }
-        // sintheta = sqrt(1 - pow(costheta,2.f));
-        // slope = sintheta/costheta;
-        // slopefile<<slope<<"\n";
+        costheta = Dot(normal2,Normal3f(0.f,0.f,1.f));
+        if (costheta<0){
+        std::cout<<"downside normal!"<<std::endl;
+        }
+        sintheta = sqrt(1 - pow(costheta,2.f));
+        slopesum += sintheta/costheta;
 
         N[VERT(x, y)] += normal1 + normal2;
         N[VERT(x + 1, y)] += normal1;
@@ -159,9 +148,10 @@ namespace pbrt {
 #undef VERT
     }
 
-    // slopefile.close();
+    slopesum /= ntris;
+    std::cout<<"average slope: "<<slopesum<<std::endl;
 
-   // average vertex normal
+    // average vertex normal
     pos = 0;
     for (int y = 0; y<ny; ++y){
       for (int x = 0; x<nx; ++x){
@@ -170,16 +160,95 @@ namespace pbrt {
       }
     }
 
-    delete[] z;
     delete[] count;
 
     // return CreateTriangleMesh(ObjectToWorld, WorldToObject, reverseOrientation,
     //                           ntris, indices.get(), nverts, P.get(), nullptr,
     //                           nullptr, uvs.get(), nullptr, nullptr);
-    std::cout<<"finish heightfield -> triangle"<<std::endl;
+    std::cout<<"finish heightfield -> triangle mesh"<<std::endl;
     return CreateTriangleMesh(ObjectToWorld, WorldToObject, reverseOrientation,
                               ntris, indices.get(), nverts, P.get(), nullptr,
                               N.get(), uvs.get(), nullptr, nullptr);
+  }
+
+  void randomsurface(int N, float rL, float h, float cl, std::unique_ptr<Point3f[]>& P){
+    // isotropic surface
+    // calculate x, y coordinates
+    int k =0;
+    for (int i = 0; i<N; ++i){
+      for (int j = 0; j<N; ++j){
+      P[k].x =  -rL/2.0f + float (j * rL)/float(N-1);
+      P[k].y =  -rL/2.0f + float (i * rL)/float(N-1); // y is same as x
+      k++;
+      }
+    }
+
+    /////////////////////////////////////////////////////////////////
+    // FFT part
+    fftw_complex *in, *out1, *out2, *out3;
+    fftw_plan p1,p2,p3;
+
+    // calculate the transform fft2(F)
+    in = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * N * N);
+    out1 = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * N * N);
+    p1 = fftw_plan_dft_2d(N, N, in, out1, FFTW_FORWARD, FFTW_MEASURE);
+
+    // set real part of input matrix F ( Gaussian filter )
+    k=0;
+    while(k<N*N){
+        in[k][0] = exp( - (P[k].x * P[k].x + P[k].y * P[k].y) / (cl * cl / 2));
+        in[k][1] = 0;
+        k++;
+    }
+
+      // calculate the transform
+      fftw_execute(p1);
+
+      // calculate the transform fft2(Z)
+      out2 = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * N * N);
+      p2 = fftw_plan_dft_2d(N, N, in, out2, FFTW_FORWARD, FFTW_MEASURE);
+
+      // set real part of input matrix Z
+      // Z is uncorrelated Gaussian random rough surface distribution
+      //  with mean 0 and standard deviation h
+      srand(time(NULL)); // set random seed
+      k=0;
+      while (k < N*N){
+        in[k][0] =  h * ((float) rand() / (RAND_MAX));
+        in[k++][1] = 0;
+      }
+
+      // calculate the transform
+      fftw_execute(p2);
+
+      // calculate (ifft2(fft2(Z).*fft2(F))
+      out3 = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * N * N);
+      p3 = fftw_plan_dft_2d(N, N, in, out3, FFTW_BACKWARD, FFTW_MEASURE);
+
+      k=0;
+      while (k < N*N){
+        in[k][0] = out1[k][0] * out2[k][0] - out1[k][1] * out2[k][1];
+        in[k][1] = out1[k][0] * out2[k][1] + out1[k][1] * out2[k][0];
+        k++;
+      }
+
+      // calculate the transform
+      fftw_execute(p3);
+
+      // normalizing prefactors
+      float factor = 1.0/sqrt(M_PI) * rL/(float)N /cl;
+      k=0;
+      while (k < N*N){
+        P[k].z = factor * out3[k][0] / ( N * N );
+        k++;
+      }
+
+      // deallocation
+      fftw_destroy_plan(p1);
+      fftw_destroy_plan(p2);
+      fftw_destroy_plan(p3);
+      fftw_free(in);
+      fftw_free(out1); fftw_free(out2); fftw_free(out3);
   }
 
 }  // namespace pbrt

@@ -9,7 +9,8 @@ clc
 mirror = true;
 
 if mirror
-    dir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror/pi:3/output';
+    dir = '/Users/mandy/Github/MultiLayerBsdf/build/';
+%     dir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror/pi:3/output';
 else
     dir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SingleLayer/pi:3/output';
 end

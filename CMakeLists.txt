@@ -367,6 +367,30 @@ SET_PROPERTY(TARGET Ptex_static PROPERTY FOLDER "dependencies")
 INCLUDE_DIRECTORIES ( src/ext/ptex/src/ptex )
 
 ###########################################################################
+# - Find FFTW
+# Find the native FFTW includes and library
+#
+#  FFTW_INCLUDES    - where to find fftw3.h
+#  FFTW_LIBRARIES   - List of libraries when using FFTW.
+#  FFTW_FOUND       - True if FFTW found.
+
+if (FFTW_INCLUDES)
+  # Already in cache, be silent
+  set (FFTW_FIND_QUIETLY TRUE)
+endif (FFTW_INCLUDES)
+
+find_path (FFTW_INCLUDES fftw3.h)
+
+find_library (FFTW_LIBRARIES NAMES fftw3)
+
+# handle the QUIETLY and REQUIRED arguments and set FFTW_FOUND to TRUE if
+# all listed variables are TRUE
+include (FindPackageHandleStandardArgs)
+find_package_handle_standard_args (FFTW DEFAULT_MSG FFTW_LIBRARIES FFTW_INCLUDES)
+
+mark_as_advanced (FFTW_LIBRARIES FFTW_INCLUDES)
+
+###########################################################################
 # On to pbrt...
 
 SET ( PBRT_CORE_SOURCE
@@ -469,6 +493,7 @@ FILE ( GLOB PBRT_SOURCE
 
 INCLUDE_DIRECTORIES ( src )
 INCLUDE_DIRECTORIES ( src/core )
+INCLUDE_DIRECTORIES (${FFTW_INCLUDES})
 
 ###########################################################################
 # pbrt libraries and executables
@@ -506,6 +531,7 @@ SET(ALL_PBRT_LIBS
   glog
   Ptex_static
   ${ZLIB_LIBRARY}
+  ${FFTW_LIBRARIES}
 )
 
 # Main renderer
@@ -514,7 +540,7 @@ ADD_SANITIZERS ( pbrt_exe )
 
 SET_TARGET_PROPERTIES ( pbrt_exe PROPERTIES OUTPUT_NAME pbrt )
 TARGET_COMPILE_FEATURES ( pbrt_exe PRIVATE ${PBRT_CXX11_FEATURES} )
-TARGET_LINK_LIBRARIES ( pbrt_exe ${ALL_PBRT_LIBS} )
+TARGET_LINK_LIBRARIES ( pbrt_exe ${ALL_PBRT_LIBS})
 
 # Tools
 ADD_EXECUTABLE ( bsdftest src/tools/bsdftest.cpp )
