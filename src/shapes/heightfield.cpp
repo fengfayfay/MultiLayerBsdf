@@ -83,6 +83,19 @@ namespace pbrt {
       }
     }
 
+    float maxvalue = P[0].z;
+    float minvalue = P[0].z;
+    pos = 0;
+    for (int y = 0; y < ny; ++y) {
+      for (int x = 0; x < nx; ++x) {
+        maxvalue = std::max(maxvalue,P[pos].z);
+        minvalue = std::min(minvalue,P[pos].z);
+        ++pos;
+      }
+    }
+    std::cout<<"max: "<<maxvalue<<std::endl;
+    std::cout<<"min: "<<minvalue<<std::endl;
+
     // Fill in heightfield vertex offset array
     int *vp = indices.get();
     // for vertex normal computation
