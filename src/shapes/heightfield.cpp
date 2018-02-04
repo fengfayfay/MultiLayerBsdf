@@ -226,8 +226,12 @@ namespace pbrt {
       //  with mean 0 and standard deviation h
       srand(time(NULL)); // set random seed
       k=0;
+      std::default_random_engine generator;
+      std::normal_distribution<float> distribution(0, 1);
       while (k < N*N){
-        in[k][0] =  h * ((float) rand() / (RAND_MAX));
+        // h * random number from standard normal distribution
+        float randnum = distribution(generator);
+        in[k][0] =  h * randnum;
         in[k++][1] = 0;
       }
 

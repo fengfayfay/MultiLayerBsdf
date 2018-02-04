@@ -41,6 +41,7 @@
 // shapes/heightfield.h*
 #include "shape.h"
 #include <ctime>
+#include <random>
 #include <fftw3.h>
 
 namespace pbrt {
