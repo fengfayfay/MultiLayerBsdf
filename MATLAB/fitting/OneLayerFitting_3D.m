@@ -24,9 +24,9 @@ pbrtbuild = '/Users/mandy/Github/MultiLayerBsdf/build/';
 
 trainnum = 1e6;
 generatenum = 1e7;
-gaussiannumvec = 100; % number of gaussians vector
-accelerated = true; % if true uses accelerated em, otherwise uses customized gmcluster
-reflectdata = true;
+gaussiannumvec = 50; % number of gaussians vector
+accelerated = false; % if true uses accelerated em, otherwise uses customized gmcluster
+reflectdata = false;
 maxiter = 1000;
 tol = 1e-5;
 alphavec = [0.1, 0.2, 0.4, 0.5, 0.7, 0.9];
@@ -90,7 +90,7 @@ for k = 4
         obj = fitting_halfvector_z13D(datadir,fundir,alpha,input,...
             trainnum, generatenum, gaussiannumvec,xnum, ynum, znum,accelerated,reflectdata,maxiter,tol);
         
-        gm2pbrtinput(dir,obj,reflectdata);
+        gm2pbrtinput(pbrtbuild,obj,reflectdata);
         
     else% glass case
         
