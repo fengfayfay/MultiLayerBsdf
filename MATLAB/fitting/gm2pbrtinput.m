@@ -9,7 +9,6 @@ fileID = fopen(filename,'w');
 fprintf(fileID,'%4.6f\n',obj.ComponentProportion);
 fclose(fileID);
 
-
 filename = [dir,'means',add,'.txt'];
 fileID = fopen(filename,'w');
 fprintf(fileID,'%4.6f\n',obj.mu);
