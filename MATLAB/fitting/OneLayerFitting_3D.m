@@ -33,6 +33,8 @@ end
 
 addpath(datadir,fundir)
 
+pbrtbuild = '/Users/mandy/Github/MultiLayerBsdf/build/';
+
 trainnum = 1e6;
 generatenum = 1e7;
 gaussiannumvec = 50; % number of gaussians vector
@@ -98,8 +100,10 @@ for k = 9
         % randomly permute input data
         input = input(randperm(length(input)),:);
         
-        fitting_halfvector_z13D(datadir,fundir,alpha,input,...
+        obj = fitting_halfvector_z13D(datadir,fundir,alpha,input,...
             trainnum, generatenum, gaussiannumvec,xnum, ynum, znum,accelerated,reflectdata,maxiter,tol);
+        
+        gm2pbrtinput(pbrtbuild,obj,reflectdata);
         
     else% glass case
         

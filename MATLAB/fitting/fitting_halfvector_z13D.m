@@ -1,4 +1,4 @@
-function fitting_halfvector_z13D(dir,fundir,alpha,input,...
+function obj = fitting_halfvector_z13D(dir,fundir,alpha,input,...
     trainnum, generatenum, gaussiannumvec,xnum, ynum, znum,accelerated,reflectdata,maxiter,tol)
 
 % fitting 3d mirror heightfield data in slope domain using a mixture of gaussians
@@ -69,8 +69,6 @@ for j = 1:length(gaussiannumvec)
     % save gm result
     filename = [dir,'3dhalf_projected_z1_alpha_',num2str(alpha), '_#G',num2str(numGaussian),'_reflect_',num2str(reflectdata),'.mat'];
     save(filename,'obj')
-    
-    gm2pbrtinput(dir, obj);
     
     %% generate points from fitted model
     Y = random(obj,length(test));

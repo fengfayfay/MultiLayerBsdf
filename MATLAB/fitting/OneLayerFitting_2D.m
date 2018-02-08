@@ -1,8 +1,8 @@
 %
 % One Layer Gaussian fitting for fixed incident angle heightfield data
 %
-% convert 2d heightfield data to slope domain 
-% fit using (accelerated) EM algorithm 
+% convert 2d heightfield data to slope domain
+% fit using (accelerated) EM algorithm
 % plot the input and fitted result and calculate the relative l2 error
 %
 
@@ -43,10 +43,10 @@ anglevec = [0, 10, 20, 30, 40, 50, 60, 70, 80 ,89];
 alpharange = 1:length(alphavec);
 anglerange = 1:length(anglevec);
 
-
-for j = 7
+for j = 7 
     angle = anglevec(j);
     for k = 4
+        close all
         cd(datadir)
         alpha = alphavec(k);
         filename = [num2str(angle), 'outputx_', num2str(alpha),'.txt'];
@@ -93,12 +93,10 @@ for j = 7
         
         xnum = 100;
         ynum = 100;
-
+        
         if mirror
-            
              fitting_halfvector_z1(datadir,fundir,alpha,angle,input,...
                  trainnum, generatenum, gaussiannumvec, xnum, ynum,accelerated,maxiter,tol);
-            
         else
             
             ior = 1.5;
