@@ -32,7 +32,7 @@ end
 
 addpath(datadir,fundir)
 
-trainnum = 1e4; % number of data for training
+trainnum = 1e4*2; % number of data for training
 generatenum = 1e4;  % number of data for testing
 gaussiannumvec = 5; % number of gaussians vector
 accelerated = true; % if true uses accelerated em, othe
@@ -108,7 +108,8 @@ for k = 5
         step = floor(anglecount/10)
         disp(step)
 
-    for j = anglecount:-step:1
+    %for j = anglecount:-step:1
+    for j = 1:step:anglecount
         
         iangle = anglevalues(j);
         ix = x(abs(angle - iangle) < .0001);
@@ -121,7 +122,7 @@ for k = 5
         
         xnum = 100;
         ynum = 100;
-        runcount = runcount + 1; 
+        %runcount = runcount + 1; 
         
         if mirror
              [W, M, R, isigma] = fitting_halfvector_z1(datadir,fundir,alpha,iangle,input,...
