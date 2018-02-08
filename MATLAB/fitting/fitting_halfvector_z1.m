@@ -1,5 +1,5 @@
 function [W, M, R, isigma ] = fitting_halfvector_z1(dir,fundir,alpha,angle,input,...
-    trainnum, generatenum, gaussiannumvec, xnum, ynum,accelerated,maxiter,tol,softinit, W, M, R, isigma)
+    trainnum, generatenum, gaussiannumvec, xnum, ynum,accelerated,maxiter,tol,softinit, W, M, R)
 
 % fitting 2d mirror heightfield data in slope domain using a mixture of gaussians
 %   
@@ -43,7 +43,7 @@ for j = 1:length(gaussiannumvec)
     if accelerated
         aemdir = [fundir,'accelerated_greedy_EM'];
         addpath(aemdir);
-        [obj, W, M, R, isigma] = accelerated_em(train,trainnum,numGaussian,maxiter,tol, softinit, W, M, R, isigma);
+        [obj, W, M, R, isigma] = accelerated_em(train,trainnum,numGaussian,maxiter,tol, softinit, W, M, R);
     else
         obj = customized_em(train,numGaussian,maxiter,tol);
     end

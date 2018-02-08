@@ -1,4 +1,4 @@
-function [W,M,R, isigma, Tlogl,mixW,mixM,mixR,iter] = em(X,T,kmax,nr_of_cand,plo,tree,maxiter,tol, softinit, oW, oM, oR, osigma)
+function [W,M,R, isigma, Tlogl,mixW,mixM,mixR,iter] = em(X,T,kmax,nr_of_cand,plo,tree,maxiter,tol, softinit, oW, oM, oR)
 
 % em - EM algorithm for adaptive multivariate Gaussian mixtures
 %
@@ -40,7 +40,8 @@ if softinit
     W = oW;
     M = oM;
     R = oR;
-    isigma = osigma;
+    [n,d] = size(X);
+    isigma = 0.5 * (4/(d+2)/n)^(1/(d+4)) * sqrt(norm(cov(X)));
 else
     [W,M,R,isigma] = em_init(X,k);
 end

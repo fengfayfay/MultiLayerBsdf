@@ -18,7 +18,7 @@ if mirror
     if (strcmp(owner,'Mandy'))
         datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror_2d/angle60/output/';
     else
-        datadir = '/Users/fengxie/work/Github/GaussianData/HeightfieldData/singleLayerUnistack07/';
+        datadir = '/Users/fengxie/work/Github/GaussianData/HeightfieldData/singleLayer05Large2/';
     end
 else
     datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerGlass_2d/angle60/output/';
@@ -32,8 +32,8 @@ end
 
 addpath(datadir,fundir)
 
-trainnum = 1e4*2; % number of data for training
-generatenum = 1e4;  % number of data for testing
+trainnum = 1000000; % number of data for training
+generatenum = 1000000;  % number of data for testing
 gaussiannumvec = 5; % number of gaussians vector
 accelerated = true; % if true uses accelerated em, othe
 maxiter = 1000;
@@ -47,9 +47,8 @@ runcount = 0;
 W = [];
 M = [];
 R = [];
-isigma = 0;
 
-for k = 5
+for k = 4
         close all
         cd(datadir)
         alpha = alphavec(k);
@@ -105,11 +104,12 @@ for k = 5
         anglevalues = unique(angle);
         anglecount = length(anglevalues);
         disp(anglecount)
-        step = floor(anglecount/10)
+        %step = floor(anglecount/10)
+        step = 1
         disp(step)
 
-    %for j = anglecount:-step:1
-    for j = 1:step:anglecount
+    for j = anglecount:-step:1
+    %for j = 1:step:anglecount
         
         iangle = anglevalues(j);
         ix = x(abs(angle - iangle) < .0001);
@@ -122,11 +122,11 @@ for k = 5
         
         xnum = 100;
         ynum = 100;
-        %runcount = runcount + 1; 
+        runcount = runcount + 1; 
         
         if mirror
              [W, M, R, isigma] = fitting_halfvector_z1(datadir,fundir,alpha,iangle,input,...
-                 trainnum, generatenum, gaussiannumvec, xnum, ynum,accelerated,maxiter,tol, runcount > 1, W, M, R, isigma);
+                 trainnum, generatenum, gaussiannumvec, xnum, ynum,accelerated,maxiter,tol, runcount > 1, W, M, R);
         else
             
             ior = 1.5;

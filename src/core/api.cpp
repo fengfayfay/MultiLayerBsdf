@@ -1585,9 +1585,11 @@ namespace pbrt {
       setting.observe = observe;
       setting.totalRays = numrays;
       setting.maxdepth = maxdepth;
-      setting.samplesPerDegree = numrays/90;
+      setting.samplesPerDegree = 1;
       //int angleSamples = dimension == 2? 1 : setting.samplesPerDegree * 90;
-      setting.raysPerIncidentAngle = dimension == 2 ? numrays : 1;
+      int angleSamples = dimension == 2? 1 : setting.samplesPerDegree * 9;
+      //setting.raysPerIncidentAngle = dimension == 2 ? numrays : 1;
+      setting.raysPerIncidentAngle = dimension == 2 ? numrays : numrays/angleSamples;
       std::cout<<"rays per incident angle " << setting.raysPerIncidentAngle << std::endl;
       //std::cout<<"samples over incident angle range " << angleSamples << std::endl;
 
@@ -1769,14 +1771,26 @@ namespace pbrt {
 
         srand (time(NULL));
         if (setting.uniformSampleIncidentAngles) {
-            for (int i = 0 ; i < setting.totalRays; i++) {
-                //for (int j = 0; j < setting.samplesPerDegree; j++){  
+            //default mode for 3D
+            //sample many output direction for a given sampled incident angle
+            for (int i = 0 ; i < 90; i+=10) {
+                for (int j = 0; j < setting.samplesPerDegree; j++){  
                     float u = ((float) rand()/(RAND_MAX));
-                    float theta = M_PI * .5 * u;
+                    float theta = M_PI * .5  * (i + u)/90.0;
                     sampleIncidentAngle(theta, setting, scene, output);
-                //}
+                }
             }
         } else {
+          
+            //uniform sample incident angle, and output direction 
+            SampleSetting newsetting = setting;
+            newsetting.raysPerIncidentAngle = 1;
+            for (int i = 0 ; i < setting.totalRays; i++) {
+                float u = ((float) rand()/(RAND_MAX));
+                float theta = M_PI * .5 * u;
+                sampleIncidentAngle(theta, newsetting, scene, output);
+            }
+            /*
             std::default_random_engine generator;
             //std::normal_distribution<float> distribution(M_PI/4,M_PI/12);
 
@@ -1790,6 +1804,7 @@ namespace pbrt {
                 float theta = randnum * M_PI * .5;
                 sampleIncidentAngle(theta, setting, scene, output);
             }
+            */
         }
   }
 
