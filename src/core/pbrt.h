@@ -173,7 +173,7 @@ struct Options {
     float alpha = 0.5;
     int numrays = 1e6;
     int dimension = 2;
-    bool uniformIncidentAngles = false;
+    bool uniformIncidentAngles = true;
 };
 
 extern Options PbrtOptions;
