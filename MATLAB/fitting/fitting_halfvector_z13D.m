@@ -70,6 +70,8 @@ for j = 1:length(gaussiannumvec)
     filename = [dir,'3dhalf_projected_z1_alpha_',num2str(alpha), '_#G',num2str(numGaussian),'_reflect_',num2str(reflectdata),'.mat'];
     save(filename,'obj')
     
+    gm2pbrtinput(dir, obj);
+    
     %% generate points from fitted model
     Y = random(obj,length(test));
     

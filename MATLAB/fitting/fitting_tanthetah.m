@@ -1,4 +1,4 @@
-function fitting_tanthetah(dir,fundir,alpha,angle,input,trainnum, ...
+function[train, result, obj, Y, predict] =  fitting_tanthetah(dir,fundir,alpha,angle,input,trainnum, ...
     generatenum, gaussiannumvec, tanthetanum,accelerated,maxiter,tol)
 
 errvec = zeros(1,length(gaussiannumvec));
@@ -33,6 +33,7 @@ plot(linspace(0,tanthetarange,tanthetanum),result/sum(result),'linewidth',2)
 xlabel('tanthetah')
 hold on
 
+distName = 'Loglogistic';
 for j = 1:length(gaussiannumvec)
     %% fit mixture of Gaussians using tan of half vector
     numGaussian = gaussiannumvec(j);
@@ -42,7 +43,8 @@ for j = 1:length(gaussiannumvec)
         addpath(aemdir);
         obj = accelerated_em(train,trainnum,numGaussian,maxiter,tol);
     else
-        obj = customized_em(train,numGaussian,maxiter,tol);
+        %obj = customized_em(train,numGaussian,maxiter,tol);
+        obj = fitdist(train, distName);
     end
   
     filename = [dir,'tanhalf',num2str(angle),'_alpha_',num2str(alpha), '_#G',num2str(numGaussian),'.mat'];

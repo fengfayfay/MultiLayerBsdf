@@ -12,26 +12,37 @@ clc
 
 mirror = true;
 
+owner = 'Feng';
+
 if mirror
-    % datadir = '/Users/mandy/Github/MultiLayerBsdf/build_clang/';
-    datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror_2d/angle60/output/';
+    if (strcmp(owner,'Mandy'))
+        datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror_2d/angle60/output/';
+    else
+        datadir = '/Users/fengxie/work/Github/GaussianData/HeightfieldData/singleLayer60/';
+    end
 else
     datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerGlass_2d/angle60/output/';
 end
-fundir = '/Users/mandy/Github/MultiLayerBsdf/MATLAB/fitting/';
+
+if (strcmp(owner, 'Mandy'))
+    fundir = '/Users/mandy/Github/MultiLayerBsdf/MATLAB/fitting/';
+else
+    fundir = '/Users/fengxie/work/Github/GaussianClean/MATLAB/fitting/';
+end
 
 addpath(datadir,fundir)
 
-trainnum = 1e6; % number of data for training
-generatenum = 1e6;  % number of data for testing
-gaussiannumvec = 5; % number of gaussians vector
+trainnum = 1e5*2; % number of data for training
+generatenum = 1e5*2;  % number of data for testing
+gaussiannumvec = 10; % number of gaussians vector
 accelerated = true; % if true uses accelerated em, othe
-maxiter = 500;
+maxiter = 1000;
 tol = 1e-5;
 alphavec = [0.1, 0.2, 0.4, 0.5, 0.7, 0.9];
 anglevec = [0, 10, 20, 30, 40, 50, 60, 70, 80 ,89];
 alpharange = 1:length(alphavec);
 anglerange = 1:length(anglevec);
+
 
 for j = 7
     angle = anglevec(j);
@@ -85,13 +96,8 @@ for j = 7
 
         if mirror
             
-%             fitting_halfvector_z1(datadir,fundir,alpha,angle,input,...
-%                 trainnum, generatenum, gaussiannumvec, xnum, ynum,accelerated,maxiter,tol);
-            
-            thetanum = 100;
-            angle = 60;
-            fitting_tanthetah(datadir,fundir,alpha,angle,input,trainnum, ...
-    generatenum, gaussiannumvec, thetanum,accelerated,maxiter,tol);
+             fitting_halfvector_z1(datadir,fundir,alpha,angle,input,...
+                 trainnum, generatenum, gaussiannumvec, xnum, ynum,accelerated,maxiter,tol);
             
         else
             

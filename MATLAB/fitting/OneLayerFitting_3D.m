@@ -12,24 +12,37 @@ clc
 
 mirror = true;
 
+owner = 'Feng';
+
 if mirror
-    datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror_3d/';
+    if (strcmp(owner, 'Mandy'))
+       datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror_3d/';
+    else
+       datadir = '/Users/fengxie/work/GitHub/GaussianData/HeightfieldData/singleLayerUniform09/';
+    end
 else
     datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SingleLayer/pi:3/output/';
 end
-fundir = '/Users/mandy/Github/MultiLayerBsdf/MATLAB/fitting/';
+
+
+if (strcmp(owner, 'Mandy'))
+    fundir = '/Users/mandy/Github/MultiLayerBsdf/MATLAB/fitting/';
+else
+    fundir = '/Users/fengxie/work/GitHub/GaussianClean/MATLAB/fitting/';
+end
+
 addpath(datadir,fundir)
 
 trainnum = 1e6;
 generatenum = 1e7;
-gaussiannumvec = 100; % number of gaussians vector
+gaussiannumvec = 50; % number of gaussians vector
 accelerated = true; % if true uses accelerated em, otherwise uses customized gmcluster
-reflectdata = true;
+reflectdata = false;
 maxiter = 1000;
 tol = 1e-5;
-alphavec = [0.1, 0.2, 0.4, 0.5, 0.7, 0.9];
+alphavec = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9];
 alpharange = 1:length(alphavec);
-for k = 4
+for k = 9
     alpha = alphavec(k);
     filename = ['3d_outputx_', num2str(alpha),'.txt'];
     fileID = fopen(filename);
