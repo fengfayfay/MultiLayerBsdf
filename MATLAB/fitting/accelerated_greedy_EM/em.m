@@ -1,8 +1,8 @@
-function [W,M,R,Tlogl,mixW,mixM,mixR,iter] = em(X,T,kmax,nr_of_cand,plo,tree,maxiter,tol)
+function [W,M,R, isigma, Tlogl,mixW,mixM,mixR,iter] = em(X,T,kmax,nr_of_cand,plo,tree,maxiter,tol, softinit, oW, oM, oR, osigma)
 
 % em - EM algorithm for adaptive multivariate Gaussian mixtures
 %
-% [W, M, R, Tlogl, mixW, mixM, mixR] = em(X, T, kmax, cands, plo, tree)
+% [W, M, R, isigma, Tlogl, mixW, mixM, mixR] = em(X, T, kmax, cands, plo, tree, softinit, W, M, R, isigma) 
 %
 %  X     - (n x d) d-dimensional zero-mean unit-variance data
 %  T     - (m x d) test data (optional, set [] if none)
@@ -35,8 +35,16 @@ else
 end
 
 % initialize em using kmeans.
-[W,M,R,sigma] = em_init(X,k);
-sigma=sigma^2;
+
+if softinit
+    W = oW;
+    M = oM;
+    R = oR;
+    isigma = osigma;
+else
+    [W,M,R,isigma] = em_init(X,k);
+end
+sigma= isigma^2;
 
 % initialize basic partition
 basic_part{1} = tree;

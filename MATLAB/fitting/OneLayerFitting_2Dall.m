@@ -43,6 +43,12 @@ anglevec = [0:1:90];
 alpharange = 1:length(alphavec);
 anglerange = 1:length(anglevec);
 
+runcount = 0;
+W = [];
+M = [];
+R = [];
+isigma = 0;
+
 for k = 5
         close all
         cd(datadir)
@@ -102,7 +108,7 @@ for k = 5
         step = floor(anglecount/10)
         disp(step)
 
-    for j = 1:step:anglecount
+    for j = anglecount:-step:1
         
         iangle = anglevalues(j);
         ix = x(abs(angle - iangle) < .0001);
@@ -115,11 +121,11 @@ for k = 5
         
         xnum = 100;
         ynum = 100;
-        
+        runcount = runcount + 1; 
         
         if mirror
-             fitting_halfvector_z1(datadir,fundir,alpha,iangle,input,...
-                 trainnum, generatenum, gaussiannumvec, xnum, ynum,accelerated,maxiter,tol);
+             [W, M, R, isigma] = fitting_halfvector_z1(datadir,fundir,alpha,iangle,input,...
+                 trainnum, generatenum, gaussiannumvec, xnum, ynum,accelerated,maxiter,tol, runcount > 1, W, M, R, isigma);
         else
             
             ior = 1.5;
