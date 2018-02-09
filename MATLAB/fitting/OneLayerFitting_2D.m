@@ -18,7 +18,7 @@ if mirror
     if (strcmp(owner,'Mandy'))
         datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror_2d/angle60/output/';
     else
-        datadir = '/Users/fengxie/work/Github/GaussianData/HeightfieldData/singleLayer60/';
+        datadir = '/Users/fengxie/work/Github/GaussianData/HeightfieldData/singleLayer80/';
     end
 else
     datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerGlass_2d/angle60/output/';
@@ -35,7 +35,7 @@ addpath(datadir,fundir)
 trainnum = 1e5*2; % number of data for training
 generatenum = 1e5*2;  % number of data for testing
 gaussiannumvec = 10; % number of gaussians vector
-accelerated = true; % if true uses accelerated em, othe
+accelerated = false; % if true uses accelerated em, othe
 maxiter = 1000;
 tol = 1e-5;
 alphavec = [0.1, 0.2, 0.4, 0.5, 0.7, 0.9];
@@ -43,7 +43,11 @@ anglevec = [0, 10, 20, 30, 40, 50, 60, 70, 80 ,89];
 alpharange = 1:length(alphavec);
 anglerange = 1:length(anglevec);
 
-for j = 7 
+W= [];
+M= [];
+R= [];
+
+for j = 9 
     angle = anglevec(j);
     for k = 4
         close all
@@ -93,10 +97,10 @@ for j = 7
         
         xnum = 100;
         ynum = 100;
-        
+               
         if mirror
-             fitting_halfvector_z1(datadir,fundir,alpha,angle,input,...
-                 trainnum, generatenum, gaussiannumvec, xnum, ynum,accelerated,maxiter,tol);
+             [obj, W, M, R, isigma] = fitting_halfvector_z1(datadir,fundir,alpha,angle,input,...
+                 trainnum, generatenum, gaussiannumvec, xnum, ynum,accelerated,maxiter,tol, false, W, M, R);
         else
             
             ior = 1.5;
