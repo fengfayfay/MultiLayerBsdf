@@ -12,13 +12,13 @@ clc
 
 mirror = true;
 
-owner = 'Mandy';
+owner = 'Feng';
 
 if mirror
     if (strcmp(owner,'Mandy'))
-        datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror_3d/';
+        datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror_2d/angle60/output/';
     else
-        datadir = '/Users/fengxie/work/Github/GaussianData/HeightfieldData/singleLayer05Large2/';
+        datadir = '/Users/fengxie/work/Github/GaussianData/HeightfieldData/singleLayerStack05/';
     end
 else
     datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerGlass_2d/angle60/output/';
@@ -125,8 +125,9 @@ for k = 4
         runcount = runcount + 1; 
         
         if mirror
-             [obj,W, M, R] = fitting_halfvector_z1(datadir,fundir,alpha,iangle,input,...
-                 trainnum, generatenum, gaussiannumvec, xnum, ynum,accelerated,maxiter,tol, runcount > 1, W, M, R);
+            [obj, W, M, R, isigma] = fitting_halfvector_z1(datadir,fundir,alpha,iangle,input,...
+                 trainnum, generatenum, gaussiannumvec, xnum, ynum,accelerated,maxiter,tol, runcount > 1, W, M, R);   
+            
         else
             
             ior = 1.5;
@@ -135,5 +136,7 @@ for k = 4
             
         end
     end
- end
+end
+
+
 

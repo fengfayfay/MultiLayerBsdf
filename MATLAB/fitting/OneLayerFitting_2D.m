@@ -35,7 +35,7 @@ addpath(datadir,fundir)
 trainnum = 1e5*2; % number of data for training
 generatenum = 1e5*2;  % number of data for testing
 gaussiannumvec = 10; % number of gaussians vector
-accelerated = false; % if true uses accelerated em, othe
+accelerated = true; % if true uses accelerated em, othe
 maxiter = 1000;
 tol = 1e-5;
 alphavec = [0.1, 0.2, 0.4, 0.5, 0.7, 0.9];
@@ -99,7 +99,7 @@ for j = 9
         ynum = 100;
                
         if mirror
-             [obj, W, M, R] = fitting_halfvector_z1(datadir,fundir,alpha,angle,input,...
+             [obj, W, M, R, isigma] = fitting_halfvector_z1(datadir,fundir,alpha,angle,input,...
                  trainnum, generatenum, gaussiannumvec, xnum, ynum,accelerated,maxiter,tol, false, W, M, R);
         else
             
