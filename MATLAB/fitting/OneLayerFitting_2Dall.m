@@ -125,7 +125,7 @@ for k = 4
         runcount = runcount + 1; 
         
         if mirror
-            [obj, W, M, R, isigma] = fitting_halfvector_z1(datadir,fundir,alpha,iangle,input,...
+            [obj, W, M, R] = fitting_halfvector_z1(datadir,fundir,alpha,iangle,input,...
                  trainnum, generatenum, gaussiannumvec, xnum, ynum,accelerated,maxiter,tol, runcount > 1, W, M, R);   
             
         else
