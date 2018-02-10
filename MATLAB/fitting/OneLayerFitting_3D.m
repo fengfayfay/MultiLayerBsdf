@@ -12,7 +12,7 @@ clc
 
 mirror = true;
 
-owner = 'Feng';
+owner = 'Mandy';
 
 if mirror
     if (strcmp(owner, 'Mandy'))
@@ -33,17 +33,26 @@ end
 
 addpath(datadir,fundir)
 
-pbrtbuild = '/Users/mandy/Github/MultiLayerBsdf/build/';
+if (strcmp(owner, 'Mandy'))
+    pbrtbuild = '/Users/mandy/Github/MultiLayerBsdf/build/';
+else
+    pbrtbuild = '/Users/fengxie/work/GitHub/GaussianClean/MATLAB/fitting/';
+end
 
 trainnum = 1e6;
 generatenum = 1e7;
-gaussiannumvec = 50; % number of gaussians vector
 accelerated = true; % if true uses accelerated em, otherwise uses customized gmcluster
-reflectdata = false;
+reflectdata = 1;
+gaussiannumvec = (reflectdata+1)*50; % number of gaussians vector
 maxiter = 1000;
 tol = 1e-5;
 alphavec = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9];
 alpharange = 1:length(alphavec);
+
+W = [];
+M = [];
+R = [];
+
 for k = 9
     alpha = alphavec(k);
     filename = ['3d_outputx_', num2str(alpha),'.txt'];
@@ -78,11 +87,8 @@ for k = 9
     % plotting parameters
     xnum = 100;
     ynum = 100;
-    znum = 90;
-    if reflectdata
-        znum = znum*2;
-    end
-    
+    znum = (reflectdata + 1) * 90;
+
     if mirror
         % for mirror
         if sum(z<0)/length(z)>0.01
@@ -101,7 +107,7 @@ for k = 9
         input = input(randperm(length(input)),:);
         
         obj = fitting_halfvector_z13D(datadir,fundir,alpha,input,...
-            trainnum, generatenum, gaussiannumvec,xnum, ynum, znum,accelerated,reflectdata,maxiter,tol);
+            trainnum, generatenum, gaussiannumvec,xnum, ynum, znum,accelerated,reflectdata,maxiter,tol,false,W,M,R);
         
         gm2pbrtinput(pbrtbuild,obj,reflectdata);
         
@@ -110,6 +116,3 @@ for k = 9
     end% check mirror or glass end
     
 end
-
-
-% 
