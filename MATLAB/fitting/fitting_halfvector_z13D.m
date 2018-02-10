@@ -1,5 +1,5 @@
 function obj = fitting_halfvector_z13D(dir,fundir,alpha,input,...
-    trainnum, generatenum, gaussiannumvec,xnum, ynum, znum,accelerated,reflectdata,maxiter,tol)
+    trainnum, generatenum, gaussiannumvec,xnum, ynum, znum,accelerated,reflectdata,maxiter,tol,softinit,W,M,R)
 
 % fitting 3d mirror heightfield data in slope domain using a mixture of gaussians
 %
@@ -23,10 +23,16 @@ errvec = zeros(1,length(gaussiannumvec));
 countvec = zeros(1,length(gaussiannumvec));
 
 boundary_ratio = 99/100;
-zmax = pi/2;
-if reflectdata
+
+if reflectdata == 2
+    zmax = pi;
+    zmin = -pi/2;
+elseif reflectdata ==1
+    zmax = pi/2;
     zmin = -pi/2;
 else
+    % reflectdata = 0;
+    zmax = pi/2;
     zmin = 0;
 end
 [train, test,test2,range,x_unit,y_unit,z_unit] = preprocess(input,...
@@ -61,9 +67,9 @@ for j = 1:length(gaussiannumvec)
     if accelerated
         aemdir = [fundir,'accelerated_greedy_EM'];
         addpath(aemdir);
-        obj = accelerated_em(train,trainnum,numGaussian,maxiter,tol);
+        [obj, ~, ~, ~] = accelerated_em(train,trainnum,numGaussian,maxiter,tol, softinit, W, M, R);
     else
-        obj = customized_em(train,numGaussian,maxiter,tol);
+        [obj, ~, ~, ~] = customized_em(train,numGaussian,maxiter,tol, softinit, W, M, R);
     end
     
     % save gm result
@@ -195,20 +201,15 @@ end
 
 function plot_error_by_angle(result,result2,predict,znum,reflectdata,filename)
 
-if reflectdata
-    e = zeros(znum/2,1);
-    eself = zeros(znum/2,1);
-    for i = znum/2+1:znum
-        e(i-znum/2) = relativel2err(result(:,:,i),predict(:,:,i));
-        eself(i-znum/2) = relativel2err(result(:,:,i),result2(:,:,i));
-    end
-else
-    e = zeros(znum,1);
-    eself = zeros(znum,1);
-    for i = 1:znum
-        e(i) = relativel2err(result(:,:,i),predict(:,:,i));
-        eself(i) = relativel2err(result(:,:,i),result2(:,:,i));
-    end
+plotlength = znum/(1+reflectdata);
+skip = (reflectdata>1)*plotlength;
+plotrange = skip + 1 : skip + plotlength;
+
+e = zeros(plotlength,1);
+eself = zeros(plotlength,1);
+for i = plotrange
+    e(i-skip) = relativel2err(result(:,:,i),predict(:,:,i));
+    eself(i-skip) = relativel2err(result(:,:,i),result2(:,:,i));
 end
 
 figure

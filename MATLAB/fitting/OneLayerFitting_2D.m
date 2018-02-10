@@ -99,7 +99,7 @@ for j = 9
         ynum = 100;
                
         if mirror
-             [obj, W, M, R, isigma] = fitting_halfvector_z1(datadir,fundir,alpha,angle,input,...
+             [obj, W, M, R] = fitting_halfvector_z1(datadir,fundir,alpha,angle,input,...
                  trainnum, generatenum, gaussiannumvec, xnum, ynum,accelerated,maxiter,tol, false, W, M, R);
         else
             
