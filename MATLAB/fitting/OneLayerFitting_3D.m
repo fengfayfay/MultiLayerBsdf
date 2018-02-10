@@ -39,11 +39,11 @@ else
     pbrtbuild = '/Users/fengxie/work/GitHub/GaussianClean/MATLAB/fitting/';
 end
 
-trainnum = 1e6;
-generatenum = 1e7;
+trainnum = 1e7;
+generatenum = 1e6;
 accelerated = true; % if true uses accelerated em, otherwise uses customized gmcluster
-reflectdata = 1;
-gaussiannumvec = (reflectdata+1)*50; % number of gaussians vector
+reflectdata = 2;
+gaussiannumvec = 50; % number of gaussians vector
 maxiter = 1000;
 tol = 1e-5;
 alphavec = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9];
@@ -53,10 +53,10 @@ W = [];
 M = [];
 R = [];
 
-for k = 9
+for k = 4
     alpha = alphavec(k);
     filename = ['3d_outputx_', num2str(alpha),'.txt'];
-    fileID = fopen(filename);
+    fileID = fopen(filename);     
     C1 = textscan(fileID,'%f');
     fclose(fileID);
     

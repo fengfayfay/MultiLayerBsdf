@@ -153,7 +153,7 @@ xdividez_test2 = xdividez(indexrange2);
 ydividez_test2 = ydividez(indexrange2);
 angle_test2 = angle(indexrange2);
 
-if reflectdata
+if reflectdata == 1
     % relfection around normal incidence
     xdividez_train_new = [xdividez_train_new;xdividez_train_new];
     ydividez_train_new = [ydividez_train_new;ydividez_train_new];
@@ -164,6 +164,17 @@ if reflectdata
     xdividez_test2 = [xdividez_test2;xdividez_test2];
     ydividez_test2 = [ydividez_test2;ydividez_test2];
     angle_test2 = [angle_test2;-angle_test2];
+elseif reflectdata ==2
+    % relfection around normal incidence
+    xdividez_train_new = [xdividez_train_new;xdividez_train_new;xdividez_train_new];
+    ydividez_train_new = [ydividez_train_new;ydividez_train_new;ydividez_train_new];
+    angle_train_new = [angle_train_new;-angle_train_new;pi - angle_train_new];
+    xdividez_test = [xdividez_test;xdividez_test;xdividez_test];
+    ydividez_test = [ydividez_test;ydividez_test;ydividez_test];
+    angle_test = [angle_test;-angle_test;pi-angle_test];
+    xdividez_test2 = [xdividez_test2;xdividez_test2;xdividez_test2];
+    ydividez_test2 = [ydividez_test2;ydividez_test2;ydividez_test2];
+    angle_test2 = [angle_test2;-angle_test2;pi-angle_test2];
 end
 
 train = [xdividez_train_new,ydividez_train_new,angle_train_new];
