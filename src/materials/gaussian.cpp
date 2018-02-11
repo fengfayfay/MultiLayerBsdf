@@ -101,8 +101,8 @@ void GaussianMaterial::ComputeScatteringFunctions(SurfaceInteraction *si,
     // isotropic roughu = roughv
     int dim = 3;
     Float alpha = 0.5;
-    int num;
-    if (reflectdata) num = 100; else num = 50;
+    int num = 50;
+    // if (reflectdata) num = 100; else num = 50;
     Gaussianmixture *gm = new Gaussianmixture(dim,num,alpha,reflectdata);
     return new GaussianMaterial(Kd, Ks, Kr, Kt, roughness, uroughness, vroughness,
                                 opacity, eta, bumpMap, remapRoughness,gm);

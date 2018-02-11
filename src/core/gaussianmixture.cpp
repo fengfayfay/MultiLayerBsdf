@@ -227,7 +227,7 @@ namespace pbrt {
     for (int i = 0; i < num_gaussian; i++){
       p += weights[i] * single_gaussian_pdf(x, y, z, i);
     }
-    if (reflectdata) p *= 2;
+    if (reflectdata) p *= 11/9;
     return p;
   }
 
