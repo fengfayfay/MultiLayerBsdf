@@ -23,14 +23,14 @@ errvec = zeros(1,length(gaussiannumvec));
 countvec = zeros(1,length(gaussiannumvec));
 
 % preprocess data
-incident = [sin(angle*pi/180), 0, cos(angle*pi/180)];
+incident = [sin(angle), 0, cos(angle)];
 boundary_ratio = 99/100;
 [train, test,range,x_unit,y_unit] = preprocess(input,incident,...
     boundary_ratio,xnum,ynum,trainnum,generatenum);
 
 % plot the input data
-titlestring = ['Gaussian Heightfiled mirror ray distribution, alpha=', num2str(alpha),' angle=',num2str(angle)];
-filename = ['halfprojected_z1',num2str(angle),'_alpha_',num2str(alpha), 'heightfield'];
+titlestring = ['Gaussian Heightfiled mirror ray distribution, alpha=', num2str(alpha),' angle=',num2str(rad2deg(angle))];
+filename = ['halfprojected_z1',num2str(rad2deg(angle)),'_alpha_',num2str(alpha), 'heightfield'];
 
 cd(fundir)
 [~,result] = plotbygrid(xnum,ynum,test,range,x_unit,y_unit,titlestring,filename);
@@ -49,15 +49,15 @@ for j = 1:length(gaussiannumvec)
     end
     
     % save gm result
-    filename = [dir,'half_projected_z1',num2str(angle),'_alpha_',num2str(alpha), '_#G',num2str(numGaussian),'.mat'];
+    filename = [dir,'half_projected_z1',num2str(rad2deg(angle)),'_alpha_',num2str(alpha), '_#G',num2str(numGaussian),'.mat'];
     save(filename,'obj')
     
     %% generate points from fitted model
     Y = random(obj,generatenum);
     
     % plot gmm generated data
-    titlestring = ['Mirror distribution generated using GMM, alpha=', num2str(alpha),' angle=',num2str(angle),' #G=',num2str(numGaussian)];
-    filename = [dir,'half_projected_z1',num2str(angle),'_alpha_',num2str(alpha), '_#G',num2str(numGaussian)];
+    titlestring = ['Mirror distribution generated using GMM, alpha=', num2str(alpha),' angle=',num2str(rad2deg(angle)),' #G=',num2str(numGaussian)];
+    filename = [dir,'half_projected_z1',num2str(rad2deg(angle)),'_alpha_',num2str(alpha), '_#G',num2str(numGaussian)];
     [count,predict] = plotbygrid(xnum,ynum,Y,range,x_unit,y_unit,titlestring,filename);
     predict = predict/sum(predict(:));
     
@@ -72,8 +72,8 @@ for j = 1:length(gaussiannumvec)
 end
 
 % save error and count file
-errvec_filename = [dir,'half_projected_z1',num2str(angle),'_angle_',num2str(alpha),'_err.mat'];
-countvec_filename = [dir,'half_projected_z1',num2str(angle),'_angle_',num2str(alpha),'_badcount.mat'];
+errvec_filename = [dir,'half_projected_z1',num2str(rad2deg(angle)),'_angle_',num2str(alpha),'_err.mat'];
+countvec_filename = [dir,'half_projected_z1',num2str(rad2deg(angle)),'_angle_',num2str(alpha),'_badcount.mat'];
 save(errvec_filename,'errvec')
 save(countvec_filename,'count')
 
