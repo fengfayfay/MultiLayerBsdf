@@ -16,7 +16,8 @@ owner = 'Mandy';
 
 if mirror
     if (strcmp(owner, 'Mandy'))
-       datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror_3d/';
+%        datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror_3d/';
+       datadir = '/Users/mandy/Github/MultiLayerBsdf/build/';
     else
        datadir = '/Users/fengxie/work/GitHub/GaussianData/HeightfieldData/singleLayerUniform09/';
     end
@@ -42,7 +43,7 @@ end
 trainnum = 1e6;
 generatenum = 1e7;
 accelerated = true; % if true uses accelerated em, otherwise uses customized gmcluster
-% reflectdata = 2;
+extenddata = 1;
 extendratio = 1/9;   % extend ratio on both ends
 gaussiannumvec = 50; % number of gaussians vector
 maxiter = 1000;
@@ -89,7 +90,7 @@ for k = 4
     xnum = 100;
     ynum = 100;
 %     znum = (reflectdata + 1) * 90;
-    znum = floor((extendratio * 2 + 1) * 90);
+    znum = round((extendratio * 2 + 1) * 90);
 
     if mirror
         % for mirror
@@ -113,7 +114,10 @@ for k = 4
         obj = fitting_halfvector_z13D_extend(datadir,fundir,alpha,input,...
             trainnum, generatenum, gaussiannumvec,xnum, ynum, znum,accelerated,extendratio,maxiter,tol,false,W,M,R);
         
-        gm2pbrtinput(pbrtbuild,obj,reflectdata);
+        gm2pbrtinput(pbrtbuild,obj,extenddata);
+        
+        % check brdf*cos plot and energy conservation
+        gm2brdf(obj,3,alpha,extendratio);
         
     else% glass case
         
