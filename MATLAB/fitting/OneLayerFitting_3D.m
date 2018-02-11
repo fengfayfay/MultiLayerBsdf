@@ -39,10 +39,11 @@ else
     pbrtbuild = '/Users/fengxie/work/GitHub/GaussianClean/MATLAB/fitting/';
 end
 
-trainnum = 1e7;
-generatenum = 1e6;
+trainnum = 1e6;
+generatenum = 1e7;
 accelerated = true; % if true uses accelerated em, otherwise uses customized gmcluster
-reflectdata = 2;
+% reflectdata = 2;
+extendratio = 1/9;   % extend ratio on both ends
 gaussiannumvec = 50; % number of gaussians vector
 maxiter = 1000;
 tol = 1e-5;
@@ -87,7 +88,8 @@ for k = 4
     % plotting parameters
     xnum = 100;
     ynum = 100;
-    znum = (reflectdata + 1) * 90;
+%     znum = (reflectdata + 1) * 90;
+    znum = floor((extendratio * 2 + 1) * 90);
 
     if mirror
         % for mirror
@@ -106,8 +108,10 @@ for k = 4
         % randomly permute input data
         input = input(randperm(length(input)),:);
         
-        obj = fitting_halfvector_z13D(datadir,fundir,alpha,input,...
-            trainnum, generatenum, gaussiannumvec,xnum, ynum, znum,accelerated,reflectdata,maxiter,tol,false,W,M,R);
+%         obj = fitting_halfvector_z13D(datadir,fundir,alpha,input,...
+%             trainnum, generatenum, gaussiannumvec,xnum, ynum, znum,accelerated,reflectdata,maxiter,tol,false,W,M,R);
+        obj = fitting_halfvector_z13D_extend(datadir,fundir,alpha,input,...
+            trainnum, generatenum, gaussiannumvec,xnum, ynum, znum,accelerated,extendratio,maxiter,tol,false,W,M,R);
         
         gm2pbrtinput(pbrtbuild,obj,reflectdata);
         
