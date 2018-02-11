@@ -1,5 +1,5 @@
 function gm2pbrtinput(dir,obj,reflect)
-if reflect
+if reflect>0
     add = '_reflect';
 else
     add ='';

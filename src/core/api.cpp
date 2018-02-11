@@ -1588,7 +1588,9 @@ namespace pbrt {
       setting.samplesPerDegree = 1;
       int angleSamples = dimension == 2? 1 : setting.samplesPerDegree * 9;
       //int angleSamples = dimension == 2? 1 : setting.samplesPerDegree * 1;
-      setting.raysPerIncidentAngle = dimension == 2 ? numrays : numrays/angleSamples;
+      int num3d = PbrtOptions.uniformIncidentAngles == true ? numrays/angleSamples : 1;
+      setting.raysPerIncidentAngle = dimension == 2 ? numrays : num3d;
+
       std::cout<<"rays per incident angle " << setting.raysPerIncidentAngle << std::endl;
       //std::cout<<"samples over incident angle range " << angleSamples << std::endl;
 
@@ -1769,7 +1771,6 @@ namespace pbrt {
         
         srand (time(NULL));
         if (setting.uniformSampleIncidentAngles) {
-            //default mode for 3D
             //sample many output direction for a given sampled incident angle
             for (int i = 0 ; i < 90; i +=10) {
             //for (int i = 80; i >= 80; i-- ) {

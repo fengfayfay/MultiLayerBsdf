@@ -16,7 +16,8 @@ owner = 'Mandy';
 
 if mirror
     if (strcmp(owner, 'Mandy'))
-       datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror_3d/';
+%        datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror_3d/';
+       datadir = '/Users/mandy/Github/MultiLayerBsdf/build/';
     else
        datadir = '/Users/fengxie/work/GitHub/GaussianData/HeightfieldData/singleLayerUniform09/';
     end
@@ -42,8 +43,9 @@ end
 trainnum = 1e6;
 generatenum = 1e7;
 accelerated = true; % if true uses accelerated em, otherwise uses customized gmcluster
-reflectdata = 1;
-gaussiannumvec = (reflectdata+1)*50; % number of gaussians vector
+extenddata = 1;
+extendratio = 1/9;   % extend ratio on both ends
+gaussiannumvec = 50; % number of gaussians vector
 maxiter = 1000;
 tol = 1e-5;
 alphavec = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9];
@@ -53,10 +55,10 @@ W = [];
 M = [];
 R = [];
 
-for k = 9
+for k = 4
     alpha = alphavec(k);
     filename = ['3d_outputx_', num2str(alpha),'.txt'];
-    fileID = fopen(filename);
+    fileID = fopen(filename);     
     C1 = textscan(fileID,'%f');
     fclose(fileID);
     
@@ -87,7 +89,8 @@ for k = 9
     % plotting parameters
     xnum = 100;
     ynum = 100;
-    znum = (reflectdata + 1) * 90;
+%     znum = (reflectdata + 1) * 90;
+    znum = round((extendratio * 2 + 1) * 90);
 
     if mirror
         % for mirror
@@ -106,10 +109,15 @@ for k = 9
         % randomly permute input data
         input = input(randperm(length(input)),:);
         
-        obj = fitting_halfvector_z13D(datadir,fundir,alpha,input,...
-            trainnum, generatenum, gaussiannumvec,xnum, ynum, znum,accelerated,reflectdata,maxiter,tol,false,W,M,R);
+%         obj = fitting_halfvector_z13D(datadir,fundir,alpha,input,...
+%             trainnum, generatenum, gaussiannumvec,xnum, ynum, znum,accelerated,reflectdata,maxiter,tol,false,W,M,R);
+        obj = fitting_halfvector_z13D_extend(datadir,fundir,alpha,input,...
+            trainnum, generatenum, gaussiannumvec,xnum, ynum, znum,accelerated,extendratio,maxiter,tol,false,W,M,R);
         
-        gm2pbrtinput(pbrtbuild,obj,reflectdata);
+        gm2pbrtinput(pbrtbuild,obj,extenddata);
+        
+        % check brdf*cos plot and energy conservation
+        gm2brdf(obj,3,alpha,extendratio);
         
     else% glass case
         

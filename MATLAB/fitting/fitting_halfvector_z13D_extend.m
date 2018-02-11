@@ -1,5 +1,5 @@
-function obj = fitting_halfvector_z13D(dir,fundir,alpha,input,...
-    trainnum, generatenum, gaussiannumvec,xnum, ynum, znum,accelerated,reflectdata,maxiter,tol,softinit,W,M,R)
+function obj = fitting_halfvector_z13D_extend(dir,fundir,alpha,input,...
+    trainnum, generatenum, gaussiannumvec,xnum, ynum, znum,accelerated,extendratio,maxiter,tol,softinit,W,M,R)
 
 % fitting 3d mirror heightfield data in slope domain using a mixture of gaussians
 %
@@ -24,19 +24,12 @@ countvec = zeros(1,length(gaussiannumvec));
 
 boundary_ratio = 99/100;
 
-if reflectdata == 2
-    zmax = pi;
-    zmin = -pi/2;
-elseif reflectdata ==1
-    zmax = pi/2;
-    zmin = -pi/2;
-else
-    % reflectdata = 0;
-    zmax = pi/2;
-    zmin = 0;
-end
+extend = pi/2 * extendratio;
+zmax = pi/2 + extend;
+zmin = 0 - extend;
+
 [train, test,test2,range,x_unit,y_unit,z_unit] = preprocess(input,...
-    boundary_ratio,xnum,ynum,znum,zmax,zmin,trainnum,generatenum,reflectdata);
+    boundary_ratio,xnum,ynum,znum,zmax,zmin,trainnum,generatenum,extend);
 
 [~,result] = bygrid3d(test,xnum,ynum,znum,range,zmax,zmin,x_unit,y_unit,z_unit);
 result = result/sum(result(:));
@@ -73,7 +66,7 @@ for j = 1:length(gaussiannumvec)
     end
     
     % save gm result
-    filename = [dir,'3dhalf_projected_z1_alpha_',num2str(alpha), '_#G',num2str(numGaussian),'_reflect_',num2str(reflectdata),'.mat'];
+    filename = [dir,'3dhalf_projected_z1_alpha_',num2str(alpha), '_#G',num2str(numGaussian),'_extend_',num2str(extendratio),'.mat'];
     save(filename,'obj')
     
     %% generate points from fitted model
@@ -90,8 +83,8 @@ for j = 1:length(gaussiannumvec)
     countvec(j) = count;
     
     % plot error by incident angle bin
-    filename = [dir,'3drelativel2error_alpha',num2str(alpha),'_reflect_',num2str(reflectdata)];
-    plot_error_by_angle(result,result2,predict,znum,reflectdata,filename)
+    filename = [dir,'3drelativel2error_alpha',num2str(alpha),'_extend_',num2str(extendratio)];
+    plot_error_by_angle(result,result2,predict,znum,extendratio,filename)
     
     
     %     for i = 1:ceil(znum/9):znum
@@ -105,15 +98,15 @@ for j = 1:length(gaussiannumvec)
 end
 
 % save error and count file
-errvec_filename = [dir,'3dhalf_projected_z1',num2str(alpha),'_reflect_',num2str(reflectdata),'_err.mat'];
-countvec_filename = [dir,'half_projected_z1',num2str(alpha),'_reflect_',num2str(reflectdata),'_badcount.mat'];
+errvec_filename = [dir,'3dhalf_projected_z1',num2str(alpha),'_extend_',num2str(extendratio),'_err.mat'];
+countvec_filename = [dir,'half_projected_z1',num2str(alpha),'_extend_',num2str(extendratio),'_badcount.mat'];
 save(errvec_filename,'errvec');
 save(countvec_filename,'count')
 
 end
 
 function [train, test,test2,range,x_unit,y_unit,z_unit] = preprocess(input,...
-    boundary_ratio,xnum,ynum,znum,zmax,zmin,trainnum,generatenum,reflectdata)
+    boundary_ratio,xnum,ynum,znum,zmax,zmin,trainnum,generatenum,extend)
 % preprocess raw data to eliminate extreme hx/hz hy/hz values for
 % each incident angle
 angle = input(:,4);
@@ -133,50 +126,65 @@ x_unit = 2 * range/xnum;
 y_unit = 2 * range/ynum;
 z_unit = (zmax-zmin)/znum;
 
+% train data before cutoff
 xdividez_train = xdividez(1:trainnum);
 ydividez_train = ydividez(1:trainnum);
-
 angle_train = angle(1:trainnum);
 
-trainindex = abs(xdividez_train)<=cutoff&abs(ydividez_train)<=cutoff;
-xdividez_train_new = xdividez_train(trainindex);
-ydividez_train_new = ydividez_train(trainindex);
-angle_train_new = angle_train(trainindex);
-
+% test data
 indexrange = trainnum+1:trainnum+generatenum;
 xdividez_test = xdividez(indexrange);
 ydividez_test = ydividez(indexrange);
 angle_test = angle(indexrange);
 
+% self test data
 indexrange2 = trainnum+generatenum+1:trainnum+2*generatenum;
 xdividez_test2 = xdividez(indexrange2);
 ydividez_test2 = ydividez(indexrange2);
 angle_test2 = angle(indexrange2);
 
-if reflectdata == 1
-    % relfection around normal incidence
-    xdividez_train_new = [xdividez_train_new;xdividez_train_new];
-    ydividez_train_new = [ydividez_train_new;ydividez_train_new];
-    angle_train_new = [angle_train_new;-angle_train_new];
-    xdividez_test = [xdividez_test;xdividez_test];
-    ydividez_test = [ydividez_test;ydividez_test];
-    angle_test = [angle_test;-angle_test];
-    xdividez_test2 = [xdividez_test2;xdividez_test2];
-    ydividez_test2 = [ydividez_test2;ydividez_test2];
-    angle_test2 = [angle_test2;-angle_test2];
-elseif reflectdata ==2
-    % relfection around normal incidence
-    xdividez_train_new = [xdividez_train_new;xdividez_train_new;xdividez_train_new];
-    ydividez_train_new = [ydividez_train_new;ydividez_train_new;ydividez_train_new];
-    angle_train_new = [angle_train_new;-angle_train_new;pi - angle_train_new];
-    xdividez_test = [xdividez_test;xdividez_test;xdividez_test];
-    ydividez_test = [ydividez_test;ydividez_test;ydividez_test];
-    angle_test = [angle_test;-angle_test;pi-angle_test];
-    xdividez_test2 = [xdividez_test2;xdividez_test2;xdividez_test2];
-    ydividez_test2 = [ydividez_test2;ydividez_test2;ydividez_test2];
-    angle_test2 = [angle_test2;-angle_test2;pi-angle_test2];
-end
+% extend on both ends for training data, test data and self test data
+% angle smaller than angle 0
+bottomindex = angle_train<extend;
+xdividez_train = [xdividez_train; xdividez_train(bottomindex)];
+ydividez_train = [ydividez_train; ydividez_train(bottomindex)];
+angle_train = [angle_train; -angle_train(bottomindex)];
+% angle greater than angle pi/2
+upindex = angle_train>pi/2-extend;
+xdividez_train = [xdividez_train; xdividez_train(upindex)];
+ydividez_train = [ydividez_train; ydividez_train(upindex)];
+angle_train = [angle_train; pi-angle_train(upindex)];
 
+% angle smaller than angle 0
+bottomindex = angle_test<extend;
+xdividez_test = [xdividez_test; xdividez_test(bottomindex)];
+ydividez_test = [ydividez_test; ydividez_test(bottomindex)];
+angle_test = [angle_test; -angle_test(bottomindex)];
+% angle greater than angle pi/2
+upindex = angle_test>pi/2-extend;
+xdividez_test = [xdividez_test; xdividez_test(upindex)];
+ydividez_test = [ydividez_test; ydividez_test(upindex)];
+angle_test = [angle_test; pi-angle_test(upindex)];
+
+% angle smaller than angle 0
+bottomindex = angle_test2<extend;
+xdividez_test2 = [xdividez_test2; xdividez_test2(bottomindex)];
+ydividez_test2 = [ydividez_test2; ydividez_test2(bottomindex)];
+angle_test2 = [angle_test2; -angle_test2(bottomindex)];
+% angle greater than angle pi/2
+upindex = angle_test2>pi/2-extend;
+xdividez_test2 = [xdividez_test2; xdividez_test2(upindex)];
+ydividez_test2 = [ydividez_test2; ydividez_test2(upindex)];
+angle_test2 = [angle_test2; pi-angle_test2(upindex)];
+
+
+% apply cutoff to training data
+trainindex = abs(xdividez_train)<=cutoff&abs(ydividez_train)<=cutoff;
+xdividez_train_new = xdividez_train(trainindex);
+ydividez_train_new = ydividez_train(trainindex);
+angle_train_new = angle_train(trainindex);
+
+% return data
 train = [xdividez_train_new,ydividez_train_new,angle_train_new];
 test = [xdividez_test,ydividez_test,angle_test];
 test2 = [xdividez_test2,ydividez_test2,angle_test2];
@@ -210,11 +218,14 @@ saveas(gcf,[filename,'.jpeg'])
 
 end
 
-function plot_error_by_angle(result,result2,predict,znum,reflectdata,filename)
+function plot_error_by_angle(result,result2,predict,znum,extendratio,filename)
 
-plotlength = znum/(1+reflectdata);
-skip = (reflectdata>1)*plotlength;
+plotlength = round(znum/(1 + 2 * extendratio));
+skip = extendratio * plotlength;
+% plotlength = znum;
+% skip = 0;
 plotrange = skip + 1 : skip + plotlength;
+
 
 e = zeros(plotlength,1);
 eself = zeros(plotlength,1);

@@ -47,7 +47,7 @@ W= [];
 M= [];
 R= [];
 
-for j = 9 
+for j = 9
     angle = anglevec(j);
     for k = 4
         close all
@@ -97,10 +97,10 @@ for j = 9
         
         xnum = 100;
         ynum = 100;
-               
+        
         if mirror
-             [obj, W, M, R] = fitting_halfvector_z1(datadir,fundir,alpha, deg2rad(angle),input,...
-                 trainnum, generatenum, gaussiannumvec, xnum, ynum,accelerated,maxiter,tol, false, W, M, R);
+            [obj, W, M, R] = fitting_halfvector_z1(datadir,fundir,alpha, deg2rad(angle),input,...
+                trainnum, generatenum, gaussiannumvec, xnum, ynum,accelerated,maxiter,tol, false, W, M, R);
         else
             
             ior = 1.5;
