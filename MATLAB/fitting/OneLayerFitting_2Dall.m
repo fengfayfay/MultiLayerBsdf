@@ -134,7 +134,8 @@ for k = 4
         %step = floor(anglecount/10)
         step = 1
 
-    for j = anglecount:-step:1
+    %for j = anglecount:-step:1
+    for j = 1:step:anglecount
         iangle = anglevalues(j);
         ix = x(abs(angle - iangle) < .0001);
         iy = y(abs(angle - iangle) < .0001);
