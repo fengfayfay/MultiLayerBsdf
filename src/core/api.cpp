@@ -1586,9 +1586,8 @@ namespace pbrt {
       setting.totalRays = numrays;
       setting.maxdepth = maxdepth;
       setting.samplesPerDegree = 1;
-      //int angleSamples = dimension == 2? 1 : setting.samplesPerDegree * 90;
       int angleSamples = dimension == 2? 1 : setting.samplesPerDegree * 9;
-      //setting.raysPerIncidentAngle = dimension == 2 ? numrays : 1;
+      //int angleSamples = dimension == 2? 1 : setting.samplesPerDegree * 1;
       setting.raysPerIncidentAngle = dimension == 2 ? numrays : numrays/angleSamples;
       std::cout<<"rays per incident angle " << setting.raysPerIncidentAngle << std::endl;
       //std::cout<<"samples over incident angle range " << angleSamples << std::endl;
@@ -1646,7 +1645,7 @@ namespace pbrt {
 
   class ExpOutput {
   public:
-    ExpOutput(int dimension = 3, float alpha = .5, float angle = 0): outputCount(0) {
+    ExpOutput(int dimension = 3, float alpha = .5, float angle = 0): outputCount(0), dimension(dimension) {
         if (dimension == 3) {
             init3D(alpha);
         } else {
@@ -1660,7 +1659,7 @@ namespace pbrt {
         outputz << inter.z <<"\n";
         outputweight << weight <<"\n";
         outputdepth << depth <<"\n";
-        outputangle << theta <<"\n";
+        if (dimension == 3) outputangle << theta <<"\n";
         return outputCount++;
     }
 
@@ -1729,10 +1728,10 @@ namespace pbrt {
         outputz.close();
         outputweight.close();
         outputdepth.close();
-        outputangle.close();
+        if (dimension == 3) outputangle.close();
     }
     std::ofstream outputx, outputy, outputz, outputweight, outputdepth, outputangle;
-    int outputCount;
+    int outputCount, dimension;
   };
 
   void sampleIncidentAngle(float theta, const SampleSetting& setting, const Scene&scene, ExpOutput&output) {
@@ -1767,16 +1766,16 @@ namespace pbrt {
   // 3d experiment, random incident angle
   void experiment3d(float alpha, const SampleSetting& setting,  const Scene& scene){
         ExpOutput output(3, alpha);
-
-
+        
         srand (time(NULL));
         if (setting.uniformSampleIncidentAngles) {
             //default mode for 3D
             //sample many output direction for a given sampled incident angle
-            for (int i = 0 ; i < 90; i+=10) {
+            for (int i = 0 ; i < 90; i +=10) {
+            //for (int i = 80; i >= 80; i-- ) {
                 for (int j = 0; j < setting.samplesPerDegree; j++){  
                     float u = ((float) rand()/(RAND_MAX));
-                    float theta = M_PI * .5  * (i + u)/90.0;
+                    float theta = M_PI * (i + u)/180.0;
                     sampleIncidentAngle(theta, setting, scene, output);
                 }
             }

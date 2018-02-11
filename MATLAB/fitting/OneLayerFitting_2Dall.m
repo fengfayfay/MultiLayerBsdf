@@ -18,7 +18,7 @@ if mirror
     if (strcmp(owner,'Mandy'))
         datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror_2d/angle60/output/';
     else
-        datadir = '/Users/fengxie/work/Github/GaussianData/HeightfieldData/singleLayerStack05/';
+        datadir = '/Users/fengxie/work/Github/GaussianData/HeightfieldData/singleLayer05/';
     end
 else
     datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerGlass_2d/angle60/output/';
@@ -43,15 +43,54 @@ anglevec = [0:1:90];
 alpharange = 1:length(alphavec);
 anglerange = 1:length(anglevec);
 
+%angle = 80;
+
 runcount = 0;
 W = [];
 M = [];
 R = [];
 
 for k = 4
+        alpha = alphavec(k);
+        [x, y, z, angle] = read_data(datadir, alpha,mirror);
+        anglevalues = unique(angle);
+        anglecount = length(anglevalues);
+        %step = floor(anglecount/10)
+        step = 1
+
+    %for j = anglecount:-step:1
+    for j = 1:step:anglecount
+        iangle = anglevalues(j);
+        ix = x(abs(angle - iangle) < .0001);
+        iy = y(abs(angle - iangle) < .0001);
+        iz = z(abs(angle - iangle) < .0001);
+
+        disp(length(ix));
+            
+        input = [ix,iy,iz];
+        
+        xnum = 100;
+        ynum = 100;
+        runcount = runcount + 1; 
+        
+        if mirror
+            [obj, W, M, R] = fitting_halfvector_z1(datadir,fundir,alpha,iangle,input,...
+                 trainnum, generatenum, gaussiannumvec, xnum, ynum,accelerated,maxiter,tol, runcount > 1, W, M, R);   
+            
+        else
+            
+            ior = 1.5;
+            Glass_fitting_halfvector_z1(datadir,fundir,alpha,iangle,input,...
+                trainnum, generatenum, gaussiannumvec, xnum, ynum,ior,accelerated,maxiter,tol);
+            
+        end
+    end
+end
+
+
+function [x, y, z, angle] = read_data(datadir, alpha, mirror)
         close all
         cd(datadir)
-        alpha = alphavec(k);
         filename = ['3d_outputx_', num2str(alpha),'.txt'];
         fileID = fopen(filename);
         C1 = textscan(fileID,'%f');
@@ -69,20 +108,19 @@ for k = 4
         
         filename = ['3d_outputweight_', num2str(alpha),'.txt'];
         fileID = fopen(filename);
-        C5 = textscan(fileID,'%f');
+        C4 = textscan(fileID,'%f');
         fclose(fileID);
 
         filename = ['3d_outputangle_', num2str(alpha),'.txt'];
         fileID = fopen(filename);
-        C4 = textscan(fileID,'%f');
+        C5 = textscan(fileID,'%f');
         fclose(fileID);
-
         
         x = C1{1};
         y = C2{1};
         z = C3{1};
-        weight = C5{1};
-        angle = C4{1};
+        weight = C4{1};
+        angle = C5{1};
         observe = 6000;
         x = x/observe;
         y = y/observe;
@@ -100,43 +138,4 @@ for k = 4
             y = y(z>=0);
             z = z(z>=0);
         end
-
-        anglevalues = unique(angle);
-        anglecount = length(anglevalues);
-        disp(anglecount)
-        %step = floor(anglecount/10)
-        step = 1
-        disp(step)
-
-    for j = anglecount:-step:1
-    %for j = 1:step:anglecount
-        
-        iangle = anglevalues(j);
-        ix = x(abs(angle - iangle) < .0001);
-        iy = y(abs(angle - iangle) < .0001);
-        iz = z(abs(angle - iangle) < .0001);
-
-        disp(length(ix));
-            
-        input = [ix,iy,iz];
-        
-        xnum = 100;
-        ynum = 100;
-        runcount = runcount + 1; 
-        
-        if mirror
-            [obj, W, M, R, isigma] = fitting_halfvector_z1(datadir,fundir,alpha,iangle,input,...
-                 trainnum, generatenum, gaussiannumvec, xnum, ynum,accelerated,maxiter,tol, runcount > 1, W, M, R);   
-            
-        else
-            
-            ior = 1.5;
-            Glass_fitting_halfvector_z1(datadir,fundir,alpha,iangle,input,...
-                trainnum, generatenum, gaussiannumvec, xnum, ynum,ior,accelerated,maxiter,tol);
-            
-        end
-    end
 end
-
-
-
