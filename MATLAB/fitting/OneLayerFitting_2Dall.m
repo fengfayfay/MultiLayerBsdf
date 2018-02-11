@@ -51,84 +51,8 @@ M = [];
 R = [];
 
 for k = 4
-        close all
-        cd(datadir)
         alpha = alphavec(k);
-        filename = ['3d_outputx_', num2str(alpha),'.txt'];
-        fileID = fopen(filename);
-        C1 = textscan(fileID,'%f');
-        fclose(fileID);
-        
-        filename = ['3d_outputy_', num2str(alpha),'.txt'];
-        fileID = fopen(filename);
-        C2 = textscan(fileID,'%f');
-        fclose(fileID);
-        
-        filename = ['3d_outputz_', num2str(alpha),'.txt'];
-        fileID = fopen(filename);
-        C3 = textscan(fileID,'%f');
-        fclose(fileID);
-        
-        filename = ['3d_outputweight_', num2str(alpha),'.txt'];
-        fileID = fopen(filename);
-        C4 = textscan(fileID,'%f');
-        fclose(fileID);
-
-        filename = ['3d_outputangle_', num2str(alpha),'.txt'];
-        fileID = fopen(filename);
-        C5 = textscan(fileID,'%f');
-        fclose(fileID);
-
-        %{
-        close all
-        cd(datadir)
-        alpha = alphavec(k);
-        filename = [num2str(angle), 'outputx_', num2str(alpha),'.txt'];
-        fileID = fopen(filename);
-        C1 = textscan(fileID,'%f');
-        fclose(fileID);
-
-        filename = [num2str(angle),'outputy_', num2str(alpha),'.txt'];
-        fileID = fopen(filename);
-        C2 = textscan(fileID,'%f');
-        fclose(fileID);
-
-        filename = [num2str(angle),'outputz_', num2str(alpha),'.txt'];
-        fileID = fopen(filename);
-        C3 = textscan(fileID,'%f');
-        fclose(fileID);
-
-        filename = [num2str(angle),'outputweight_', num2str(alpha),'.txt'];
-        fileID = fopen(filename);
-        C4 = textscan(fileID,'%f');
-        fclose(fileID);
-        %}
-
-
-        
-        x = C1{1};
-        y = C2{1};
-        z = C3{1};
-        weight = C4{1};
-        angle = C5{1};
-        observe = 6000;
-        x = x/observe;
-        y = y/observe;
-        z = z/observe;
-        
-        
-        if mirror
-            if sum(z<0)/length(z)>0.01
-                msg = 'More than 1% rays go down, not mirror data.';
-                error(msg)
-            end
-            % only take z>=0 data
-            angle = angle(z>=0);
-            x = x(z>=0);
-            y = y(z>=0);
-            z = z(z>=0);
-        end
-
+        [x, y, z, angle] = read_data(datadir, alpha,mirror);
         anglevalues = unique(angle);
         anglecount = length(anglevalues);
         %step = floor(anglecount/10)
@@ -164,4 +88,54 @@ for k = 4
 end
 
 
+function [x, y, z, angle] = read_data(datadir, alpha, mirror)
+        close all
+        cd(datadir)
+        filename = ['3d_outputx_', num2str(alpha),'.txt'];
+        fileID = fopen(filename);
+        C1 = textscan(fileID,'%f');
+        fclose(fileID);
+        
+        filename = ['3d_outputy_', num2str(alpha),'.txt'];
+        fileID = fopen(filename);
+        C2 = textscan(fileID,'%f');
+        fclose(fileID);
+        
+        filename = ['3d_outputz_', num2str(alpha),'.txt'];
+        fileID = fopen(filename);
+        C3 = textscan(fileID,'%f');
+        fclose(fileID);
+        
+        filename = ['3d_outputweight_', num2str(alpha),'.txt'];
+        fileID = fopen(filename);
+        C4 = textscan(fileID,'%f');
+        fclose(fileID);
 
+        filename = ['3d_outputangle_', num2str(alpha),'.txt'];
+        fileID = fopen(filename);
+        C5 = textscan(fileID,'%f');
+        fclose(fileID);
+        
+        x = C1{1};
+        y = C2{1};
+        z = C3{1};
+        weight = C4{1};
+        angle = C5{1};
+        observe = 6000;
+        x = x/observe;
+        y = y/observe;
+        z = z/observe;
+        
+        
+        if mirror
+            if sum(z<0)/length(z)>0.01
+                msg = 'More than 1% rays go down, not mirror data.';
+                error(msg)
+            end
+            % only take z>=0 data
+            angle = angle(z>=0);
+            x = x(z>=0);
+            y = y(z>=0);
+            z = z(z>=0);
+        end
+end
