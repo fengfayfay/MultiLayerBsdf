@@ -18,7 +18,7 @@ if mirror
     if (strcmp(owner, 'Mandy'))
        datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror_3d/';
     else
-       datadir = '/Users/fengxie/work/GitHub/GaussianData/HeightfieldData/singleLayer05/';
+       datadir = '/Users/fengxie/work/GitHub/GaussianData/HeightfieldData/singleLayer02/';
     end
 else
     datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SingleLayer/pi:3/output/';
@@ -45,7 +45,7 @@ generatenum = 1e7;
 accelerated = true; % if true uses accelerated em, otherwise uses customized gmcluster
 extenddata = 0;
 extendratio = 0;   % extend ratio on both ends (0 means no reflection)
-gaussiannumvec = 50; % number of gaussians vector
+gaussiannumvec = 10; % number of gaussians vector
 maxiter = 1000;
 tol = 1e-5;
 alphavec = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9];
@@ -55,7 +55,7 @@ W = [];
 M = [];
 R = [];
 
-for k = 5
+for k = 2
     alpha = alphavec(k);
     filename = ['3d_outputx_', num2str(alpha),'.txt'];
     fileID = fopen(filename);     
@@ -118,6 +118,8 @@ for k = 5
         
         % check brdf*cos plot and energy conservation
         gm2brdf(obj,3,alpha,extendratio);
+
+        plotGMM(obj, 10);
         
     else% glass case
         
