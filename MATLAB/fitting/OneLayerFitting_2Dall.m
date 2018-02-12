@@ -18,7 +18,7 @@ if mirror
     if (strcmp(owner,'Mandy'))
         datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror_2d/angle60/output/';
     else
-        datadir = '/Users/fengxie/work/Github/GaussianData/HeightfieldData/singleLayer05/';
+        datadir = '/Users/fengxie/work/Github/GaussianData/HeightfieldData/singleLayer05small/';
     end
 else
     datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerGlass_2d/angle60/output/';
@@ -32,8 +32,8 @@ end
 
 addpath(datadir,fundir)
 
-trainnum = 1000000; % number of data for training
-generatenum = 1000000;  % number of data for testing
+trainnum = 10000; % number of data for training
+generatenum = 10000;  % number of data for testing
 gaussiannumvec = 5; % number of gaussians vector
 accelerated = true; % if true uses accelerated em, othe
 maxiter = 1000;
@@ -49,6 +49,7 @@ runcount = 0;
 W = [];
 M = [];
 R = [];
+fitting_data = [];
 
 for k = 4
         alpha = alphavec(k);
@@ -76,7 +77,7 @@ for k = 4
         if mirror
             [obj, W, M, R] = fitting_halfvector_z1(datadir,fundir,alpha,iangle,input,...
                  trainnum, generatenum, gaussiannumvec, xnum, ynum,accelerated,maxiter,tol, runcount > 1, W, M, R);   
-            
+            fitting_data = prep_for_fitting(obj, runcount == 1, j, anglecount, fitting_data);
         else
             
             ior = 1.5;
@@ -85,33 +86,35 @@ for k = 4
             
         end
     end
+    weight0 = fitting_data(0,);
 end
 
 
 function [x, y, z, angle] = read_data(datadir, alpha, mirror)
         close all
         cd(datadir)
-        filename = ['3d_outputx_', num2str(alpha),'.txt'];
+        prefix = '3d_output';
+        filename = [prefix, 'x_',  num2str(alpha),'.txt'];
         fileID = fopen(filename);
         C1 = textscan(fileID,'%f');
         fclose(fileID);
         
-        filename = ['3d_outputy_', num2str(alpha),'.txt'];
+        filename = [prefix, 'y_', num2str(alpha),'.txt'];
         fileID = fopen(filename);
         C2 = textscan(fileID,'%f');
         fclose(fileID);
         
-        filename = ['3d_outputz_', num2str(alpha),'.txt'];
+        filename = [prefix, 'z_',  num2str(alpha),'.txt'];
         fileID = fopen(filename);
         C3 = textscan(fileID,'%f');
         fclose(fileID);
         
-        filename = ['3d_outputweight_', num2str(alpha),'.txt'];
+        filename = [prefix, 'weight_',  num2str(alpha),'.txt'];
         fileID = fopen(filename);
         C4 = textscan(fileID,'%f');
         fclose(fileID);
 
-        filename = ['3d_outputangle_', num2str(alpha),'.txt'];
+        filename = [prefix, 'angle_', num2str(alpha),'.txt'];
         fileID = fopen(filename);
         C5 = textscan(fileID,'%f');
         fclose(fileID);
@@ -139,3 +142,28 @@ function [x, y, z, angle] = read_data(datadir, alpha, mirror)
             z = z(z>=0);
         end
 end
+
+function [fitting_data] = prep_for_fitting(obj, start, angleindex, anglecount, fitting_data)
+    weights = obj.ComponentProportion;
+    means = obj.mu;
+    cov = obj.Sigma;
+    wsize = prod(size(weights));
+    msize = prod(size(means));
+    if (start)
+        s = wsize+msize;
+        %fitting_data = zeros(s, anglecount);
+        fitting_data = zeros(anglecount, s);
+    end
+    
+    i = angleindex; 
+    for j = 1:wsize
+        %fitting_data(j, i) = weights(j);
+        fitting_data(i, j) = weights(j);
+    end
+    for j = 1:msize
+        %fitting_data(j+wsize, i) = means(j)
+        fitting_data(i, j+wsize) = means(j);
+    end
+end
+
+        

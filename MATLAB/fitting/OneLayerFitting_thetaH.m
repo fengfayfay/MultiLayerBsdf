@@ -13,7 +13,7 @@ clc
 mirror = true;
 
 if mirror
-    datadir = '/Users/fengxie/work/Github/GaussianData/HeightFieldData/singleLayerUnistack07';
+    datadir = '/Users/fengxie/work/Github/GaussianData/HeightFieldData/singleLayer05';
 else
     datadir = '/Users/fengxie/Github/GaussianData/GaussianHeightField/SingleLayer/pi:3/output/';
 end
