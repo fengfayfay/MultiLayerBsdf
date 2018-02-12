@@ -16,8 +16,7 @@ owner = 'Mandy';
 
 if mirror
     if (strcmp(owner, 'Mandy'))
-%        datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror_3d/';
-       datadir = '/Users/mandy/Github/MultiLayerBsdf/build/';
+       datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror_3d/';
     else
        datadir = '/Users/fengxie/work/GitHub/GaussianData/HeightfieldData/singleLayerUniform09/';
     end
@@ -44,7 +43,7 @@ trainnum = 1e6;
 generatenum = 1e7;
 accelerated = true; % if true uses accelerated em, otherwise uses customized gmcluster
 extenddata = 1;
-extendratio = 1/9;   % extend ratio on both ends
+extendratio = 1/9;   % extend ratio on both ends (0 means no reflection)
 gaussiannumvec = 50; % number of gaussians vector
 maxiter = 1000;
 tol = 1e-5;
@@ -55,7 +54,7 @@ W = [];
 M = [];
 R = [];
 
-for k = 4
+for k = 5
     alpha = alphavec(k);
     filename = ['3d_outputx_', num2str(alpha),'.txt'];
     fileID = fopen(filename);     

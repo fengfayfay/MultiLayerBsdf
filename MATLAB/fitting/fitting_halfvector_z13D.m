@@ -73,7 +73,7 @@ for j = 1:length(gaussiannumvec)
     end
     
     % save gm result
-    filename = [dir,'3dhalf_projected_z1_alpha_',num2str(alpha), '_#G',num2str(numGaussian),'_reflect_',num2str(reflectdata),'.mat'];
+    filename = [dir,'3dhalf_projected_z1_alpha_',num2str(alpha), '_#G',num2str(numGaussian),'.mat'];
     save(filename,'obj')
     
     %% generate points from fitted model
@@ -90,7 +90,7 @@ for j = 1:length(gaussiannumvec)
     countvec(j) = count;
     
     % plot error by incident angle bin
-    filename = [dir,'3drelativel2error_alpha',num2str(alpha),'_reflect_',num2str(reflectdata)];
+    filename = [dir,'3drelativel2error_alpha',num2str(alpha)];
     plot_error_by_angle(result,result2,predict,znum,reflectdata,filename)
     
     
@@ -105,8 +105,8 @@ for j = 1:length(gaussiannumvec)
 end
 
 % save error and count file
-errvec_filename = [dir,'3dhalf_projected_z1',num2str(alpha),'_reflect_',num2str(reflectdata),'_err.mat'];
-countvec_filename = [dir,'half_projected_z1',num2str(alpha),'_reflect_',num2str(reflectdata),'_badcount.mat'];
+errvec_filename = [dir,'3dhalf_projected_z1',num2str(alpha),'_err.mat'];
+countvec_filename = [dir,'3dhalf_projected_z1',num2str(alpha),'_badcount.mat'];
 save(errvec_filename,'errvec');
 save(countvec_filename,'count')
 
