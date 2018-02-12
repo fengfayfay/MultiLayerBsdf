@@ -12,13 +12,13 @@ clc
 
 mirror = true;
 
-owner = 'Mandy';
+owner = 'Feng';
 
 if mirror
     if (strcmp(owner, 'Mandy'))
        datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror_3d/';
     else
-       datadir = '/Users/fengxie/work/GitHub/GaussianData/HeightfieldData/singleLayerUniform09/';
+       datadir = '/Users/fengxie/work/GitHub/GaussianData/HeightfieldData/singleLayer05/';
     end
 else
     datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SingleLayer/pi:3/output/';
@@ -32,18 +32,19 @@ else
 end
 
 addpath(datadir,fundir)
+disp(datadir);
 
 if (strcmp(owner, 'Mandy'))
     pbrtbuild = '/Users/mandy/Github/MultiLayerBsdf/build/';
 else
-    pbrtbuild = '/Users/fengxie/work/GitHub/GaussianClean/MATLAB/fitting/';
+    pbrtbuild = datadir;
 end
 
 trainnum = 1e6;
 generatenum = 1e7;
 accelerated = true; % if true uses accelerated em, otherwise uses customized gmcluster
-extenddata = 1;
-extendratio = 1/9;   % extend ratio on both ends (0 means no reflection)
+extenddata = 0;
+extendratio = 0;   % extend ratio on both ends (0 means no reflection)
 gaussiannumvec = 50; % number of gaussians vector
 maxiter = 1000;
 tol = 1e-5;
