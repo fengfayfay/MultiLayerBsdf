@@ -3,7 +3,7 @@
 % without plotting their weights
 %
 
-numGaussian = 50;
+numGaussian = obj.NumComponents;
 figure
 hold on
 for i = 1:numGaussian
