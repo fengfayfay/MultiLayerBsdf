@@ -1,0 +1,61 @@
+LookAt 200 250 70   0 33 -50   0 0 1
+Camera "perspective" "float fov" [38]
+Film "image"  "integer xresolution" [1368] "integer yresolution" [1026]
+    "string filename" "killeroo-gauss.png"
+
+#Integrator "mlt" "integer mutationsperpixel" 16 
+
+Sampler "halton" "integer pixelsamples" 128 
+Integrator "path" "integer maxdepth" [1]
+
+WorldBegin
+AttributeBegin
+#Scale 1 -1 1
+#LightSource "infinite" "integer nsamples" [ 8 ] # [64]
+#	"string mapname" "textures/skylight-morn.exr"
+Material "matte" "color Kd" [0 0 0]
+AreaLightSource "diffuse"  "color L" [50 50 50]
+Translate 0 0 800
+ReverseOrientation
+Shape "disk" "float radius" [150] # was 300
+AttributeEnd
+
+AttributeBegin
+CoordSysTransform "camera"
+#LightSource "distant" "color L" [.2 .2 .2]
+AttributeEnd
+
+AttributeBegin
+  Material "matte" "color Kd" [.5 .5 .5]
+  Translate 0 0 -140
+#Texture "grid" "color" "imagemap" "string filename" ["textures/lines.png"]
+#Texture "sgrid" "color" "scale" "texture tex1" "grid" "color tex2" [ .5 .5 .5 ]
+#Material "matte" "texture Kd" "sgrid"
+Shape "trianglemesh" "point P" [ -400 -400 0 400 -400 0 400 400 0 -400 400 0 ]
+      "float uv" [ 0 0 5 0 5 5 0 5 ]
+	"integer indices" [ 0 1 2 2 3 0]
+Shape "trianglemesh" "point P" [ -400 -400 0 400 -400 0 
+	400 -400  1000 -400 -400 1000 ]
+      "float uv" [ 0 0 5 0 5 5 0 5 ]
+	"integer indices" [ 0 1 2 2 3 0]
+Shape "trianglemesh" "point P" [ -400 -400 0 -400 400 0  -400 400 1000 -400 -400 1000 ]
+      "float uv" [ 0 0 5 0 5 5 0 5 ]
+	"integer indices" [ 0 1 2 2 3 0]
+#Shape "trianglemesh" "point P" [ -400 400 0 400 400 0 
+#	400 400  1000 -400 400 1000 ]
+#      "float uv" [ 0 0 5 0 5 5 0 5 ]
+#	"integer indices" [ 0 1 2 2 3 0]
+#Shape "trianglemesh" "point P" [ 400 -400 0 400 400 0  400 400 1000 400 -400 1000 ]
+#      "float uv" [ 0 0 5 0 5 5 0 5 ]
+#	"integer indices" [ 0 1 2 2 3 0]
+
+AttributeEnd
+AttributeBegin
+    Material "uber" "rgb Kd" [0 0 0] "rgb Ks" [1 1 1] "float roughness" [0.3] "bool remaproughness" "false" "bool reflectdata" "false" "integer numgaussian" [10]
+    #Material "gaussian" "rgb Kd" [0 0 0] "rgb Ks" [1 1 1] "float roughness" [0.3] "bool remaproughness" "false" "bool reflectdata" "false" "integer numgaussian" [10]
+    #Include "geometry/killeroo3.pbrt"
+    Include "geometry/killeroo.pbrt"
+
+
+AttributeEnd
+WorldEnd
