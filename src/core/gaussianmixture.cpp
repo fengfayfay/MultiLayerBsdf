@@ -230,7 +230,8 @@ namespace pbrt {
     //TODO##
     //reflectdata is doubling as "extend" mode for now
     //##
-    if (reflectdata) p *= 11.0/9.0;
+    //if (reflectdata) p *= 11.0/9.0;
+    if (reflectdata) p *= 2.0;
     return p;
   }
 
