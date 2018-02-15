@@ -1,3 +1,4 @@
+function [obj] = OneLayer3D(alpha, gaussiannum, extend)
 %
 % One Layer Gaussian fitting for varying incident angle heightfield data
 %
@@ -7,59 +8,42 @@
 %
 
 close all
-clear
-clc
 
 mirror = true;
 
 owner = 'Feng';
-gaussiannumvec = 20;
-
-if mirror
-    if (strcmp(owner, 'Mandy'))
-       datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror_3d/';
-    else
-       datadir = '/Users/fengxie/work/GitHub/GaussianData/HeightfieldData/singleLayer08/';
-    end
-else
-    datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SingleLayer/pi:3/output/';
-end
-
+gaussiannumvec = gaussiannum;
 
 if (strcmp(owner, 'Mandy'))
+    datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror_3d/';
     fundir = '/Users/mandy/Github/MultiLayerBsdf/MATLAB/fitting/';
 else
+    datadir = '/Users/fengxie/work/GitHub/GaussianData/HeightfieldData/singleLayer/';
     fundir = '/Users/fengxie/work/GitHub/GaussianClean/MATLAB/fitting/';
 end
 
+datadir = strcat(datadir, 'alpha', num2str(alpha), '/');
 addpath(datadir,fundir)
 disp(datadir);
 
-if (strcmp(owner, 'Mandy'))
-    pbrtbuild = '/Users/mandy/Github/MultiLayerBsdf/build/';
-else
-    pbrtbuild = strcat(datadir, num2str(gaussiannumvec), '/');
-    status = mkdir(pbrtbuild);
-    disp(pbrtbuild);
-end
+pbrtbuild = strcat(datadir, num2str(gaussiannumvec), '/extend', num2str(extend), '/');
+status = mkdir(pbrtbuild);
+disp(pbrtbuild);
 
 trainnum = 1e6 * 2;
 generatenum = 1e7;
 accelerated = true; % if true uses accelerated em, otherwise uses customized gmcluster
-extenddata = 1;
-extendratio = .5;   % extend ratio on both ends (0 means no reflection)
+extenddata = extend > 0;
+extendratio = extend;   % extend ratio on both ends (0 means no reflection)
 
 maxiter = 2000;
 tol = 1e-5;
-alphavec = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9];
-alpharange = 1:length(alphavec);
 
 W = [];
 M = [];
 R = [];
 
 for k = 3
-    alpha = .8;
     filename = ['3d_outputx_', num2str(alpha),'.txt'];
     fileID = fopen(filename);     
     C1 = textscan(fileID,'%f');
@@ -120,9 +104,11 @@ for k = 3
         gm2pbrtinput(pbrtbuild,obj,extenddata);
         
         % check brdf*cos plot and energy conservation
-        gm2brdf(obj,3,alpha,extendratio, 89);
+        for j = 1:8:88
+            gm2brdf(obj,3,alpha,extendratio,j);
+        end;
 
-        plotGMM(obj, 10);
+        plotGMM(obj, gaussiannum);
         
     else% glass case
         

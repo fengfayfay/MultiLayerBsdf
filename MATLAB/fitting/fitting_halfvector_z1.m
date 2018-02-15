@@ -47,6 +47,8 @@ for j = 1:length(gaussiannumvec)
     else
         [obj, W, M, R] = customized_em(train,numGaussian,maxiter,tol, softinit, W, M, R);
     end
+
+    plotGMM(obj, 0);
     
     % save gm result
     filename = [dir,'half_projected_z1',num2str(rad2deg(angle)),'_alpha_',num2str(alpha), '_#G',num2str(numGaussian),'.mat'];
