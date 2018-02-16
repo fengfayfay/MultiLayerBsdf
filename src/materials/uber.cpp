@@ -82,11 +82,14 @@ void UberMaterial::ComputeScatteringFunctions(SurfaceInteraction *si,
         // invoke Beckmann distribution instead of GGX for testing (Mandy)
         MicrofacetDistribution *distrib =
           ARENA_ALLOC(arena, BeckmannDistribution)(roughu, roughv, false);
-        BxDF *spec =
-            ARENA_ALLOC(arena, MicrofacetReflection)(ks, distrib, fresnel);
-        // use Gaussian BSDF (Mandy)
-        //BxDF *spec = ARENA_ALLOC(arena, GaussianReflection)(ks, fresnel);
-        si->bsdf->Add(spec);
+        if (gm == NULL) {
+            BxDF *spec =
+                ARENA_ALLOC(arena, MicrofacetReflection)(ks, distrib, fresnel);
+            si->bsdf->Add(spec);
+        } else {
+            BxDF *spec = ARENA_ALLOC(arena, GaussianBSDF)(ks,gm,distrib);
+            si->bsdf->Add(spec);
+        }
     }
 
     Spectrum kr = op * Kr->Evaluate(*si).Clamp();
@@ -103,9 +106,9 @@ void UberMaterial::ComputeScatteringFunctions(SurfaceInteraction *si,
 
 UberMaterial *CreateUberMaterial(const TextureParams &mp) {
     std::shared_ptr<Texture<Spectrum>> Kd =
-        mp.GetSpectrumTexture("Kd", Spectrum(0.25f));
+        mp.GetSpectrumTexture("Kd", Spectrum(0.f));
     std::shared_ptr<Texture<Spectrum>> Ks =
-        mp.GetSpectrumTexture("Ks", Spectrum(0.25f));
+        mp.GetSpectrumTexture("Ks", Spectrum(0.f));
     std::shared_ptr<Texture<Spectrum>> Kr =
         mp.GetSpectrumTexture("Kr", Spectrum(0.f));
     std::shared_ptr<Texture<Spectrum>> Kt =
@@ -123,8 +126,22 @@ UberMaterial *CreateUberMaterial(const TextureParams &mp) {
     std::shared_ptr<Texture<Float>> bumpMap =
         mp.GetFloatTextureOrNull("bumpmap");
     bool remapRoughness = mp.FindBool("remaproughness", false);
+
+     bool reflectdata = mp.FindBool("reflectdata", false);
+    int numgaussian = mp.FindInt("numgaussian", 0);
+
+    // isotropic roughu = roughv
+    Gaussianmixture *gm = NULL;
+
+    // if (reflectdata) numgaussian = 100; else numgaussian = 50;
+    if (numgaussian > 0) {
+        Float alpha = mp.FindFloat("roughness", .1f);
+        int dim = 3;
+        gm = new Gaussianmixture(dim,numgaussian,alpha,reflectdata);
+    }
+    
     return new UberMaterial(Kd, Ks, Kr, Kt, roughness, uroughness, vroughness,
-                            opacity, eta, bumpMap, remapRoughness);
+                            opacity, eta, bumpMap, remapRoughness, gm);
 }
 
 }  // namespace pbrt

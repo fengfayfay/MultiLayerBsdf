@@ -58,6 +58,8 @@ void GaussianMaterial::ComputeScatteringFunctions(SurfaceInteraction *si,
           ARENA_ALLOC(arena, BeckmannDistribution)(roughu, roughv, false);
         // use Gaussian BSDF (Mandy)
         BxDF *spec = ARENA_ALLOC(arena, GaussianBSDF)(ks,gm,distrib);
+        //std::cout<<"add gaussian bsdf" << "\n";
+        //fflush(stdout);
         si->bsdf->Add(spec);
     }
 
@@ -97,13 +99,13 @@ void GaussianMaterial::ComputeScatteringFunctions(SurfaceInteraction *si,
     bool remapRoughness = mp.FindBool("remaproughness", true);
 
     bool reflectdata = mp.FindBool("reflectdata", true);
+    int numgaussian = mp.FindInt("numgaussian", 50);
 
     // isotropic roughu = roughv
     int dim = 3;
     Float alpha = 0.5;
-    int num = 10;
     // if (reflectdata) num = 100; else num = 50;
-    Gaussianmixture *gm = new Gaussianmixture(dim,num,alpha,reflectdata);
+    Gaussianmixture *gm = new Gaussianmixture(dim,numgaussian,alpha,reflectdata);
     return new GaussianMaterial(Kd, Ks, Kr, Kt, roughness, uroughness, vroughness,
                                 opacity, eta, bumpMap, remapRoughness,gm);
 }

@@ -379,10 +379,37 @@ bool FourierBSDFTable::GetWeightsAndOffset(Float cosTheta, int *offset,
 
 
 
+//GaussianBSDF methods
+//Uniform sampling for now for Sample_f and Pdf computation
+//TODO: add importance sampling of GMM
+Spectrum GaussianBSDF::Sample_f(const Vector3f &wo, Vector3f *wi,
+                                          const Point2f &u, Float *pdf,
+                                          BxDFType *sampledType) const {
+    //return MicrofacetReflection::Sample_f(wo, wi, u, pdf, sampledType);
 
-  // Add GaussianBSDF f and ToString methods (Mandy)
+    //Uniform sampling for gaussian bsdf 
+    Vector3f wo_normalized = Normalize(wo);
+
+    // Sample gaussian orientation $\wh$ and reflected direction $\wi$
+    *wi = CosineSampleHemisphere(u);
+    *wi = Normalize(*wi);
+    if (wo.z < 0) wi->z *= -1;
+    if (!SameHemisphere(wo_normalized, *wi) || wi->z == 0) return Spectrum(0.f);
+    *pdf = Pdf(wo_normalized, *wi);
+    return f(wo_normalized, *wi);
+}
+
+Float GaussianBSDF::Pdf(const Vector3f &wo, const Vector3f &wi) const {
+    //return MicrofacetReflection::Pdf(wo, wi);
+    
+    //Uniform sampling for gaussian bsdf 
+    return SameHemisphere(wo, wi) ? AbsCosTheta(wi) * InvPi : 0;
+}
+
 Spectrum GaussianBSDF::f(const Vector3f &woO, const Vector3f &wiO) const {
-    //if (!SameHemisphere(woO, wiO)) return Spectrum(0);  // now reflection only
+
+    //This evaluation is here only for potential debugging    
+    //Spectrum mf =  MicrofacetReflection::f(woO, wiO);
 
     Vector3f wo = woO;
     Vector3f wi = wiO;
@@ -406,45 +433,43 @@ Spectrum GaussianBSDF::f(const Vector3f &woO, const Vector3f &wiO) const {
         assert(fabs(wo.y) < 1e-5);
         wi = rotation(wi);
     }
-    Vector3f wh = wi + wo;
-    
-    if (wh.z == 0) return Spectrum(0.);
     
     Float denom = wi.z + wo.z;
-    if (denom < 1e-3) return Spectrum(0);
-    denom = denom * denom * denom;
-    Float J = (wo.z * wi.z + wi.y * wo.y + wi.x * wo.x + 1)/denom;
+    if (fabs(denom) < 1e-6) return Spectrum(0);
     
+    denom = denom * denom * denom;
+    Float J = fabs((wo.z * wi.z + wi.y * wo.y + wi.x * wo.x + 1)/denom);
+    
+    Vector3f wh = wi + wo;
     wh = Normalize(wh);
     
     // calculate probability in slope domain using fitted GMM
     Float x = wh.x/wh.z;
     Float y = wh.y/wh.z;
     Float zo = acos(abs(wo.z)); 
-    assert(zo >=0 && zo <= M_PI * .5);
+    if (zo <0 || zo >= M_PI * .5) {
+        std::cout << "gaussian brdf value: 0" << "\n";
+        return Spectrum(0);
+    }
     Float p = gm->prob(x,y,zo);
+    Spectrum R = 1;
+
+    Spectrum brdf = R * p * J / cosThetaI;
 
     /*
-    Float dist = distribution->D(wh) * distribution->G(wo, wi);
-    if (dist > .1 && p < 1e-4) {
-        std::cout << "phi: " << phi << "mu: " << cosThetaO << "\n";
-        std::cout << wo << "\n";
-        std::cout << wi << "\n";
+    if (mf[1] > 2.0 * brdf[1]) {
+        std::cout << "beckmann brdf value:" << mf << "\n";
+        std::cout << "gaussian brdf value:" << brdf << "\n";
         fflush(stdout);
     }
-    Spectrum beck = dist/(4.0 * cosThetaO * cosThetaI);
-    //return beck;
     */
-    Spectrum brdfcos = p * J;
-    return brdfcos / cosThetaI;
+    return brdf;
 }
 
-  std::string GaussianBSDF::ToString() const {
-    // return std::string("[ MicrofacetReflection R: ") + R.ToString() +
-    //   std::string(" distribution: ") + distribution->ToString() +
-    //   std::string(" fresnel: ") + fresnel->ToString() + std::string(" ]");
-    return std::string("");
-  }
+std::string GaussianBSDF::ToString() const {
+     return MicrofacetReflection::ToString();
+     //TODO: add gaussian mixture string rep
+}
 
 
 Spectrum BxDF::Sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &u,
@@ -712,35 +737,6 @@ Float FourierBSDF::Pdf(const Vector3f &wo, const Vector3f &wi) const {
     return (rho > 0 && Y > 0) ? (Y / rho) : 0;
 }
 
-  // Add Gaussian BSDF Sample_f and Pdf functions (Mandy)
-  Spectrum GaussianBSDF::Sample_f(const Vector3f &wo, Vector3f *wi,
-                                          const Point2f &u, Float *pdf,
-                                          BxDFType *sampledType) const {
-    // From FourierBSDF::Sample_f
-    // Mathematically, wo will be normalized (if wo was). However, in
-    // practice, floating-point rounding error can cause some error to
-    // accumulate in the computed value of wi here. This can be
-    // catastrophic: if the ray intersects an object with the FourierBSDF
-    // again and the wo (based on such a wi) is nearly perpendicular to the
-    // surface, then the wi computed at the next intersection can end up
-    // being substantially (like 4x) longer than normalized, which leads to
-    // all sorts of errors, including negative spectral values. Therefore,
-    // we normalize again here.
-    Vector3f wo_normalized = Normalize(wo);
-
-    // Sample gaussian orientation $\wh$ and reflected direction $\wi$
-    *wi = CosineSampleHemisphere(u);
-    *wi = Normalize(*wi);
-    if (wo.z < 0) wi->z *= -1;
-    if (!SameHemisphere(wo_normalized, *wi) || wi->z == 0) return Spectrum(0.f);
-    *pdf = Pdf(wo_normalized, *wi);
-    return f(wo_normalized, *wi);
-  }
-
-  // uniform sampling for now (Mandy)
-  Float GaussianBSDF::Pdf(const Vector3f &wo, const Vector3f &wi) const {
-    return SameHemisphere(wo, wi) ? AbsCosTheta(wi) * InvPi : 0;
-  }
 
 Spectrum BxDF::rho(const Vector3f &w, int nSamples, const Point2f *u) const {
     Spectrum r(0.);

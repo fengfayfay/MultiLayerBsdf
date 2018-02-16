@@ -531,11 +531,10 @@ inline int BSDF::NumComponents(BxDFType flags) const {
 }
 
 // Fitted GMM BSDF class declaration (Mandy)
-class GaussianBSDF : public BxDF{
+class GaussianBSDF : public MicrofacetReflection {
  public:
     // GaussianBSDF Public Methods
-    GaussianBSDF(const Spectrum &R, const Gaussianmixture *gm, MicrofacetDistribution *distribution)
-        : BxDF(BxDFType(BSDF_REFLECTION)),R(R),gm(gm), distribution(distribution){}
+    GaussianBSDF(const Spectrum &R, const Gaussianmixture *gm, MicrofacetDistribution *distribution):MicrofacetReflection(R, distribution, NULL), gm(gm){}
 
     Spectrum f(const Vector3f &wo, const Vector3f &wi) const;
     Spectrum Sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &u,
@@ -547,7 +546,6 @@ class GaussianBSDF : public BxDF{
  // GaussianBSDF Private Data
     const Spectrum R;
     const Gaussianmixture *gm;
-    const MicrofacetDistribution *distribution;
 };
 
 }  // namespace pbrt
