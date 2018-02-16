@@ -100,12 +100,12 @@ void GaussianMaterial::ComputeScatteringFunctions(SurfaceInteraction *si,
 
     bool reflectdata = mp.FindBool("reflectdata", true);
     int numgaussian = mp.FindInt("numgaussian", 50);
+    float extf = mp.FindFloat("extfactor",1.0);
 
     // isotropic roughu = roughv
     int dim = 3;
-    Float alpha = 0.5;
-    // if (reflectdata) num = 100; else num = 50;
-    Gaussianmixture *gm = new Gaussianmixture(dim,numgaussian,alpha,reflectdata);
+    float alpha = 0.5;
+    Gaussianmixture *gm = new Gaussianmixture(dim,numgaussian,alpha,extf);
     return new GaussianMaterial(Kd, Ks, Kr, Kt, roughness, uroughness, vroughness,
                                 opacity, eta, bumpMap, remapRoughness,gm);
 }

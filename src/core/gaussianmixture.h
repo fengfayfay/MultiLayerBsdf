@@ -103,7 +103,7 @@ struct Matrix3x3;
 
   public:
     Gaussianmixture();
-    Gaussianmixture(int dim, int num, Float alpha, bool reflectdata);
+    Gaussianmixture(int dim, int num, float alpha, float extf);
     ~Gaussianmixture();
     Float single_gaussian_pdf(Float x, Float y, Float z, int index) const;
     Float prob(Float x, Float y, Float z) const;
@@ -113,13 +113,13 @@ struct Matrix3x3;
   private:
     int dimension;
     int num_gaussian;
+    float extfactor;
     std::vector<Float> weights;
     std::vector<Vector3f> means;
     std::vector<Matrix3x3> covars;
     std::vector<Matrix3x3> covars_inverse;
 
     std::vector<Float> norm_factors;
-    bool reflectdata;
   };
 
 }// namespace pbrt

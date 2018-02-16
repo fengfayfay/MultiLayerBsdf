@@ -127,8 +127,8 @@ UberMaterial *CreateUberMaterial(const TextureParams &mp) {
         mp.GetFloatTextureOrNull("bumpmap");
     bool remapRoughness = mp.FindBool("remaproughness", false);
 
-     bool reflectdata = mp.FindBool("reflectdata", false);
     int numgaussian = mp.FindInt("numgaussian", 0);
+    float extf = mp.FindFloat("extfactor",1);
 
     // isotropic roughu = roughv
     Gaussianmixture *gm = NULL;
@@ -137,7 +137,7 @@ UberMaterial *CreateUberMaterial(const TextureParams &mp) {
     if (numgaussian > 0) {
         Float alpha = mp.FindFloat("roughness", .1f);
         int dim = 3;
-        gm = new Gaussianmixture(dim,numgaussian,alpha,reflectdata);
+        gm = new Gaussianmixture(dim,numgaussian,alpha,extf);
     }
     
     return new UberMaterial(Kd, Ks, Kr, Kt, roughness, uroughness, vroughness,

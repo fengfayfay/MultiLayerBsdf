@@ -106,11 +106,10 @@ namespace pbrt {
     weights = {1};
     means = { {0,0,0} };
     covars = {Matrix3x3(1,0,0,0,1,0,0,0,1)};
-    reflectdata = false;
   }
 
 
-  Gaussianmixture::Gaussianmixture(int dim, int num, Float alpha, bool reflect): dimension(dim), num_gaussian(num), reflectdata(reflect){
+  Gaussianmixture::Gaussianmixture(int dim, int num, float alpha, float extf): dimension(dim), num_gaussian(num), extfactor(extf){
     weights.resize(num_gaussian);
     means.resize(num_gaussian);
     covars.resize(num_gaussian);
@@ -118,15 +117,9 @@ namespace pbrt {
     norm_factors.resize(num_gaussian);
 
     std::string wf,mf,cf;
-    if (reflect){
-      wf = "weights_reflect.txt";
-      mf = "means_reflect.txt";
-      cf = "covars_reflect.txt";
-    }else{
-      wf = "weights.txt";
-      mf = "means.txt";
-      cf = "covars.txt";
-    }
+    wf = "weights.txt";
+    mf = "means.txt";
+    cf = "covars.txt";
 
     // weights
     std::vector<Float> w;
@@ -227,11 +220,7 @@ namespace pbrt {
     for (int i = 0; i < num_gaussian; i++){
       p += weights[i] * single_gaussian_pdf(x, y, z, i);
     }
-    //TODO##
-    //reflectdata is doubling as "extend" mode for now
-    //##
-    //if (reflectdata) p *= 11.0/9.0;
-    if (reflectdata) p *= 2.0;
+    p *= extfactor;
     return p;
   }
 
