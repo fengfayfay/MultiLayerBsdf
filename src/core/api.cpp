@@ -1586,7 +1586,7 @@ namespace pbrt {
       setting.totalRays = numrays;
       setting.maxdepth = maxdepth;
       setting.samplesPerDegree = 1;
-      int angleSamples = dimension == 2? 1 : setting.samplesPerDegree * 9;
+      int angleSamples = dimension == 2? 1 : setting.samplesPerDegree * 12;
       //int angleSamples = dimension == 2? 1 : setting.samplesPerDegree * 1;
       int num3d = PbrtOptions.uniformIncidentAngles == true ? numrays/angleSamples : 1;
       setting.raysPerIncidentAngle = dimension == 2 ? numrays : num3d;
@@ -1772,10 +1772,11 @@ namespace pbrt {
         srand (time(NULL));
         if (setting.uniformSampleIncidentAngles) {
             //sample many output direction for a given sampled incident angle
-            for (int i = 0 ; i < 90; i +=10) {
+            int step = 8;
+            for (int i = 0 ; i < 90; i +=step) {
             //for (int i = 80; i >= 80; i-- ) {
                 for (int j = 0; j < setting.samplesPerDegree; j++){  
-                    float u = ((float) rand()/(RAND_MAX));
+                    float u = ((float) rand()/(RAND_MAX)) * .5;
                     float theta = M_PI * (i + u)/180.0;
                     sampleIncidentAngle(theta, setting, scene, output);
                 }

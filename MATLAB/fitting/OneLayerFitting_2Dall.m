@@ -18,7 +18,7 @@ if mirror
     if (strcmp(owner,'Mandy'))
         datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror_2d/angle60/output/';
     else
-        datadir = '/Users/fengxie/work/Github/GaussianData/HeightfieldData/singleLayer05small/';
+        datadir = '/Users/fengxie/work/Github/GaussianData/HeightfieldData/singleLayer05Slice/';
     end
 else
     datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerGlass_2d/angle60/output/';
@@ -32,10 +32,10 @@ end
 
 addpath(datadir,fundir)
 
-trainnum = 10000; % number of data for training
-generatenum = 10000;  % number of data for testing
-gaussiannumvec = 5; % number of gaussians vector
-accelerated = true; % if true uses accelerated em, othe
+trainnum = 1000000; % number of data for training
+generatenum = 1000000;  % number of data for testing
+gaussiannumvec = 2; % number of gaussians vector
+accelerated = false; % if true uses accelerated em, othe
 maxiter = 1000;
 tol = 1e-5;
 alphavec = [0.1, 0.2, 0.4, 0.5, 0.7, 0.9];
@@ -76,7 +76,8 @@ for k = 4
         
         if mirror
             [obj, W, M, R] = fitting_halfvector_z1(datadir,fundir,alpha,iangle,input,...
-                 trainnum, generatenum, gaussiannumvec, xnum, ynum,accelerated,maxiter,tol, runcount > 1, W, M, R);   
+                 trainnum, generatenum, gaussiannumvec, xnum, ynum,accelerated,maxiter,tol, runcount > 1, W, M, R);
+            gm2brdf(obj, 2, alpha, 0, iangle * 180/pi);
             fitting_data = prep_for_fitting(obj, runcount == 1, j, anglecount, fitting_data);
         else
             
@@ -86,7 +87,7 @@ for k = 4
             
         end
     end
-    weight0 = fitting_data(0,);
+    
 end
 
 
