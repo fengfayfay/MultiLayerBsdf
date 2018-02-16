@@ -30,7 +30,7 @@ boundary_ratio = 99/100;
 
 % plot the input data
 titlestring = ['Gaussian Heightfiled mirror ray distribution, alpha=', num2str(alpha),' angle=',num2str(rad2deg(angle))];
-filename = ['halfprojected_z1',num2str(rad2deg(angle)),'_alpha_',num2str(alpha), 'heightfield'];
+filename = [dir,'halfprojected_z1',num2str(rad2deg(angle)),'_alpha_',num2str(alpha), 'heightfield'];
 
 cd(fundir)
 [~,result] = plotbygrid(xnum,ynum,test,range,x_unit,y_unit,titlestring,filename);
