@@ -6,42 +6,34 @@
 % plot the input and fitted result and calculate the relative l2 error
 %
 
-close all
-clear
-clc
+function OneLayer2Dall(alpha, gaussiannum)
+%close all
+%clear
+%clc
 
 mirror = true;
 
 owner = 'Feng';
 
 if mirror
-    if (strcmp(owner,'Mandy'))
-        datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror_2d/angle60/output/';
-    else
-        datadir = '/Users/fengxie/work/Github/GaussianData/HeightfieldData/singleLayer05Slice/';
-    end
-else
-    datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerGlass_2d/angle60/output/';
-end
-
-if (strcmp(owner, 'Mandy'))
-    fundir = '/Users/mandy/Github/MultiLayerBsdf/MATLAB/fitting/';
-else
+    datadir = '/Users/fengxie/work/Github/GaussianData/HeightfieldData/singleLayer/';
     fundir = '/Users/fengxie/work/Github/GaussianClean/MATLAB/fitting/';
 end
 
+datadir = strcat(datadir, 'alpha', num2str(alpha), '/');
 addpath(datadir,fundir)
+disp(datadir);
+resultdir = strcat(datadir, num2str(gaussiannum), '/');
+status = mkdir(resultdir);
+disp(resultdir);
 
-trainnum = 1000000; % number of data for training
+
+trainnum = 100000; % number of data for training
 generatenum = 1000000;  % number of data for testing
-gaussiannumvec = 2; % number of gaussians vector
-accelerated = false; % if true uses accelerated em, othe
+gaussiannumvec = gaussiannum; % number of gaussians vector
+accelerated = true; % if true uses accelerated em, othe
 maxiter = 1000;
 tol = 1e-5;
-alphavec = [0.1, 0.2, 0.4, 0.5, 0.7, 0.9];
-anglevec = [0:1:90];
-alpharange = 1:length(alphavec);
-anglerange = 1:length(anglevec);
 
 %angle = 80;
 
@@ -52,7 +44,6 @@ R = [];
 fitting_data = [];
 
 for k = 4
-        alpha = alphavec(k);
         [x, y, z, angle] = read_data(datadir, alpha,mirror);
         anglevalues = unique(angle);
         anglecount = length(anglevalues);
@@ -75,7 +66,7 @@ for k = 4
         runcount = runcount + 1; 
         
         if mirror
-            [obj, W, M, R] = fitting_halfvector_z1(datadir,fundir,alpha,iangle,input,...
+            [obj, W, M, R] = fitting_halfvector_z1(resultdir,fundir,alpha,iangle,input,...
                  trainnum, generatenum, gaussiannumvec, xnum, ynum,accelerated,maxiter,tol, runcount > 1, W, M, R);
             gm2brdf(obj, 2, alpha, 0, iangle * 180/pi);
             fitting_data = prep_for_fitting(obj, runcount == 1, j, anglecount, fitting_data);
@@ -87,8 +78,8 @@ for k = 4
             
         end
     end
-    
 end
+end %function end
 
 
 function [x, y, z, angle] = read_data(datadir, alpha, mirror)
