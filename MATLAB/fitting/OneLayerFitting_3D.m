@@ -116,7 +116,7 @@ for k = 3
         obj = fitting_halfvector_z13D_extend(datadir,fundir,alpha,input,...
             trainnum, generatenum, gaussiannumvec,xnum, ynum, znum,accelerated,extendratio,maxiter,tol,false,W,M,R);
         
-        gm2pbrtinput(pbrtbuild,obj,extenddata);
+        gm2pbrtinput(pbrtbuild,obj);
         
         % check brdf*cos plot and energy conservation
         gm2brdf(obj,3,alpha,extendratio, 89);

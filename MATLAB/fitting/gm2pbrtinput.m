@@ -1,20 +1,15 @@
-function gm2pbrtinput(dir,obj,reflect)
-if reflect>0
-    add = '_reflect';
-else
-    add ='';
-end
-filename = [dir,'weights',add,'.txt'];
+function gm2pbrtinput(dir,obj)
+filename = [dir,'weights.txt'];
 fileID = fopen(filename,'w');
 fprintf(fileID,'%4.6f\n',obj.ComponentProportion);
 fclose(fileID);
 
-filename = [dir,'means',add,'.txt'];
+filename = [dir,'means.txt'];
 fileID = fopen(filename,'w');
 fprintf(fileID,'%4.6f\n',obj.mu);
 fclose(fileID);
 
-filename = [dir,'covars',add,'.txt'];
+filename = [dir,'covars.txt'];
 fileID = fopen(filename,'w');
 fprintf(fileID,'%4.6f\n',obj.Sigma);
 fclose(fileID);
