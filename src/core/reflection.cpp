@@ -413,6 +413,21 @@ Spectrum GaussianBSDF::f(const Vector3f &woO, const Vector3f &wiO) const {
 
     Vector3f wo = woO;
     Vector3f wi = wiO;
+
+    if (wiO.z*woO.z>0){
+      std::cout<< "wiO.z "<<wiO.z<<" woO.z "<<woO.z<<std::endl;
+      //return Spectrum(0);
+    }
+
+    // if (wi.z<0 && wo.z<0){
+    //    wi.z = -wi.z;
+    //    wo.z = -wo.z;
+    //  }
+
+    // if (wo.z<0){
+    //   wo.z = -wo.z;
+    // }
+
     Float cosThetaI = AbsCosTheta(wi);
     Float cosThetaO = AbsCosTheta(wo);
     // handle degenerate cases
@@ -444,8 +459,8 @@ Spectrum GaussianBSDF::f(const Vector3f &woO, const Vector3f &wiO) const {
     wh = Normalize(wh);
     
     // calculate probability in slope domain using fitted GMM
-    Float x = wh.x/wh.z;
-    Float y = wh.y/wh.z;
+    Float x = wh.x/fabs(wh.z);
+    Float y = wh.y/fabs(wh.z);
     Float zo = acos(abs(wo.z)); 
     if (zo <0 || zo >= M_PI * .5) {
         std::cout << "gaussian brdf value: 0" << "\n";

@@ -1,7 +1,7 @@
 LookAt 200 250 70   0 33 -50   0 0 1
 Camera "perspective" "float fov" [38]
 Film "image"  "integer xresolution" [1368] "integer yresolution" [1026]
-    "string filename" "killeroo-beck.png"
+    "string filename" "killeroo-beck03.png"
 
 #Integrator "mlt" "integer mutationsperpixel" 16 
 
@@ -51,8 +51,8 @@ Shape "trianglemesh" "point P" [ -400 -400 0 -400 400 0  -400 400 1000 -400 -400
 
 AttributeEnd
 AttributeBegin
-    Material "uber" "rgb Kd" [0 0 0] "rgb Ks" [1 1 1] "float roughness" [0.8] "bool remaproughness" "false"
-    #Material "uber" "rgb Kd" [0 0 0] "rgb Ks" [1 1 1] "float roughness" [0.8] "bool remaproughness" "false" "integer numgaussian" [10] "float extfactor" [1.0]
+    Material "uber" "rgb Kd" [0 0 0] "rgb Ks" [1 1 1] "float roughness" [0.3] "bool remaproughness" "false"
+    #Material "uber" "rgb Kd" [0 0 0] "rgb Ks" [1 1 1] "float roughness" [0.3] "bool remaproughness" "false" "integer numgaussian" [10] "float extfactor" [1.0]
     #Material "gaussian" "rgb Kd" [0 0 0] "rgb Ks" [1 1 1] "float roughness" [0.3] "bool remaproughness" "false" "integer numgaussian" [10] "float extfactor" [2.0]
     #Include "geometry/killeroo3.pbrt"
     Include "geometry/killeroo.pbrt"
