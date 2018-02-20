@@ -11,11 +11,11 @@ close all
 
 mirror = true;
 
-owner = 'Feng';
+owner = 'Mandy';
 gaussiannumvec = gaussiannum;
 
 if (strcmp(owner, 'Mandy'))
-    datadir = '/Users/mandy/Github/pixar/ritest/GaussianHeightField/SinglelayerMirror_3d/';
+    datadir = '/Users/mandy/Github/MultiLayerBsdf/GaussianHeightField/SingleLayerMirror_3d/';
     fundir = '/Users/mandy/Github/MultiLayerBsdf/MATLAB/fitting/';
 else
     datadir = '/Users/fengxie/work/GitHub/GaussianData/HeightfieldData/singleLayer/';
@@ -30,7 +30,7 @@ pbrtbuild = strcat(datadir, num2str(gaussiannumvec), '/extend', num2str(extend),
 status = mkdir(pbrtbuild);
 disp(pbrtbuild);
 
-trainnum = 1e6 * 2;
+trainnum = 1e6;
 generatenum = 1e7;
 accelerated = true; % if true uses accelerated em, otherwise uses customized gmcluster
 extenddata = extend > 0;
@@ -43,76 +43,75 @@ W = [];
 M = [];
 R = [];
 
-for k = 3
-    filename = ['3d_outputx_', num2str(alpha),'.txt'];
-    fileID = fopen(filename);     
-    C1 = textscan(fileID,'%f');
-    fclose(fileID);
-    
-    filename = ['3d_outputy_', num2str(alpha),'.txt'];
-    fileID = fopen(filename);
-    C2 = textscan(fileID,'%f');
-    fclose(fileID);
-    
-    filename = ['3d_outputz_', num2str(alpha),'.txt'];
-    fileID = fopen(filename);
-    C3 = textscan(fileID,'%f');
-    fclose(fileID);
-    
-    filename = ['3d_outputangle_', num2str(alpha),'.txt'];
-    fileID = fopen(filename);
-    C4 = textscan(fileID,'%f');
-    fclose(fileID);
-    
-    x = C1{1};
-    y = C2{1};
-    z = C3{1};
-    angle = C4{1};
-    observe = 6000;
-    x = x/observe;
-    y = y/observe;
-    z = z/observe;
-    
-    % plotting parameters
-    xnum = 100;
-    ynum = 100;
+filename = ['3d_outputx_', num2str(alpha),'.txt'];
+fileID = fopen(filename);
+C1 = textscan(fileID,'%f');
+fclose(fileID);
+
+filename = ['3d_outputy_', num2str(alpha),'.txt'];
+fileID = fopen(filename);
+C2 = textscan(fileID,'%f');
+fclose(fileID);
+
+filename = ['3d_outputz_', num2str(alpha),'.txt'];
+fileID = fopen(filename);
+C3 = textscan(fileID,'%f');
+fclose(fileID);
+
+filename = ['3d_outputangle_', num2str(alpha),'.txt'];
+fileID = fopen(filename);
+C4 = textscan(fileID,'%f');
+fclose(fileID);
+
+x = C1{1};
+y = C2{1};
+z = C3{1};
+angle = C4{1};
+observe = 6000;
+x = x/observe;
+y = y/observe;
+z = z/observe;
+
+% plotting parameters
+xnum = 100;
+ynum = 100;
 %     znum = (reflectdata + 1) * 90;
-    znum = round((extendratio * 2 + 1) * 90);
+znum = round((extendratio * 2 + 1) * 90);
 
-    if mirror
-        % for mirror
-        if sum(z<0)/length(z)>0.01
-            msg = 'More than 1% rays go down, not mirror data.';
-            error(msg)
-        end
-        % only take z>= data
-        angle = angle(z>=0);
-        x = x(z>=0);
-        y = y(z>=0);
-        z = z(z>=0);
-        
-        input = [x,y,z,angle];
-        
-        % randomly permute input data
-        input = input(randperm(length(input)),:);
-        
-%         obj = fitting_halfvector_z13D(datadir,fundir,alpha,input,...
-%             trainnum, generatenum, gaussiannumvec,xnum, ynum, znum,accelerated,reflectdata,maxiter,tol,false,W,M,R);
-        obj = fitting_halfvector_z13D_extend(datadir,fundir,alpha,input,...
-            trainnum, generatenum, gaussiannumvec,xnum, ynum, znum,accelerated,extendratio,maxiter,tol,false,W,M,R);
-        
-        gm2pbrtinput(pbrtbuild,obj);
-        
-        % check brdf*cos plot and energy conservation
-        for j = 1:8:88
-            filename = [pbrtbuild,'angle_',num2str(j),'_alpha_',num2str(alpha), '_brdfgmm'];
-            gm2brdf(obj, 3, j, alpha, extendratio, filename);
-        end;
-
-        plotGMM(obj, gaussiannum);
-        
-    else% glass case
-        
-    end% check mirror or glass end
+if mirror
+    % for mirror
+    if sum(z<0)/length(z)>0.01
+        msg = 'More than 1% rays go down, not mirror data.';
+        error(msg)
+    end
+    % only take z>= data
+    angle = angle(z>=0);
+    x = x(z>=0);
+    y = y(z>=0);
+    z = z(z>=0);
     
+    input = [x,y,z,angle];
+    
+    % randomly permute input data
+    input = input(randperm(length(input)),:);
+    
+    %         obj = fitting_halfvector_z13D(datadir,fundir,alpha,input,...
+    %             trainnum, generatenum, gaussiannumvec,xnum, ynum, znum,accelerated,reflectdata,maxiter,tol,false,W,M,R);
+    obj = fitting_halfvector_z13D_extend(datadir,fundir,alpha,input,...
+        trainnum, generatenum, gaussiannumvec,xnum, ynum, znum,accelerated,extendratio,maxiter,tol,false,W,M,R);
+    
+    gm2pbrtinput(pbrtbuild,obj);
+    
+    % check brdf*cos plot and energy conservation
+    for j = 1:8:88
+        filename = [pbrtbuild,'angle_',num2str(j),'_alpha_',num2str(alpha), '_brdfgmm'];
+        gm2brdf(obj, 3, j, alpha, extendratio, filename);
+    end;
+    
+    plotGMM(obj, gaussiannum);
+    
+else% glass case
+    
+end% check mirror or glass end
+
 end
