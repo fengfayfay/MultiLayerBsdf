@@ -1,6 +1,6 @@
 Film "image" 
 	"integer xresolution" [900] "integer yresolution" [900]
-    "string filename" "ubersphere.png"
+    "string filename" "furnace_beck.png"
 Integrator "path" "integer maxdepth" [1]
 Sampler "halton" "integer pixelsamples" [32] 
 
@@ -15,7 +15,7 @@ AttributeBegin
 AttributeEnd
 
 AttributeBegin
-Material "uber" "rgb Kd" [0 0 0] "rgb Ks" [1 1 1] "float roughness" [0.1] "bool remaproughness" "false"
+Material "uber" "rgb Kd" [0 0 0] "rgb Ks" [1 1 1] "float roughness" [0.5] "bool remaproughness" "false" "float extfactor" [2.0] "integer numgaussian" [0]
 Translate 0 1 0
 Rotate 60 1 1 1
 Scale .9 .9 .9

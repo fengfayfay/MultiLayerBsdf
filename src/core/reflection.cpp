@@ -406,6 +406,14 @@ Float GaussianBSDF::Pdf(const Vector3f &wo, const Vector3f &wi) const {
     return SameHemisphere(wo, wi) ? AbsCosTheta(wi) * InvPi : 0;
 }
 
+/*
+//uncomment to debug for negative wo and wi
+void check_omega_oi_negative(const Vector3f &wo, const Vector3f &wi) {
+    std::cout<< "wo " << wo<< " wi " << wi << "\n";
+    fflush(stdout);
+}
+*/
+
 Spectrum GaussianBSDF::f(const Vector3f &woO, const Vector3f &wiO) const {
 
     //This evaluation is here only for potential debugging    
@@ -414,6 +422,9 @@ Spectrum GaussianBSDF::f(const Vector3f &woO, const Vector3f &wiO) const {
     Vector3f wo = woO;
     Vector3f wi = wiO;
 
+    if (wo.z * wi.z < 0) { 
+        return Spectrum(0.);
+    }
     Float cosThetaI = AbsCosTheta(wi);
     Float cosThetaO = AbsCosTheta(wo);
     // handle degenerate cases
@@ -434,6 +445,9 @@ Spectrum GaussianBSDF::f(const Vector3f &woO, const Vector3f &wiO) const {
         assert(fabs(wo.y) < 1e-5);
         wi = rotation(wi);
     }
+
+    wo.z = abs(wo.z);
+    wi.z = abs(wi.z);
     
     Float denom = wi.z + wo.z;
     if (fabs(denom) < 1e-6) return Spectrum(0);
@@ -445,17 +459,15 @@ Spectrum GaussianBSDF::f(const Vector3f &woO, const Vector3f &wiO) const {
     wh = Normalize(wh);
     
     // calculate probability in slope domain using fitted GMM
-    Float x = wh.x/fabs(wh.z);
-    Float y = wh.y/fabs(wh.z);
+    Float x = wh.x/wh.z;
+    Float y = wh.y/wh.z;
     Float zo = acos(abs(wo.z)); 
     if (zo <0 || zo >= M_PI * .5) {
         std::cout << "gaussian brdf value: 0" << "\n";
         return Spectrum(0);
     }
     Float p = gm->prob(x,y,zo);
-    Spectrum R = 1;
-
-    Spectrum brdf = R * p * J / cosThetaI;
+    Spectrum brdf =  p * J / cosThetaI;
 
     /*
     if (mf[1] > 2.0 * brdf[1]) {
