@@ -106,7 +106,7 @@ for k = 3
         % check brdf*cos plot and energy conservation
         for j = 1:8:88
             filename = [pbrtbuild,'angle_',num2str(j),'_alpha_',num2str(alpha), '_brdfgmm'];
-            gm2brdf(obj, 3, j, alpha, extendratio);
+            gm2brdf(obj, 3, j, alpha, extendratio, filename);
         end;
 
         plotGMM(obj, gaussiannum);
