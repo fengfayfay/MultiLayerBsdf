@@ -1,8 +1,8 @@
 Film "image" 
 	"integer xresolution" [900] "integer yresolution" [900]
-    "string filename" "gaussianAreaClose.png"
+    "string filename" "area2_gaussian.png"
 Integrator "path" "integer maxdepth" [1]
-Sampler "halton" "integer pixelsamples" [32] 
+Sampler "halton" "integer pixelsamples" [16] 
 
 LookAt 0 3 8  0 .8 0   0 1 0
 Camera "perspective" "float fov" [22]
@@ -13,13 +13,13 @@ WorldBegin
 AttributeBegin
 Material "matte" "color Kd" [1 1 1]
 AreaLightSource "diffuse"  "color L" [500 500 500]
-Translate -5 10 0 
+Translate -10 10 -4
 Shape "disk" "float radius" [1]
 ReverseOrientation
 AttributeEnd
 
 AttributeBegin
-Material "uber" "rgb Kd" [0 0 0] "rgb Ks" [1 1 1] "float roughness" [0.3] "bool remaproughness" "false" "bool reflectdata" "false" "integer numgaussian" [10]
+Material "uber" "rgb Kd" [0 0 0] "rgb Ks" [1 1 1] "float roughness" [0.3] "bool remaproughness" "false" "float extfactor" [2.0] "integer numgaussian" [20]
 Translate 0 1 0
 Rotate 60 1 1 1
 Scale .9 .9 .9
