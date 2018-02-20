@@ -1,6 +1,6 @@
 
 
-function gm2brdf(obj,dim,alpha,extendratio, angle)
+function gm2brdf(obj, dim, angle, alpha, extendratio, filename)
 %
 % convert from slope domain probability to brdf*cos value
 %
@@ -46,6 +46,7 @@ for k = 1:length(anglevec)
     xlabel('mu')
     ylabel('phi')
     title(['brdf*cos angle=',num2str(angle), ' alpha=', num2str(alpha)])
+    saveas(gcf,[filename,'.jpeg'])
     
     fprintf('at angle %2d, %4.4f energy is perserved\n',angle,sum(brdfcos(:)));
 end

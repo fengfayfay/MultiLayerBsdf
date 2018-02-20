@@ -16,7 +16,7 @@ mirror = true;
 owner = 'Feng';
 
 if mirror
-    datadir = '/Users/fengxie/work/Github/GaussianData/HeightfieldData/singleLayer/';
+    datadir = '/Users/fengxie/work/Github/GaussianData/HeightfieldData/singleLayerSlice/';
     fundir = '/Users/fengxie/work/Github/GaussianClean/MATLAB/fitting/';
 end
 
@@ -28,7 +28,7 @@ status = mkdir(resultdir);
 disp(resultdir);
 
 
-trainnum = 100000; % number of data for training
+trainnum = 1000000; % number of data for training
 generatenum = 1000000;  % number of data for testing
 gaussiannumvec = gaussiannum; % number of gaussians vector
 accelerated = true; % if true uses accelerated em, othe
@@ -68,7 +68,6 @@ for k = 4
         if mirror
             [obj, W, M, R] = fitting_halfvector_z1(resultdir,fundir,alpha,iangle,input,...
                  trainnum, generatenum, gaussiannumvec, xnum, ynum,accelerated,maxiter,tol, runcount > 1, W, M, R);
-            gm2brdf(obj, 2, alpha, 0, iangle * 180/pi);
             fitting_data = prep_for_fitting(obj, runcount == 1, j, anglecount, fitting_data);
         else
             

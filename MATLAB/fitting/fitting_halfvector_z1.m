@@ -25,16 +25,22 @@ countvec = zeros(1,length(gaussiannumvec));
 % preprocess data
 incident = [sin(angle), 0, cos(angle)];
 boundary_ratio = 99/100;
-[train, test,range,x_unit,y_unit] = preprocess(input,incident,...
+[train, test,range,x_unit,y_unit, phimu] = preprocess(input,incident,...
     boundary_ratio,xnum,ynum,trainnum,generatenum);
 
 % plot the input data
-titlestring = ['Gaussian Heightfiled mirror ray distribution, alpha=', num2str(alpha),' angle=',num2str(rad2deg(angle))];
-filename = [dir,'halfprojected_z1',num2str(rad2deg(angle)),'_alpha_',num2str(alpha), 'heightfield'];
+titlestring = ['Gaussian heightfield slope distribution, alpha=', num2str(alpha),' angle=',num2str(rad2deg(angle))];
+filename = [dir,'slopedomain_',num2str(rad2deg(angle)),'_alpha_',num2str(alpha), '_heightfield'];
 
-cd(fundir)
 [~,result] = plotbygrid(xnum,ynum,test,range,x_unit,y_unit,titlestring,filename);
 result = result/sum(result(:));
+filename = [dir,'angle_',num2str(rad2deg(angle)),'_alpha_',num2str(alpha), '_brdfsim'];
+%[~,brdfsimulated] = plotgrid(phimu, xnum, ynum, titlestring, filename);
+[~,brdfsimulated] = plotgrid(input, xnum, ynum, titlestring, filename);
+
+hold();
+
+cd(fundir)
 
 for j = 1:length(gaussiannumvec)
     
@@ -51,15 +57,18 @@ for j = 1:length(gaussiannumvec)
     plotGMM(obj, 0);
     
     % save gm result
-    filename = [dir,'half_projected_z1',num2str(rad2deg(angle)),'_alpha_',num2str(alpha), '_#G',num2str(numGaussian),'.mat'];
+    filename = [dir,'slopedomain_',num2str(rad2deg(angle)),'_alpha_',num2str(alpha), '_#G',num2str(numGaussian),'.mat'];
     save(filename,'obj')
+    filename = [dir,'angle_',num2str(rad2deg(angle)),'_alpha_',num2str(alpha), '_brdfgmm'];
+    gm2brdf(obj, 2, rad2deg(angle),alpha, 0, filename);
+     
     
     %% generate points from fitted model
     Y = random(obj,generatenum);
     
     % plot gmm generated data
-    titlestring = ['Mirror distribution generated using GMM, alpha=', num2str(alpha),' angle=',num2str(rad2deg(angle)),' #G=',num2str(numGaussian)];
-    filename = [dir,'half_projected_z1',num2str(rad2deg(angle)),'_alpha_',num2str(alpha), '_#G',num2str(numGaussian)];
+    titlestring = ['Slope distribution generated using GMM, alpha=', num2str(alpha),' angle=',num2str(rad2deg(angle)),' #G=',num2str(numGaussian)];
+    filename = [dir,'slopedomain_',num2str(rad2deg(angle)),'_alpha_',num2str(alpha), '_gmm',num2str(numGaussian)];
     [count,predict] = plotbygrid(xnum,ynum,Y,range,x_unit,y_unit,titlestring,filename);
     predict = predict/sum(predict(:));
     
@@ -74,14 +83,14 @@ for j = 1:length(gaussiannumvec)
 end
 
 % save error and count file
-errvec_filename = [dir,'half_projected_z1',num2str(rad2deg(angle)),'_angle_',num2str(alpha),'_err.mat'];
-countvec_filename = [dir,'half_projected_z1',num2str(rad2deg(angle)),'_angle_',num2str(alpha),'_badcount.mat'];
+errvec_filename = [dir,'slopedomain_',num2str(rad2deg(angle)),'_angle_',num2str(alpha),'_err.mat'];
+countvec_filename = [dir,'slopedomain_',num2str(rad2deg(angle)),'_angle_',num2str(alpha),'_badcount.mat'];
 save(errvec_filename,'errvec')
 save(countvec_filename,'count')
 
 end
 
-function [train, test,range,x_unit,y_unit] = preprocess(input,incident,...
+function [train, test,range,x_unit,y_unit, phimu] = preprocess(input,incident,...
     boundary_ratio,xnum,ynum,trainnum,generatenum)
 
 h = (input + incident)/2;
@@ -108,5 +117,14 @@ train = [xtrain_new, ytrain_new];
 % testing data
 indexrange = trainnum+1:trainnum+generatenum;
 test = [xdividez(indexrange),ydividez(indexrange)];
+
+mu = input(:,3);
+phi = atan2(input(:,2), input(:,1));
+for i = 1:length(phi)
+    if phi(i) < 0
+        phi(i) = phi(i)+ 2 * pi;
+    end
+end
+phimu = [phi, mu];
 
 end

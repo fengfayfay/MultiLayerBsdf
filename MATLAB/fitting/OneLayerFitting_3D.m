@@ -119,7 +119,10 @@ for k = 3
         gm2pbrtinput(pbrtbuild,obj);
         
         % check brdf*cos plot and energy conservation
-        gm2brdf(obj,3,alpha,extendratio, 89);
+        j = 89;
+        filename = [pbrtbuild,'angle_',num2str(j),'_alpha_',num2str(alpha), '_brdfgmm'];
+        gm2brdf(obj, 3, j, alpha, extendratio);
+
 
         plotGMM(obj, 10);
         
