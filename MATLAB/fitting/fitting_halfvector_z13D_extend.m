@@ -1,4 +1,4 @@
-function obj = fitting_halfvector_z13D_extend(dir,fundir,alpha,input,...
+function [obj, W, M, R] = fitting_halfvector_z13D_extend(dir,fundir,alpha,input,...
     trainnum, generatenum, gaussiannumvec,xnum, ynum, znum,accelerated,extendratio,maxiter,tol,softinit,W,M,R)
 
 % fitting 3d mirror heightfield data in slope domain using a mixture of gaussians
@@ -60,9 +60,9 @@ for j = 1:length(gaussiannumvec)
     if accelerated
         aemdir = [fundir,'accelerated_greedy_EM'];
         addpath(aemdir);
-        [obj, ~, ~, ~] = accelerated_em(train,trainnum,numGaussian,maxiter,tol, softinit, W, M, R);
+        [obj, W, M, R] = accelerated_em(train,trainnum,numGaussian,maxiter,tol, softinit, W, M, R);
     else
-        [obj, ~, ~, ~] = customized_em(train,numGaussian,maxiter,tol, softinit, W, M, R);
+        [obj, W, M, R] = customized_em(train,numGaussian,maxiter,tol, softinit, W, M, R);
     end
     
     % save gm result
