@@ -1,4 +1,4 @@
-function [obj] = OneLayer3D(alpha, gaussiannum, extend)
+function [obj, W, M, R] = OneLayer3D(alpha, gaussiannum, extend, W, M, R)
 %
 % One Layer Gaussian fitting for varying incident angle heightfield data
 %
@@ -38,10 +38,6 @@ extendratio = extend;   % extend ratio on both ends (0 means no reflection)
 
 maxiter = 2000;
 tol = 1e-5;
-
-W = [];
-M = [];
-R = [];
 
 filename = ['3d_outputx_', num2str(alpha),'.txt'];
 fileID = fopen(filename);
@@ -97,7 +93,7 @@ if mirror
     
     %         obj = fitting_halfvector_z13D(datadir,fundir,alpha,input,...
     %             trainnum, generatenum, gaussiannumvec,xnum, ynum, znum,accelerated,reflectdata,maxiter,tol,false,W,M,R);
-    obj = fitting_halfvector_z13D_extend(datadir,fundir,alpha,input,...
+    [obj, W, M, R] = fitting_halfvector_z13D_extend(datadir,fundir,alpha,input,...
         trainnum, generatenum, gaussiannumvec,xnum, ynum, znum,accelerated,extendratio,maxiter,tol,false,W,M,R);
     
     gm2pbrtinput(pbrtbuild,obj);
