@@ -28,8 +28,8 @@ status = mkdir(resultdir);
 disp(resultdir);
 
 
-trainnum = 1000000; % number of data for training
-generatenum = 1000000;  % number of data for testing
+trainnum = 100000; % number of data for training
+generatenum = 100000;  % number of data for testing
 gaussiannumvec = gaussiannum; % number of gaussians vector
 accelerated = true; % if true uses accelerated em, othe
 maxiter = 1000;
