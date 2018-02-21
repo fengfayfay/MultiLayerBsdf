@@ -419,8 +419,8 @@ Spectrum GaussianBSDF::f(const Vector3f &woO, const Vector3f &wiO) const {
     //This evaluation is here only for potential debugging    
     //Spectrum mf =  MicrofacetReflection::f(woO, wiO);
 
-    Vector3f wo = woO;
-    Vector3f wi = wiO;
+    Vector3f wo = Normalize(woO);
+    Vector3f wi = Normalize(wiO);
 
     if (wo.z * wi.z < 0) { 
         return Spectrum(0.);
@@ -450,9 +450,9 @@ Spectrum GaussianBSDF::f(const Vector3f &woO, const Vector3f &wiO) const {
     wi.z = abs(wi.z);
     
     Float denom = wi.z + wo.z;
-    if (fabs(denom) < 1e-6) return Spectrum(0);
     
     denom = denom * denom * denom;
+    if (fabs(denom) < 1e-6) return Spectrum(0);
     Float J = fabs((wo.z * wi.z + wi.y * wo.y + wi.x * wo.x + 1)/denom);
     
     Vector3f wh = wi + wo;
@@ -461,12 +461,20 @@ Spectrum GaussianBSDF::f(const Vector3f &woO, const Vector3f &wiO) const {
     // calculate probability in slope domain using fitted GMM
     Float x = wh.x/wh.z;
     Float y = wh.y/wh.z;
-    Float zo = acos(abs(wo.z)); 
-    if (zo <0 || zo >= M_PI * .5) {
+    Float zo = wo.z > 1? 1: wo.z;
+    zo = acos(zo); 
+    if (zo <0 || zo >= M_PI * .5 || isNaN(zo)) {
+        std::cout<< "woO " << woO<< " wo " << wo << "\n";
         std::cout << "gaussian brdf value: 0" << "\n";
+        fflush(stdout);
         return Spectrum(0);
     }
     Float p = gm->prob(x,y,zo);
+    if (isNaN(p)) {
+        std::cout<< "has NaN prob" << "\n";
+        fflush(stdout);
+        return Spectrum(0);
+    }
     Spectrum brdf =  p * J / cosThetaI;
 
     /*

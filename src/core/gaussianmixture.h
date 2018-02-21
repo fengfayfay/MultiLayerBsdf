@@ -66,8 +66,8 @@ struct Matrix3x3;
             m1.m[i][2] * m2.m[2][j];
       return r;
     }
-    static std::vector<Float> Mul(const Matrix3x3 &m1, const std::vector<Float> v) {
-      std::vector<Float> r(3);
+    static Vector3f Mul(const Matrix3x3 &m1, const Vector3f&  v) {
+      Vector3f r;
       for (int i = 0; i < 3; ++i)
         for (int j = 0; j < 3; ++j)
           r[i] = m1.m[i][0] * v[0] + m1.m[i][1] * v[1] + m1.m[i][2] * v[2];

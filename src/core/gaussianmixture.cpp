@@ -207,10 +207,10 @@ namespace pbrt {
 
   Gaussianmixture::~Gaussianmixture(){}
 
-  Float Gaussianmixture::single_gaussian_pdf(Float x, Float y, Float z, int index) const{
+    Float Gaussianmixture::single_gaussian_pdf(Float x, Float y, Float z, int index) const{
     Float p = norm_factors[index];
-    std::vector<Float> diff = {x - means[index][0], y-means[index][1], z-means[index][2]};
-    std::vector<Float> middle = Matrix3x3::Mul(covars_inverse[index], diff);
+    Vector3f diff (x - means[index][0], y-means[index][1], z-means[index][2]);
+    Vector3f middle = Matrix3x3::Mul(covars_inverse[index], diff);
     p *= exp(-0.5 * (diff[0]*middle[0] + diff[1]*middle[1] + diff[2]*middle[2]));
     return p;
   }
