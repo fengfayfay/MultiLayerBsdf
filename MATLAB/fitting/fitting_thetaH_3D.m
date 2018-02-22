@@ -118,7 +118,7 @@ disp(trainnum);
 dataTrain = ydata(1:trainnum);
 angleTrain = angle(1:trainnum);
 
-for i = 1:100:length(angleValues)
+for i = 1:length(angleValues)
     train = dataTrain(abs(angleTrain - angleValues(i)) < angleUnit);
     disp(length(train));
     pd = fitdist(train, 'Rayleigh'); 

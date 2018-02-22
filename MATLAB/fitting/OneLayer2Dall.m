@@ -6,7 +6,7 @@
 % plot the input and fitted result and calculate the relative l2 error
 %
 
-function OneLayer2Dall(alpha, gaussiannum)
+function [fitting_data, anglesforfit] =  OneLayer2Dall(alpha, gaussiannum)
 %close all
 %clear
 %clc
@@ -46,6 +46,7 @@ fitting_data = [];
 for k = 4
         [x, y, z, angle] = read_data(datadir, alpha,mirror);
         anglevalues = unique(angle);
+        anglesforfit = anglevalues;
         anglecount = length(anglevalues);
         %step = floor(anglecount/10)
         step = 1
