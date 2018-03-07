@@ -48,8 +48,7 @@ for k = 4
         anglevalues = unique(angle);
         anglesforfit = anglevalues;
         anglecount = length(anglevalues);
-        %step = floor(anglecount/10)
-        step = 1
+        step = floor(anglecount/10)
 
     %for j = anglecount:-step:1
     for j = 1:step:anglecount

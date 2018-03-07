@@ -11,7 +11,7 @@ close all
 
 mirror = true;
 
-owner = 'Mandy';
+owner = 'Feng';
 gaussiannumvec = gaussiannum;
 
 if (strcmp(owner, 'Mandy'))
@@ -93,13 +93,12 @@ if mirror
     
     %         obj = fitting_halfvector_z13D(datadir,fundir,alpha,input,...
     %             trainnum, generatenum, gaussiannumvec,xnum, ynum, znum,accelerated,reflectdata,maxiter,tol,false,W,M,R);
-    [obj, W, M, R] = fitting_halfvector_z13D_extend(datadir,fundir,alpha,input,...
-        trainnum, generatenum, gaussiannumvec,xnum, ynum, znum,accelerated,extendratio,maxiter,tol,false,W,M,R);
+    [obj, W, M, R] = fitting_halfvector_z13D_extend(pbrtbuild,fundir,alpha,input, trainnum, generatenum, gaussiannumvec,xnum, ynum, znum,accelerated,extendratio,maxiter,tol,false,W,M,R);
     
     gm2pbrtinput(pbrtbuild,obj);
     
     % check brdf*cos plot and energy conservation
-    for j = 1:8:88
+    for j = 1:4:88
         filename = [pbrtbuild,'angle_',num2str(j),'_alpha_',num2str(alpha), '_brdfgmm'];
         gm2brdf(obj, 3, j, alpha, extendratio, filename);
     end;

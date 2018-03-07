@@ -25,17 +25,16 @@ countvec = zeros(1,length(gaussiannumvec));
 % preprocess data
 incident = [sin(angle), 0, cos(angle)];
 boundary_ratio = 99/100;
-[train, test,range,x_unit,y_unit, phimu] = preprocess(input,incident,...
+[train, test,range] = preprocess(input,incident,...
     boundary_ratio,xnum,ynum,trainnum,generatenum);
 
 % plot the input data
 titlestring = ['Gaussian heightfield slope distribution, alpha=', num2str(alpha),' angle=',num2str(rad2deg(angle))];
 filename = [dir,'slopedomain_',num2str(rad2deg(angle)),'_alpha_',num2str(alpha), '_heightfield'];
 
-[~,result] = plotbygrid(xnum,ynum,test,range,x_unit,y_unit,titlestring,filename);
+[~,result] = plotbygrid(xnum,ynum,test,range,titlestring,filename);
 result = result/sum(result(:));
 filename = [dir,'angle_',num2str(rad2deg(angle)),'_alpha_',num2str(alpha), '_brdfsim'];
-%[~,brdfsimulated] = plotgrid(phimu, xnum, ynum, titlestring, filename);
 [~,brdfsimulated] = plotgrid(input, xnum, ynum, titlestring, filename);
 
 hold();
@@ -54,7 +53,7 @@ for j = 1:length(gaussiannumvec)
         [obj, W, M, R] = customized_em(train,numGaussian,maxiter,tol, softinit, W, M, R);
     end
 
-    plotGMM(obj, 0);
+    %plotGMM(obj, 0);
     
     % save gm result
     filename = [dir,'slopedomain_',num2str(rad2deg(angle)),'_alpha_',num2str(alpha), '_#G',num2str(numGaussian),'.mat'];
@@ -65,11 +64,11 @@ for j = 1:length(gaussiannumvec)
     
     %% generate points from fitted model
     Y = random(obj,generatenum);
-    
     % plot gmm generated data
+    
     titlestring = ['Slope distribution generated using GMM, alpha=', num2str(alpha),' angle=',num2str(rad2deg(angle)),' #G=',num2str(numGaussian)];
     filename = [dir,'slopedomain_',num2str(rad2deg(angle)),'_alpha_',num2str(alpha), '_gmm',num2str(numGaussian)];
-    [count,predict] = plotbygrid(xnum,ynum,Y,range,x_unit,y_unit,titlestring,filename);
+    [count,predict] = plotbygrid(xnum,ynum,Y,range, titlestring,filename);
     predict = predict/sum(predict(:));
     
     % calculate relative L2 error
@@ -78,7 +77,6 @@ for j = 1:length(gaussiannumvec)
     
     errvec(j) = err;
     countvec(j) = count;
-    
     
 end
 
@@ -90,7 +88,7 @@ save(countvec_filename,'count')
 
 end
 
-function [train, test,range,x_unit,y_unit, phimu] = preprocess(input,incident,...
+function [train, test,range] = preprocess(input,incident,...
     boundary_ratio,xnum,ynum,trainnum,generatenum)
 
 h = (input + incident)/2;
@@ -98,14 +96,16 @@ hnorm = repmat(sqrt(sum(h.^2,2)),1,3);
 h = h./hnorm;
 xdividez = h(:,1)./h(:,3);
 ydividez = h(:,2)./h(:,3);
-sortedxz = sort(abs(xdividez));
+sortedxz = sort(xdividez);
 xrange = sortedxz(ceil(boundary_ratio*length(xdividez)));
-sortedyz = sort(abs(ydividez));
+disp([sortedxz(1), xrange]);
+xrange = xrange - sortedxz(1);
+sortedyz = sort(ydividez);
 yrange = sortedyz(ceil(boundary_ratio*length(xdividez)));
-range = 2*max(xrange, yrange);
+disp([sortedyz(1), yrange]);
+yrange = yrange - sortedyz(1);
+range = max(xrange, yrange) * 1.25;
 fprintf('plotting range is %4.2f\n',range)
-x_unit = 2*range/xnum;
-y_unit = 2*range/ynum;
 
 % training data
 xtrain = xdividez(1:trainnum);
@@ -118,13 +118,5 @@ train = [xtrain_new, ytrain_new];
 indexrange = trainnum+1:trainnum+generatenum;
 test = [xdividez(indexrange),ydividez(indexrange)];
 
-mu = input(:,3);
-phi = atan2(input(:,2), input(:,1));
-for i = 1:length(phi)
-    if phi(i) < 0
-        phi(i) = phi(i)+ 2 * pi;
-    end
-end
-phimu = [phi, mu];
 
 end
