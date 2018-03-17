@@ -1,5 +1,5 @@
 function [obj, W, M, R] = fitting_halfvector_z1(dir,fundir,alpha,angle,input,...
-    trainnum, generatenum, gaussiannumvec, xnum, ynum,accelerated,maxiter,tol,softinit, W, M, R)
+    trainnum, generatenum, gaussiannumvec, xnum, ynum,accelerated,maxiter,tol,softinit, W, M, R, energyRatio)
 
 % fitting 2d mirror heightfield data in slope domain using a mixture of gaussians
 %   
@@ -32,10 +32,10 @@ boundary_ratio = 99/100;
 titlestring = ['Gaussian heightfield slope distribution, alpha=', num2str(alpha),' angle=',num2str(rad2deg(angle))];
 filename = [dir,'slopedomain_',num2str(rad2deg(angle)),'_alpha_',num2str(alpha), '_heightfield'];
 
-[~,result] = plotbygrid(xnum,ynum,test,range,titlestring,filename);
+[~,result] = plotbygrid(xnum,ynum,test,range,titlestring,filename, energyRatio);
 result = result/sum(result(:));
 filename = [dir,'angle_',num2str(rad2deg(angle)),'_alpha_',num2str(alpha), '_brdfsim'];
-[~,brdfsimulated] = plotgrid(input, xnum, ynum, titlestring, filename);
+[~,brdfsimulated] = plotgrid(input, xnum, ynum, titlestring, filename, energyRatio);
 
 hold();
 
@@ -59,7 +59,7 @@ for j = 1:length(gaussiannumvec)
     filename = [dir,'slopedomain_',num2str(rad2deg(angle)),'_alpha_',num2str(alpha), '_#G',num2str(numGaussian),'.mat'];
     save(filename,'obj')
     filename = [dir,'angle_',num2str(rad2deg(angle)),'_alpha_',num2str(alpha), '_brdfgmm'];
-    gm2brdf(obj, 2, rad2deg(angle),alpha, 0, filename);
+    gm2brdf(obj, 2, rad2deg(angle),alpha, 0, filename, energyRatio);
      
     
     %% generate points from fitted model
@@ -68,7 +68,7 @@ for j = 1:length(gaussiannumvec)
     
     titlestring = ['Slope distribution generated using GMM, alpha=', num2str(alpha),' angle=',num2str(rad2deg(angle)),' #G=',num2str(numGaussian)];
     filename = [dir,'slopedomain_',num2str(rad2deg(angle)),'_alpha_',num2str(alpha), '_gmm',num2str(numGaussian)];
-    [count,predict] = plotbygrid(xnum,ynum,Y,range, titlestring,filename);
+    [count,predict] = plotbygrid(xnum,ynum,Y,range, titlestring,filename, energyRatio);
     predict = predict/sum(predict(:));
     
     % calculate relative L2 error

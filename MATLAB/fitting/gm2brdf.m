@@ -1,6 +1,6 @@
 
 
-function gm2brdf(obj, dim, angle, alpha, extendratio, filename)
+function gm2brdf(obj, dim, angle, alpha, extendratio, filename, energyRatio)
 %
 % convert from slope domain probability to brdf*cos value
 %
@@ -10,7 +10,7 @@ phi = 2*pi*((0:1:phinum-1)+0.5)/phinum;
 
 munum = 100;
 mu = ((0:1:munum-1)+0.5)/munum;
-scale = 2 * pi/(munum * phinum);
+scale = 2 * pi/(munum * phinum) * energyRatio;
 
 anglevec = angle;
 for k = 1:length(anglevec)
@@ -39,7 +39,7 @@ for k = 1:length(anglevec)
             brdfcos(i,j) = p * detJ * (1 + extendratio*2) * scale;
         end
     end
-    
+   
     figure
     imagesc(brdfcos)
     colorbar()

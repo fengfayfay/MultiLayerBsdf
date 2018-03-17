@@ -1,5 +1,5 @@
 function [count, A] = plotbygrid(xnum,ynum,Y,...
-    range,titlestring,filename)
+    range,titlestring,filename, energyRatio)
 
 % calculate predict matrix
     x_unit = 2.0 * range/xnum;
@@ -15,7 +15,7 @@ function [count, A] = plotbygrid(xnum,ynum,Y,...
         yindex = ceil(Y(i, 2) / y_unit + .5) + index_Y0;
         
         if xindex < xnum + 1 && yindex < ynum + 1
-            A(xindex, yindex) = A(xindex, yindex) + 1;
+            A(xindex, yindex) = A(xindex, yindex) + energyRatio;
         else
             count = count +1;
         end
