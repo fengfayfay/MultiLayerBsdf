@@ -82,13 +82,18 @@ void UberMaterial::ComputeScatteringFunctions(SurfaceInteraction *si,
         // invoke Beckmann distribution instead of GGX for testing (Mandy)
         MicrofacetDistribution *distrib =
           ARENA_ALLOC(arena, BeckmannDistribution)(roughu, roughv, false);
-        if (gm == NULL) {
+        if (gm == NULL && gs == NULL) {
             BxDF *spec =
                 ARENA_ALLOC(arena, MicrofacetReflection)(ks, distrib, fresnel);
             si->bsdf->Add(spec);
         } else {
-            BxDF *spec = ARENA_ALLOC(arena, GaussianBSDF)(ks,gm,distrib);
-            si->bsdf->Add(spec);
+            if (gs) {
+                BxDF *spec = ARENA_ALLOC(arena, MultiScatterReflection)(ks,distrib, gs);
+                si->bsdf->Add(spec);
+            } else {
+                BxDF *spec = ARENA_ALLOC(arena, GaussianBSDF)(ks,gm,distrib);
+                si->bsdf->Add(spec);
+            }
         }
     }
 
@@ -129,19 +134,26 @@ UberMaterial *CreateUberMaterial(const TextureParams &mp) {
 
     int numgaussian = mp.FindInt("numgaussian", 0);
     float extf = mp.FindFloat("extfactor",1);
+    bool useMS = mp.FindBool("multiscatter", false);
+
+    Float alpha = mp.FindFloat("roughness", 0.7f);
+    GaussianScatter *gs = NULL;
+    if (useMS) {
+        std::cout << "use MultiScatterReflection\n";
+        gs = new GaussianScatter(alpha);
+    }
 
     // isotropic roughu = roughv
     Gaussianmixture *gm = NULL;
 
     // if (reflectdata) numgaussian = 100; else numgaussian = 50;
     if (numgaussian > 0) {
-        Float alpha = mp.FindFloat("roughness", .1f);
         int dim = 3;
         gm = new Gaussianmixture(dim,numgaussian,alpha,extf);
     }
     
     return new UberMaterial(Kd, Ks, Kr, Kt, roughness, uroughness, vroughness,
-                            opacity, eta, bumpMap, remapRoughness, gm);
+                            opacity, eta, bumpMap, remapRoughness, gs, gm);
 }
 
 }  // namespace pbrt

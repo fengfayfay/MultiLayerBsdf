@@ -377,7 +377,86 @@ bool FourierBSDFTable::GetWeightsAndOffset(Float cosTheta, int *offset,
     return CatmullRomWeights(nMu, mu, cosTheta, offset, weights);
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////
+//////MultiScatterReflection:  Feng
+////////////////////////////////////////////////////////////////////////////////////////////
+Spectrum MultiScatterReflection::f(const Vector3f &woO, const Vector3f &wiO) const {
+    Spectrum singleScatter = MicrofacetReflection::f(woO, wiO);
 
+    Vector3f wo = Normalize(woO);
+    Vector3f wi = Normalize(wiO);
+
+    if (wo.z * wi.z < 0) { 
+        return singleScatter; 
+    }
+    if (wo.z < 1e-6 || wi.z < 1e-6) {
+        return singleScatter;
+    }
+    Float cosThetaI = AbsCosTheta(wi);
+    Float cosThetaO = AbsCosTheta(wo);
+    // handle degenerate cases
+    if (cosThetaI == 0 || cosThetaO == 0) return singleScatter;
+
+    Float phi = atan2(wo.y, wo.x);
+    if (phi < 0) phi += 2.0 * M_PI;
+    if (fabs(phi) > 1e-5) {
+        phi = Degrees(phi);
+        Transform rotation = RotateZ(-phi);
+        wo = rotation(wo);
+        if (fabs(wo.y) > 1e-3) {
+            std::cout << "phi: " << phi << "mu: " << cosThetaO << "\n";
+            std::cout<< "woO " << woO<< " wo " << wo << "\n";
+            std::cout<< "rotation" << rotation << "\n";
+            fflush(stdout);
+        }
+        assert(fabs(wo.y) < 1e-5);
+        wi = rotation(wi);
+    }
+
+    wo.z = abs(wo.z);
+    wi.z = abs(wi.z);
+    
+    Float denom = wi.z + wo.z;
+    denom = denom * denom * denom;
+    if (fabs(denom) < 1e-6) return Spectrum(0);
+    Float J = fabs((wo.z * wi.z + wi.y * wo.y + wi.x * wo.x + 1)/denom);
+    
+    Vector3f wh = wi + wo;
+    wh = Normalize(wh);
+    
+    // calculate probability in slope domain using fitted GMM
+    Float x = wh.x/wh.z;
+    Float y = wh.y/wh.z;
+    Float zo = wo.z > 1? 1: wo.z;
+    zo = acos(zo); 
+    if (zo <0 || zo >= M_PI * .5 || isNaN(zo)) {
+        std::cout<< "woO " << woO<< " wo " << wo << "\n";
+        std::cout << "multiscatter brdf value: 0" << "\n";
+        fflush(stdout);
+        return singleScatter;
+    }
+    Float p = gs->prob(x,y,zo);
+    if (isNaN(p)) {
+        std::cout<< "has NaN prob" << "\n";
+        fflush(stdout);
+        return singleScatter;
+    }
+    Float multi =  p * J / cosThetaI;
+    /*
+    Float rgb[3];
+    singleScatter.ToRGB(rgb);
+    if (multi > .1 * rgb[0]) {
+        std::cout<<"multiscatter, single scatter " << multi << " " << singleScatter << "\n";
+    }
+    */
+    Spectrum brdf = Spectrum(multi) + singleScatter;
+    return brdf;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////
+////GaussianBSDF:  Mandy and Feng ////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////
 
 //GaussianBSDF methods
 //Uniform sampling for now for Sample_f and Pdf computation
@@ -424,6 +503,10 @@ Spectrum GaussianBSDF::f(const Vector3f &woO, const Vector3f &wiO) const {
 
     if (wo.z * wi.z < 0) { 
         return Spectrum(0.);
+    }
+
+    if (wo.z < 1e-6 || wi.z < 1e-6) {
+        return 0;
     }
     Float cosThetaI = AbsCosTheta(wi);
     Float cosThetaO = AbsCosTheta(wo);
@@ -791,6 +874,13 @@ Spectrum BSDF::f(const Vector3f &woW, const Vector3f &wiW,
     ProfilePhase pp(Prof::BSDFEvaluation);
     Vector3f wi = WorldToLocal(wiW), wo = WorldToLocal(woW);
     if (wo.z == 0) return 0.;
+    if (fabs(wo.z) > 1 || fabs(wi.z) > 1) {
+        std::cout<< " wo " << wo << "\n";
+        std::cout<< " wi " << wi << "\n";
+        std::cout<< " ss " << ss << "\n";
+        std::cout<< " ts " << ts << "\n";
+        std::cout<< " ns " << ns << "\n";
+    }
     bool reflect = Dot(wiW, ng) * Dot(woW, ng) > 0;
     Spectrum f(0.f);
     for (int i = 0; i < nBxDFs; ++i)

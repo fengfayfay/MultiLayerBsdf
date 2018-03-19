@@ -408,6 +408,7 @@ SET ( PBRT_CORE_SOURCE
   src/core/texture.cpp
   src/core/transform.cpp
 
+  src/core/gaussianscatter.cpp
   src/core/gaussianmixture.cpp
   )
 

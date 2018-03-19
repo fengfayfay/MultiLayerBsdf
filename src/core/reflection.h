@@ -47,6 +47,7 @@
 
 // gaussian mixture for gaussianbsdf (Mandy)
 #include "gaussianmixture.h"
+#include "gaussianscatter.h"
 
 #include <fstream>
 #include <string>
@@ -530,7 +531,7 @@ inline int BSDF::NumComponents(BxDFType flags) const {
     return num;
 }
 
-// Fitted GMM BSDF class declaration (Mandy)
+// Fitted GMM BSDF class declaration (Mandy, Feng)
 class GaussianBSDF : public MicrofacetReflection {
  public:
     // GaussianBSDF Public Methods
@@ -546,6 +547,25 @@ class GaussianBSDF : public MicrofacetReflection {
  // GaussianBSDF Private Data
     const Spectrum R;
     const Gaussianmixture *gm;
+};
+
+//Microfacet BSDF with fitted multiscattering components (Feng)
+class MultiScatterReflection : public MicrofacetReflection {
+ public:
+    // GaussianBSDF Public Methods
+    MultiScatterReflection(const Spectrum &R, MicrofacetDistribution *distribution,
+                           const GaussianScatter *gs):MicrofacetReflection(R, distribution, NULL), gs(gs){}
+
+    Spectrum f(const Vector3f &wo, const Vector3f &wi) const;
+    /*
+    Spectrum Sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &u,
+                   Float *pdf, BxDFType *sampledType) const;
+    Float Pdf(const Vector3f &wo, const Vector3f &wi) const;
+    std::string ToString() const;
+    */
+
+ private:
+    const GaussianScatter *gs;
 };
 
 }  // namespace pbrt
