@@ -20,14 +20,17 @@ for i = 1:length(input)
     x = ceil(phi/x_unit + .5);
     y = ceil(input(i, 3)/y_unit + .5);
     if (x <= xnum && y <=ynum) 
-        A(x, y) = A(x, y) + energyRatio;
+        A(x, y) = A(x, y) + 1;
     else
         count = count +1;
     end
 end
 
+B = A/sum(sum(A));
+B = B * energyRatio;
+
 figure
-imagesc(A/sum(sum(A)))
+imagesc(B)
 colorbar()
 ylabel('phi')
 xlabel('mu')

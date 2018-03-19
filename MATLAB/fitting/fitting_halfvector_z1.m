@@ -57,7 +57,7 @@ for j = 1:length(gaussiannumvec)
     
     % save gm result
     filename = [dir,'slopedomain_',num2str(rad2deg(angle)),'_alpha_',num2str(alpha), '_#G',num2str(numGaussian),'.mat'];
-    save(filename,'obj')
+    %save(filename,'obj')
     filename = [dir,'angle_',num2str(rad2deg(angle)),'_alpha_',num2str(alpha), '_brdfgmm'];
     gm2brdf(obj, 2, rad2deg(angle),alpha, 0, filename, energyRatio);
      
@@ -83,40 +83,38 @@ end
 % save error and count file
 errvec_filename = [dir,'slopedomain_',num2str(rad2deg(angle)),'_angle_',num2str(alpha),'_err.mat'];
 countvec_filename = [dir,'slopedomain_',num2str(rad2deg(angle)),'_angle_',num2str(alpha),'_badcount.mat'];
-save(errvec_filename,'errvec')
-save(countvec_filename,'count')
+%save(errvec_filename,'errvec')
+%save(countvec_filename,'count')
 
 end
 
 function [train, test,range] = preprocess(input,incident,...
     boundary_ratio,xnum,ynum,trainnum,generatenum)
 
-h = (input + incident)/2;
-hnorm = repmat(sqrt(sum(h.^2,2)),1,3);
-h = h./hnorm;
-xdividez = h(:,1)./h(:,3);
-ydividez = h(:,2)./h(:,3);
-sortedxz = sort(xdividez);
-xrange = sortedxz(ceil(boundary_ratio*length(xdividez)));
-disp([sortedxz(1), xrange]);
-xrange = xrange - sortedxz(1);
-sortedyz = sort(ydividez);
-yrange = sortedyz(ceil(boundary_ratio*length(xdividez)));
-disp([sortedyz(1), yrange]);
-yrange = yrange - sortedyz(1);
-range = max(xrange, yrange) * 1.25;
-fprintf('plotting range is %4.2f\n',range)
+    h = (input + incident)/2;
+    hnorm = repmat(sqrt(sum(h.^2,2)),1,3);
+    h = h./hnorm;
+    xdividez = h(:,1)./h(:,3);
+    ydividez = h(:,2)./h(:,3);
+    sortedxz = sort(xdividez);
+    xrange = sortedxz(ceil(boundary_ratio*length(xdividez)));
+    disp([sortedxz(1), xrange]);
+    xrange = xrange - sortedxz(1);
+    sortedyz = sort(ydividez);
+    yrange = sortedyz(ceil(boundary_ratio*length(xdividez)));
+    disp([sortedyz(1), yrange]);
+    yrange = yrange - sortedyz(1);
+    range = max(xrange, yrange) * 1.25;
+    fprintf('plotting range is %4.2f\n',range)
 
-% training data
-xtrain = xdividez(1:trainnum);
-ytrain = ydividez(1:trainnum);
-xtrain_new = xtrain(abs(xtrain)<=range/2 & abs(ytrain)<=range/2);
-ytrain_new = ytrain(abs(xtrain)<=range/2 & abs(ytrain)<=range/2);
-train = [xtrain_new, ytrain_new];
+    % training data
+    xtrain = xdividez(1:trainnum);
+    ytrain = ydividez(1:trainnum);
+    xtrain_new = xtrain(abs(xtrain)<=range/2 & abs(ytrain)<=range/2);
+    ytrain_new = ytrain(abs(xtrain)<=range/2 & abs(ytrain)<=range/2);
+    train = [xtrain_new, ytrain_new];
 
-% testing data
-indexrange = trainnum+1:trainnum+generatenum;
-test = [xdividez(indexrange),ydividez(indexrange)];
-
-
+    % testing data
+    indexrange = trainnum+1:trainnum+generatenum;
+    test = [xdividez(indexrange),ydividez(indexrange)];
 end
