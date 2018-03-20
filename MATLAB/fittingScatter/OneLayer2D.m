@@ -11,7 +11,7 @@
 %   bounce:  depth of 1 or greater than 1
 %
 
-function [mean_0, mean_1, cv_0, cv_1, energyRatios, anglevalues] =  OneLayer2D(alpha, gaussiannum, bounce)
+function [mean_0, mean_1, cv_0, cv_1, energyRatios, anglevalues, errs] =  OneLayer2D(alpha, gaussiannum, bounce)
     %close all
     %clear
     %clc
@@ -36,6 +36,10 @@ function [mean_0, mean_1, cv_0, cv_1, energyRatios, anglevalues] =  OneLayer2D(a
     maxiter = 1000;
     tol = 1e-5;
 
+    targetNames = ["energyRatio", "mean0", "mean1", "cov0", "cov1"]; 
+    %targetName = targetNames{1}
+    %filename = [resultdir, 'polyfit_', targetName]
+
 
     runcount = 0;
     W = [];
@@ -47,6 +51,8 @@ function [mean_0, mean_1, cv_0, cv_1, energyRatios, anglevalues] =  OneLayer2D(a
     [anglevalues, energyRatios] = selectValidAnglesForFitting(ox, oangle, x, angle);
     anglecount = length(anglevalues);
     step = 1;
+
+    errs = zeros(anglecount, 1);
     for j = 1:step:anglecount
         iangle = anglevalues(j);
         ix = x(abs(angle - iangle) < .0001);
@@ -61,11 +67,15 @@ function [mean_0, mean_1, cv_0, cv_1, energyRatios, anglevalues] =  OneLayer2D(a
         xnum = 100;
         ynum = 100;
         runcount = runcount + 1; 
-        
-        [obj, W, M, R] = fitting_slopedomain(resultdir,fundir,alpha,iangle,input,...
+         
+        [obj, err, W, M, R] = fitting_slopedomain(resultdir,fundir,alpha,iangle,input,...
                  trainnum, generatenum, gaussiannumvec, xnum, ynum,accelerated,maxiter,tol, runcount > 1, W, M, R, energyRatios(j));
         fitting_data = prep_for_fitting(obj, runcount == 1, j, anglecount, fitting_data);
+
+        errs(j) = err;
     end
+
+    plot_error(anglevalues, errs, resultdir);
 
     mean_0 = fitting_data(:,1)
     assert(length(mean_0) == anglecount);
@@ -75,22 +85,9 @@ function [mean_0, mean_1, cv_0, cv_1, energyRatios, anglevalues] =  OneLayer2D(a
     assert(length(cv_0) == anglecount);
     cv_1 = fitting_data(:,4)
     assert(length(cv_1) == anglecount);
-   
-    filename = [resultdir, 'scatter_', num2str(alpha), '.txt'];
-    file = fopen(filename, 'w');
-    coefCount = 5;
-    fprintf(file, "%d\n", coefCount);
-    p = polyfit(anglevalues, energyRatios, coefCount - 1);
-    exportPolyFit(file, p);    
-    disp(p);
-    for i = 1:4
-        f = fitting_data(:,i);
-        assert(length(f) == anglecount);
-        p = polyfit(anglevalues, f, coefCount - 1);
-        exportPolyFit(file, p);    
-        disp(p);
-    end
-    fclose(file);
+    
+    createFit(alpha, anglevalues, energyRatios, fitting_data, targetNames, resultdir);
+        
 end %function end
 
 
@@ -128,7 +125,27 @@ function [anglevalues, energyRatios] = selectValidAnglesForFitting(ox, oangle, x
 end
     
        
-        
+function createFit(alpha, anglevalues, energyRatios, fitting_data, targetNames, resultdir)        
+    filename = [resultdir, 'scatter_', num2str(alpha), '.txt'];
+    file = fopen(filename, 'w');
+    coefCount = 5;
+    fprintf(file, "%d\n", coefCount);
+       
+    p = polyfit(anglevalues, energyRatios, coefCount - 1)
+    exportPolyFit(file, p);    
+    plotGaussianFit(anglevalues, energyRatios, targetNames{1}, resultdir); 
+    anglecount = length(anglevalues);
+    %assert(length(energyRatios) == anglecount);
+
+    for i = 1:4
+        f = fitting_data(:,i);
+        %assert(length(f) == anglecount);
+        p = polyfit(anglevalues, f, coefCount - 1)
+        exportPolyFit(file, p);    
+        plotGaussianFit(anglevalues, f, targetNames{i+1}, resultdir); 
+    end
+    fclose(file);
+end
         
     
 

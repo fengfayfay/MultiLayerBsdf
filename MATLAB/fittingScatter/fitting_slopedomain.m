@@ -1,4 +1,4 @@
-function [obj, W, M, R] = fitting_slopedomain(dir,fundir,alpha,angle,input,...
+function [obj, err, W, M, R] = fitting_slopedomain(dir,fundir,alpha,angle,input,...
     trainnum, generatenum, gaussiannumvec, xnum, ynum,accelerated,maxiter,tol,softinit, W, M, R, energyRatio)
 
 % fitting 2d mirror heightfield data in slope domain using a mixture of gaussians
@@ -44,7 +44,8 @@ cd(fundir)
 for j = 1:length(gaussiannumvec)
     
     numGaussian = gaussiannumvec(j);
-    
+   
+    %accelerated = false; 
     if accelerated
         aemdir = [fundir,'accelerated_greedy_EM'];
         addpath(aemdir);
