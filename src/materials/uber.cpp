@@ -131,16 +131,17 @@ UberMaterial *CreateUberMaterial(const TextureParams &mp) {
     std::shared_ptr<Texture<Float>> bumpMap =
         mp.GetFloatTextureOrNull("bumpmap");
     bool remapRoughness = mp.FindBool("remaproughness", false);
+    bool useMS = mp.FindBool("multiscatter", false);
+    bool energyOnly = mp.FindBool("energyonly", false);
 
     int numgaussian = mp.FindInt("numgaussian", 0);
     float extf = mp.FindFloat("extfactor",1);
-    bool useMS = mp.FindBool("multiscatter", false);
 
     Float alpha = mp.FindFloat("roughness", 0.7f);
     GaussianScatter *gs = NULL;
     if (useMS) {
         std::cout << "use MultiScatterReflection\n";
-        gs = new GaussianScatter(alpha);
+        gs = new GaussianScatter(alpha, energyOnly);
     }
 
     // isotropic roughu = roughv
