@@ -24,12 +24,14 @@ ft = 'linearinterp';
 [fitresult, gof] = fit( xData, yData, ft, 'Normalize', 'on' );
 
 % Plot fit with data.
-figure( 'Name', 'L2 error of gaussian fit' );
+figure( 'Name', 'L2 error of Gaussian fit' );
 h = plot( fitresult, xData, yData );
-legend( h, 'errs vs. anglevalues', 'L2 error of gaussian fit', 'Location', 'NorthEast' );
+legend( h, 'L2 Error Samples', 'Linear Interpolation of L2 error', 'Location', 'NorthEast' );
+title('L2 error of slope domain Gaussian fit');
+
 % Label axes
-xlabel anglevalues
-ylabel errs
+xlabel 'theta I'
+ylabel 'L2 error'
 grid on
 
 filename = [resultDir, 'gaussian_error'];

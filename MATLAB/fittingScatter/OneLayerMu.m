@@ -11,7 +11,7 @@
 %   bounce:  depth of 1 or greater than 1
 %
 
-function [mean_0, mean_1, cv_0, cv_1, energyRatios, anglevalues, errs] =  OneLayer2D(alpha, gaussiannum, bounce)
+function [mean_0, mean_1, cv_0, cv_1, energyRatios, anglevalues, errs, mus] =  OneLayerMu(alpha, polyDegree, bounce)
     %close all
     %clear
     %clc
@@ -22,7 +22,7 @@ function [mean_0, mean_1, cv_0, cv_1, energyRatios, anglevalues, errs] =  OneLay
     datadir = strcat(datadir, 'alpha', num2str(alpha), '/');
     addpath(datadir,fundir)
     disp(datadir);
-    resultdir = strcat(datadir, num2str(gaussiannum), '/');
+    resultdir = strcat(datadir, 'poly', num2str(polyDegree), '/');
     status = mkdir(resultdir);
     resultdir = strcat(resultdir, 'depth', num2str(bounce), '/');
     status = mkdir(resultdir);
@@ -31,12 +31,12 @@ function [mean_0, mean_1, cv_0, cv_1, energyRatios, anglevalues, errs] =  OneLay
 
     trainnum = 20000; % number of data for training
     generatenum = 20000;  % number of data for testing
-    gaussiannumvec = gaussiannum; % number of gaussians vector
+    gaussiannumvec = 1; % number of gaussians vector
     accelerated = true; % if true uses accelerated em, othe
     maxiter = 1000;
     tol = 1e-5;
 
-    targetNames = ["energyRatio", "mean0", "mean1", "cov0", "cov1"]; 
+    targetNames = ["energy ratio", "X mean", "Y mean", "X covariance", "Y covariance"]; 
     %targetName = targetNames{1}
     %filename = [resultdir, 'polyfit_', targetName]
 
@@ -48,7 +48,7 @@ function [mean_0, mean_1, cv_0, cv_1, energyRatios, anglevalues, errs] =  OneLay
     fitting_data = [];
 
     [ox, oangle, x, y, z, angle] = read_data(datadir, alpha, bounce);
-    [anglevalues, energyRatios] = selectValidAnglesForFitting(ox, oangle, x, angle);
+    [anglevalues, energyRatios, mus] = selectValidAnglesForFitting(ox, oangle, x, angle);
     anglecount = length(anglevalues);
     step = 1;
 
@@ -86,7 +86,8 @@ function [mean_0, mean_1, cv_0, cv_1, energyRatios, anglevalues, errs] =  OneLay
     cv_1 = fitting_data(:,4)
     assert(length(cv_1) == anglecount);
     
-    createFit(alpha, anglevalues, energyRatios, fitting_data, targetNames, resultdir);
+    %createFit(alpha, anglevalues, energyRatios, fitting_data, targetNames, resultdir);
+    createFit(alpha, polyDegree, mus, energyRatios, fitting_data, targetNames, resultdir);
         
 end %function end
 
@@ -99,50 +100,58 @@ function exportPolyFit(file, p)
     fprintf(file, '\n');
 end
 
-function [anglevalues, energyRatios] = selectValidAnglesForFitting(ox, oangle, x, angle)
+function [anglevalues, energyRatios, mus] = selectValidAnglesForFitting(ox, oangle, x, angle)
     anglecandidates = unique(angle);
     anglecount = length(anglecandidates);
 
     anglevalues = zeros(anglecount,1);
+    mus  = zeros(anglecount,1);
     energyRatios = zeros(anglecount,1);
     validCount = 0;
     for j = 1:anglecount
         iangle = anglecandidates(j);
         iox = ox(abs(oangle - iangle) < .0001);
         ix = x(abs(angle - iangle) < .0001);
-        lenIX = length(ix)
-        lenIOX = length(iox)
+        lenIX = length(ix);
+        lenIOX = length(iox);
         energy = lenIX/lenIOX
         %if energy > .02
         if energy > 0.001 
             validCount = validCount + 1;
             energyRatios(validCount) = energy;
             anglevalues(validCount) = iangle;
+            mus(validCount) = cos(iangle);
         end 
     end
-    energyRatios = energyRatios(1:validCount)
-    anglevalues = anglevalues(1:validCount)
+    energyRatios = energyRatios(1:validCount);
+    anglevalues = anglevalues(1:validCount);
+    mus = mus(1:validCount);
+    assert(length(energyRatios) == length(anglevalues));
+    assert(length(mus) == length(energyRatios));
+
 end
     
        
-function createFit(alpha, anglevalues, energyRatios, fitting_data, targetNames, resultdir)        
+function createFit(alpha, polyDegree, anglevalues, energyRatios, fitting_data, targetNames, resultdir)        
     filename = [resultdir, 'scatter_', num2str(alpha), '.txt'];
     file = fopen(filename, 'w');
-    coefCount = 5;
+    coefCount = polyDegree + 1;
     fprintf(file, "%d\n", coefCount);
        
-    p = polyfit(anglevalues, energyRatios, coefCount - 1)
+    p = polyfit(anglevalues, energyRatios, polyDegree)
+
     exportPolyFit(file, p);    
-    plotGaussianFit(coefCount - 1, anglevalues, energyRatios, targetNames{1}, resultdir); 
+    plotGaussianFit(polyDegree, anglevalues, energyRatios, targetNames{1}, resultdir); 
     anglecount = length(anglevalues);
     %assert(length(energyRatios) == anglecount);
 
     for i = 1:4
         f = fitting_data(:,i);
         %assert(length(f) == anglecount);
-        p = polyfit(anglevalues, f, coefCount - 1)
+        p = polyfit(anglevalues, f, polyDegree)
+
         exportPolyFit(file, p);    
-        plotGaussianFit(coefCount - 1, anglevalues, f, targetNames{i+1}, resultdir); 
+        plotGaussianFit(polyDegree, anglevalues, f, targetNames{i+1}, resultdir); 
     end
     fclose(file);
 end

@@ -1,4 +1,4 @@
-function [fitresult, gof] = plotGaussianFit(anglevalues, target, targetName, resultDir)
+function [fitresult, gof] = plotGaussianFit(polyDegree, anglevalues, target, targetName, resultDir)
 %CREATEFIT(ANGLEVALUES,CV1)
 %  Create a fit.
 %
@@ -18,7 +18,8 @@ function [fitresult, gof] = plotGaussianFit(anglevalues, target, targetName, res
 [xData, yData] = prepareCurveData( anglevalues, target );
 
 % Set up fittype and options.
-ft = fittype( 'poly4' );
+fitname = ['poly', num2str(polyDegree)];
+ft = fittype( fitname );
 
 % Fit model to data.
 [fitresult, gof] = fit( xData, yData, ft );
@@ -28,13 +29,14 @@ figname = [targetName, ' fit'];
 figure( 'Name', 'Poly Fit');
 h = plot( fitresult, xData, yData );
 % Label axes
-xlabel('angle values')
+xlabel('cos (theta I)')
 ylabel(targetName)
 grid on
 
+legend('data', ['fit RMSE ', num2str(gof.rmse)] );
+title(['Slope domain  ', targetName, ' fit']);
+
 filename = [resultDir, 'polyfit_', targetName]
 saveas(gcf,[filename,'.jpeg']);
-
-%legend( h, 'target vs. anglevalues', figname, 'Location', 'NorthEast' );
 
 end

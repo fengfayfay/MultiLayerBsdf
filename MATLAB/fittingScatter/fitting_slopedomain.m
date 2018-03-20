@@ -35,6 +35,7 @@ filename = [dir,'slopedomain_',num2str(rad2deg(angle)),'_alpha_',num2str(alpha),
 [~,result] = plotbygrid(xnum,ynum,test,range,titlestring,filename, energyRatio);
 result = result/sum(result(:));
 filename = [dir,'angle_',num2str(rad2deg(angle)),'_alpha_',num2str(alpha), '_brdfsim'];
+titlestring = ['Reflectance from raytraced Gaussian Heightfield, alpha=', num2str(alpha),' angle=',num2str(rad2deg(angle))];
 [~,brdfsimulated] = plotgrid(input, xnum, ynum, titlestring, filename, energyRatio);
 
 hold();

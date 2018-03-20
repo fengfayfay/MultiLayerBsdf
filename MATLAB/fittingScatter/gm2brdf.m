@@ -45,7 +45,7 @@ for k = 1:length(anglevec)
     colorbar()
     xlabel('mu')
     ylabel('phi')
-    title(['brdf*cos angle=',num2str(angle), ' alpha=', num2str(alpha)])
+    title(['Reflectance from fitted Gaussian,  angle=',num2str(angle), ' alpha=', num2str(alpha)])
     saveas(gcf,[filename,'.jpeg'])
     
     fprintf('at angle %2d, %4.4f energy is perserved\n',angle,sum(brdfcos(:)));
