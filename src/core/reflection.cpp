@@ -418,7 +418,8 @@ Spectrum MultiScatterReflection::f(const Vector3f &woO, const Vector3f &wiO) con
     
     Float denom = wi.z + wo.z;
     denom = denom * denom * denom;
-    if (fabs(denom) < 1e-6) return Spectrum(0);
+    if (fabs(denom) < 1e-6) return singleScatter;
+
     Float J = fabs((wo.z * wi.z + wi.y * wo.y + wi.x * wo.x + 1)/denom);
     
     Vector3f wh = wi + wo;
@@ -428,20 +429,22 @@ Spectrum MultiScatterReflection::f(const Vector3f &woO, const Vector3f &wiO) con
     Float x = wh.x/wh.z;
     Float y = wh.y/wh.z;
     Float zo = wo.z > 1? 1: wo.z;
-    zo = acos(zo); 
-    if (zo <0 || zo >= M_PI * .5 || isNaN(zo)) {
-        std::cout<< "woO " << woO<< " wo " << wo << "\n";
-        std::cout << "multiscatter brdf value: 0" << "\n";
-        fflush(stdout);
-        return singleScatter;
-    }
-    Float p = gs->prob(x,y,zo);
+    Float zi = wi.z > 1? 1: wi.z;
+    //zo = acos(zo); 
+    
+    Float p = gs->prob(x,y, zo, zi);
     if (isNaN(p)) {
         std::cout<< "has NaN prob" << "\n";
         fflush(stdout);
         return singleScatter;
     }
-    Float multi =  p * J / cosThetaI;
+    
+    Float multi = 0;
+    if (gs->isEnergyOnly()) {
+        multi = p;
+    } else { 
+        multi =  p * J / cosThetaI;
+    }
     /*
     Float rgb[3];
     singleScatter.ToRGB(rgb);

@@ -38,6 +38,35 @@ struct Polynomial {
         return e;
     }
 
+    Polynomial multiply_x() const {
+        Polynomial ipoly;
+        if (coef.size() == 0) {
+            return ipoly;
+        }
+        ipoly.coef.resize(coef.size() + 1);
+        for (int i = 0; i <coef.size(); i++) {
+            ipoly.coef[i] = coef[i]; 
+        }
+        ipoly.coef[coef.size()] = 0;
+        return ipoly;
+        
+    }
+    Polynomial integral() const {
+        Polynomial ipoly;
+        if (coef.size() == 0) {
+            return ipoly;
+        }
+
+        ipoly.coef.resize(coef.size() + 1);
+        int degree = coef.size() - 1; 
+        for (int i = 0; i <= degree; i++) {
+            int cdegree = degree - i; 
+            ipoly.coef[i] = coef[i]/(cdegree+1); 
+        }
+        ipoly.coef[coef.size()] = 0;
+        return ipoly;
+    }
+
     bool readFromFile(std::ifstream&, int);
     std::vector<Float> coef;
 };
@@ -47,16 +76,23 @@ class GaussianScatter{
 
   public:
     GaussianScatter();
-    GaussianScatter(Float alpha);
+    GaussianScatter(Float alpha, bool energyOnly);
     ~GaussianScatter();
 
+    bool isEnergyOnly() const { return energyOnly; }
+
     //hx, hy, wo.z
-    Float prob(Float x, Float y, Float z) const {
+    Float prob(Float x, Float y, Float z, Float z_i) const {
 
         if (!validScatter) return 0;
         
         Float energy = penergy.eval(z);
-        if (energy < .01) return 0;
+        if (energy < .01 || energyAve < 1e-3) return 0;
+        if (energyOnly) {
+            Float e_i = penergy.eval(z_i);
+            if (e_i < 0) e_i = 0;
+            return (energy * e_i) /(M_PI * energyAve);
+        }
 
         Vector2f h(x, y);
         Vector2f mean (pmean[0].eval(z), pmean[1].eval(z));
@@ -84,6 +120,9 @@ class GaussianScatter{
     Polynomial penergy;
     Polynomial pmean[2];
     Polynomial pcov[2];
+    Float energyAve;
+
+    bool energyOnly;
   };
 
 }// namespace pbrt

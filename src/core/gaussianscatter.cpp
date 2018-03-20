@@ -10,7 +10,7 @@
 
 using namespace pbrt;
 
-GaussianScatter::GaussianScatter() {
+GaussianScatter::GaussianScatter() : energyOnly(false) {
     penergy = Polynomial(-0.0433,   -0.0395,    0.0097,    0.2321);
     pmean[0] = Polynomial(0.0552,   -0.0308,    0.2410,   0.0070);
     pmean[1] = Polynomial( 0.0168,   -0.0157,    0.0013,   -0.0024);
@@ -22,7 +22,7 @@ GaussianScatter::GaussianScatter() {
     validateScatter();
 }
 
-GaussianScatter::GaussianScatter(Float alpha): alpha(alpha) {
+GaussianScatter::GaussianScatter(Float alpha, bool energyOnly): alpha(alpha), energyOnly(energyOnly) {
     char buf[10];
     sprintf(buf, "%1.1f", alpha);
     std::string scatterName = "scatter_" + std::string(buf) + ".txt";
@@ -58,12 +58,17 @@ bool Polynomial::readFromFile(std::ifstream& file, int coefCount) {
 
 void GaussianScatter::validateScatter() {
     if (validScatter) {
+        Polynomial emu = penergy.multiply_x();
+        Polynomial ienergy = emu.integral();
+        energyAve = ienergy.eval(1.0) - ienergy.eval(0);
+        energyAve = 2.0 * energyAve;
+        
         Float energy = penergy.eval(.5);
         Float m0 = pmean[0].eval(.5);
         Float m1 = pmean[1].eval(.5);
         Float c0 = pcov[0].eval(.5);
         Float c1 = pcov[1].eval(.5);
-        std::cout << "energy, m0, m1, c0, c1 "<< energy<< " "<< m0<< " "<< m1<< " "<< c0<< " "<< c1 << "\n";
+        std::cout << "energy, m0, m1, c0, c1, energyAve "<< energy<< " "<< m0<< " "<< m1<< " "<< c0<< " "<< c1 << " " << energyAve <<"\n";
     }
 }
 
