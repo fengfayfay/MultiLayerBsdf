@@ -16,15 +16,16 @@ function [mean_0, mean_1, cv_0, cv_1, energyRatios, anglevalues, errs, mus] =  O
     %clear
     %clc
 
-    datadir = '/Users/fengxie/work/Github/GaussianData/HeightfieldData/singleLayerSlice/';
+    %datadir = '/Users/fengxie/work/Github/GaussianData/HeightfieldData/singleLayerSlice/';
+    datadir = '/Users/fengxie/work/Github/GaussianData/HeightfieldData/1layer/';
     fundir = '/Users/fengxie/work/Github/GaussianClean/MATLAB/fittingScatter/';
 
-    datadir = strcat(datadir, 'alpha', num2str(alpha), '/');
+    %datadir = strcat(datadir, 'alpha', num2str(alpha), '/');
     addpath(datadir,fundir)
     disp(datadir);
     resultdir = strcat(datadir, 'poly', num2str(polyDegree), '/');
     status = mkdir(resultdir);
-    resultdir = strcat(resultdir, 'depth', num2str(bounce), '/');
+    resultdir = strcat(resultdir, 'depth', num2str(bounce), '/', num2str(alpha), '_');
     status = mkdir(resultdir);
     disp(resultdir);
 
@@ -36,7 +37,7 @@ function [mean_0, mean_1, cv_0, cv_1, energyRatios, anglevalues, errs, mus] =  O
     maxiter = 1000;
     tol = 1e-5;
 
-    targetNames = ["energy ratio", "X mean", "Y mean", "X covariance", "Y covariance"]; 
+    targetNames = ["energyRatio", "Xmean", "Ymean", "Xcovariance", "Ycovariance"]; 
     %targetName = targetNames{1}
     %filename = [resultdir, 'polyfit_', targetName]
 
