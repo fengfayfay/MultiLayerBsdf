@@ -30,15 +30,13 @@ boundary_ratio = 99/100;
 
 % plot the input data
 titlestring = ['Gaussian heightfield slope distribution, alpha=', num2str(alpha),' angle=',num2str(rad2deg(angle))];
-filename = [dir,'slopedomain_',num2str(rad2deg(angle)),'_alpha_',num2str(alpha), '_heightfield'];
+filename = [dir,'slope_',num2str(rad2deg(angle)),'_alpha_',num2str(alpha), '_sim'];
 
 [~,result] = plotbygrid(xnum,ynum,test,range,titlestring,filename, energyRatio);
 result = result/sum(result(:));
-filename = [dir,'angle_',num2str(rad2deg(angle)),'_alpha_',num2str(alpha), '_brdfsim'];
+filename = [dir,'brdf_',num2str(rad2deg(angle)),'_alpha_',num2str(alpha), '_sim'];
 titlestring = ['Reflectance from raytraced Gaussian Heightfield, alpha=', num2str(alpha),' angle=',num2str(rad2deg(angle))];
 [~,brdfsimulated] = plotgrid(input, xnum, ynum, titlestring, filename, energyRatio);
-
-hold();
 
 cd(fundir)
 
@@ -58,9 +56,9 @@ for j = 1:length(gaussiannumvec)
     %plotGMM(obj, 0);
     
     % save gm result
-    filename = [dir,'slopedomain_',num2str(rad2deg(angle)),'_alpha_',num2str(alpha), '_#G',num2str(numGaussian),'.mat'];
+    filename = [dir,'slopeomain_',num2str(rad2deg(angle)),'_alpha_',num2str(alpha), '_#G',num2str(numGaussian),'.mat'];
     %save(filename,'obj')
-    filename = [dir,'angle_',num2str(rad2deg(angle)),'_alpha_',num2str(alpha), '_brdfgmm'];
+    filename = [dir,'brdf_',num2str(rad2deg(angle)),'_alpha_',num2str(alpha), '_gmm'];
     gm2brdf(obj, 2, rad2deg(angle),alpha, 0, filename, energyRatio);
      
     
@@ -69,7 +67,7 @@ for j = 1:length(gaussiannumvec)
     % plot gmm generated data
     
     titlestring = ['Slope distribution generated using GMM, alpha=', num2str(alpha),' angle=',num2str(rad2deg(angle)),' #G=',num2str(numGaussian)];
-    filename = [dir,'slopedomain_',num2str(rad2deg(angle)),'_alpha_',num2str(alpha), '_gmm',num2str(numGaussian)];
+    filename = [dir,'slope_',num2str(rad2deg(angle)),'_alpha_',num2str(alpha), '_gmm'];
     [count,predict] = plotbygrid(xnum,ynum,Y,range, titlestring,filename, energyRatio);
     predict = predict/sum(predict(:));
     

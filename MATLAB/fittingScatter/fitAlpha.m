@@ -1,6 +1,7 @@
 function [energy, mean0, mean1, cv0, cv1, mu, angleValue, alphaValues] = fitAlpha()
     %alphaValues = [0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9];
-    alphaValues = [0.9 0.8 0.7 0.6 0.5];
+    %alphaValues = [0.9 0.8 0.7 0.6 0.5];
+    alphaValues = [.9 0.8 0.7 0.6 0.5 0.4];
     mean0 = [];
     mean1 = [];
     cv0 = [];

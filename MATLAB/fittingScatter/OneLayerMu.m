@@ -16,16 +16,16 @@ function [mean_0, mean_1, cv_0, cv_1, energyRatios, anglevalues, errs, mus] =  O
     %clear
     %clc
 
-    %datadir = '/Users/fengxie/work/Github/GaussianData/HeightfieldData/singleLayerSlice/';
-    datadir = '/Users/fengxie/work/Github/GaussianData/HeightfieldData/1layer/';
+    datadir = '/Users/fengxie/work/Github/GaussianData/HeightfieldData/singleLayerSlice/';
+    %datadir = '/Users/fengxie/work/Github/GaussianData/HeightfieldData/1layer/';
     fundir = '/Users/fengxie/work/Github/GaussianClean/MATLAB/fittingScatter/';
 
-    %datadir = strcat(datadir, 'alpha', num2str(alpha), '/');
+    datadir = strcat(datadir, 'alpha', num2str(alpha), '/');
     addpath(datadir,fundir)
     disp(datadir);
     resultdir = strcat(datadir, 'poly', num2str(polyDegree), '/');
     status = mkdir(resultdir);
-    resultdir = strcat(resultdir, 'depth', num2str(bounce), '/', num2str(alpha), '_');
+    resultdir = strcat(resultdir, 'depth', num2str(bounce), '/');
     status = mkdir(resultdir);
     disp(resultdir);
 
@@ -117,7 +117,7 @@ function [anglevalues, energyRatios, mus] = selectValidAnglesForFitting(ox, oang
         lenIOX = length(iox);
         energy = lenIX/lenIOX
         %if energy > .02
-        if energy > 0.001 
+        if energy > 0.00 
             validCount = validCount + 1;
             energyRatios(validCount) = energy;
             anglevalues(validCount) = iangle;

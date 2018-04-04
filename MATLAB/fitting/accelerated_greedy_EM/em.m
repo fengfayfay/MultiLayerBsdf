@@ -68,7 +68,7 @@ while 1
             
             % Print running information (Mandy)
             iter = iter+1;
-            if mod(iter,40)==0 && iter>0
+            if mod(iter,200)==0 && iter>0
                 fprintf('\nNumber of iterations: %4d \n', iter)
                 fprintf('\nLast 40 iterations used time: %4.4f \n', toc(t1))
                 F1(iter) = abs(logl/oldlogl-1);

@@ -1656,12 +1656,14 @@ namespace pbrt {
     }
 
     int addOutput(Point3f inter, float weight, float depth, float theta) {
-        outputx << inter.x <<"\n";
-        outputy << inter.y <<"\n";
-        outputz << inter.z <<"\n";
-        outputweight << weight <<"\n";
-        outputdepth << depth <<"\n";
-        if (dimension == 3) outputangle << theta <<"\n";
+        if (depth > 1) {
+            outputx << inter.x <<"\n";
+            outputy << inter.y <<"\n";
+            outputz << inter.z <<"\n";
+            outputweight << weight <<"\n";
+            outputdepth << depth <<"\n";
+            if (dimension == 3) outputangle << theta <<"\n";
+        }
         return outputCount++;
     }
 
