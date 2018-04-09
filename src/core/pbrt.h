@@ -171,9 +171,9 @@ struct Options {
     std::string imageFile;
     int theta_i = 60;
     float alpha = 0.5;
-    int numrays = 1e6;
-    int dimension = 2;
-    bool uniformIncidentAngles = false;
+    int numrays = 30 * 1e6;
+    int dimension = 3;
+    bool uniformIncidentAngles = true;
 };
 
 extern Options PbrtOptions;

@@ -1647,7 +1647,7 @@ namespace pbrt {
 
   class ExpOutput {
   public:
-    ExpOutput(int dimension = 3, float alpha = .5, float angle = 0): outputCount(0), dimension(dimension) {
+    ExpOutput(int dimension = 3, float alpha = .5, float angle = 0): outputCount(0), dimension(dimension), depthG1(0) {
         if (dimension == 3) {
             init3D(alpha);
         } else {
@@ -1663,6 +1663,7 @@ namespace pbrt {
             outputweight << weight <<"\n";
             outputdepth << depth <<"\n";
             if (dimension == 3) outputangle << theta <<"\n";
+            depthG1++;
         }
         return outputCount++;
     }
@@ -1724,6 +1725,11 @@ namespace pbrt {
         oss6 <<"3d_outputangle_" << alpha<<".txt";
         std::string var6 = oss6.str();
         outputangle.open(var6);
+        
+        std::ostringstream oss7;
+        oss7 <<"3d_outputenergy_" << alpha<<".txt";
+        std::string var7 = oss7.str();
+        outputenergy.open(var7);
 
     }
     void closeOutput() {
@@ -1732,10 +1738,14 @@ namespace pbrt {
         outputz.close();
         outputweight.close();
         outputdepth.close();
-        if (dimension == 3) outputangle.close();
+        if (dimension == 3) {
+            outputangle.close();
+            outputenergy << outputCount << " " << depthG1 << "\n"; 
+            outputenergy.close();
+        }
     }
-    std::ofstream outputx, outputy, outputz, outputweight, outputdepth, outputangle;
-    int outputCount, dimension;
+    std::ofstream outputx, outputy, outputz, outputweight, outputdepth, outputangle, outputenergy;
+    int outputCount, dimension, depthG1;
   };
 
   void sampleIncidentAngle(float theta, const SampleSetting& setting, const Scene&scene, ExpOutput&output) {
@@ -1764,6 +1774,7 @@ namespace pbrt {
         srand (time(NULL));
         float theta = angle*M_PI/180.f;
         sampleIncidentAngle(theta, setting, scene, output);
+        output.closeOutput();
   }
 
 
@@ -1810,6 +1821,7 @@ namespace pbrt {
             }
             */
         }
+        output.closeOutput();
   }
 
   void SingleLayerMirror(float theta, float observe, const Ray &r, const Scene& scene, int weight, int depth, int maxdepth, ExpOutput&output){
