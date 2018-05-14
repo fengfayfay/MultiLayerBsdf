@@ -23,6 +23,8 @@ GaussianScatter::GaussianScatter() : energyOnly(false) {
 }
 
 GaussianScatter::GaussianScatter(Float alpha, bool energyOnly): alpha(alpha), energyOnly(energyOnly) {
+
+    std::cout << "energy only: " << energyOnly <<"\n";
     char buf[10];
     sprintf(buf, "%1.1f", alpha);
     std::string scatterName = "scatter_" + std::string(buf) + ".txt";
