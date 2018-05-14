@@ -1656,7 +1656,7 @@ namespace pbrt {
     }
 
     int addOutput(Point3f inter, float weight, float depth, float theta) {
-        if (depth > 1) {
+        if (depth >= 1) {
             outputx << inter.x <<"\n";
             outputy << inter.y <<"\n";
             outputz << inter.z <<"\n";
