@@ -29,6 +29,7 @@
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
+
 #include <fstream>
 #include <sstream>
 #include <time.h>       /* time */
@@ -104,6 +105,7 @@
 #include "shapes/sphere.h"
 #include "shapes/triangle.h"
 #include "shapes/plymesh.h"
+#include "shapes/vgroove.h"
 #include "textures/bilerp.h"
 #include "textures/checkerboard.h"
 #include "textures/constant.h"
@@ -427,6 +429,9 @@ namespace pbrt {
                                 reverseOrientation, paramSet);
     else if (name == "nurbs")
       shapes = CreateNURBS(object2world, world2object, reverseOrientation,
+                           paramSet);
+    else if (name == "vgroove")
+      shapes = CreateVGroove(object2world, world2object, reverseOrientation,
                            paramSet);
     else
       Warning("Shape \"%s\" unknown.", name.c_str());
@@ -1586,7 +1591,7 @@ namespace pbrt {
       setting.totalRays = numrays;
       setting.maxdepth = maxdepth;
       setting.samplesPerDegree = 1;
-      int angleSamples = dimension == 2? 1 : setting.samplesPerDegree * 12;
+      int angleSamples = dimension == 2? 1 : setting.samplesPerDegree * 5;
       //int angleSamples = dimension == 2? 1 : setting.samplesPerDegree * 1;
       int num3d = PbrtOptions.uniformIncidentAngles == true ? numrays/angleSamples : 1;
       setting.raysPerIncidentAngle = dimension == 2 ? numrays : num3d;
@@ -1647,7 +1652,7 @@ namespace pbrt {
 
   class ExpOutput {
   public:
-    ExpOutput(int dimension = 3, float alpha = .5, float angle = 0): outputCount(0), dimension(dimension), depthG1(0) {
+    ExpOutput(int dimension = 3, float alpha = .5, float angle = 0): outputCount(0), dimension(dimension), depthG1(0), hasXform(false) {
         if (dimension == 3) {
             init3D(alpha);
         } else {
@@ -1655,83 +1660,110 @@ namespace pbrt {
         }
     }
 
+    bool computeWh(Float theta, Point3f inter, Vector3f& wh) {
+        float observe = 6000.0;
+        inter /= observe;
+        Vector3f  wo(inter);
+        Vector3f wi = Vector3f(sin(theta), 0.f, cos(theta));
+        wh = wo+wi;
+        if (wh.Length() < 1e-6 || wh.z < 0) {
+            std::cout<< wh << "\n";
+            std::cout<< wo << "\n";
+            std::cout<< wi << "\n";
+            //return false;
+        }
+
+        wh = Normalize(wh);
+        return true;
+    }
+ 
     int addOutput(Point3f inter, float weight, float depth, float theta) {
-        if (depth >= 1) {
-            outputx << inter.x <<"\n";
-            outputy << inter.y <<"\n";
-            outputz << inter.z <<"\n";
-            outputweight << weight <<"\n";
-            outputdepth << depth <<"\n";
-            if (dimension == 3) outputangle << theta <<"\n";
-            depthG1++;
+        if (depth >= 1 && inter.z >= 0 ) {
+            if (hasXform) {
+                inter = l2w(inter);
+            }
+            Vector3f wh(0, 0, 1);
+            if (computeWh(theta, inter, wh)) {
+                //outputx.write((char*)&inter.x, sizeof(inter.x));
+                //outputy.write((char*)&inter.y, sizeof(inter.y));
+                //outputz.write((char*)&inter.z, sizeof(inter.z));
+                outputx.write((char*)&wh.x, sizeof(wh.x));
+                outputy.write((char*)&wh.y, sizeof(wh.y));
+                outputz.write((char*)&wh.z, sizeof(wh.z));
+                outputweight.write((char*)&weight, sizeof(weight));
+                outputdepth.write((char*)&depth, sizeof(depth));
+                if (dimension == 3) outputangle.write((char*)&theta, sizeof(theta));
+                depthG1++;
+            }
         }
         return outputCount++;
     }
 
     void init2D(float alpha, float angle) {
         std::ostringstream oss1;
-        oss1 << angle << "outputx_" << alpha<<".txt";
+        oss1 << angle << "outputx_" << alpha<<".p";
         std::string var1 = oss1.str();
         outputx.open(var1);
 
         std::ostringstream oss2;
-        oss2 << angle << "outputy_" << alpha<<".txt";
+        oss2 << angle << "outputy_" << alpha<<".p";
         std::string var2 = oss2.str();
         outputy.open(var2);
 
         std::ostringstream oss3;
-        oss3 << angle << "outputz_" << alpha<<".txt";
+        oss3 << angle << "outputz_" << alpha<<".p";
         std::string var3 = oss3.str();
         outputz.open(var3);
 
         std::ostringstream oss4;
-        oss4 << angle << "outputweight_" << alpha<<".txt";
+        oss4 << angle << "outputweight_" << alpha<<".p";
         std::string var4 = oss4.str();
         outputweight.open(var4);
 
         std::ostringstream oss5;
-        oss5 << angle << "outputdepth_" << alpha<<".txt";
+        oss5 << angle << "outputdepth_" << alpha<<".p";
         std::string var5 = oss5.str();
         outputdepth.open(var5);
     }
 
     void init3D(float alpha) {
         std::ostringstream oss1;
-        oss1 <<"3d_outputx_" << alpha<<".txt";
+        oss1 <<"3d_outputx_" << alpha<<".p";
         std::string var1 = oss1.str();
-        outputx.open(var1);
+        //outputx.open(var1);
+        outputx.open(var1, std::ios::out | std::ios::binary);
 
         std::ostringstream oss2;
-        oss2 <<"3d_outputy_" << alpha<<".txt";
+        oss2 <<"3d_outputy_" << alpha<<".p";
         std::string var2 = oss2.str();
-        outputy.open(var2);
+        outputy.open(var2, std::ios::out | std::ios::binary);
 
         std::ostringstream oss3;
-        oss3 <<"3d_outputz_" << alpha<<".txt";
+        oss3 <<"3d_outputz_" << alpha<<".p";
         std::string var3 = oss3.str();
-        outputz.open(var3);
+        outputz.open(var3, std::ios::out | std::ios::binary);
 
         std::ostringstream oss4;
-        oss4 <<"3d_outputweight_" << alpha<<".txt";
+        oss4 <<"3d_outputweight_" << alpha<<".p";
         std::string var4 = oss4.str();
-        outputweight.open(var4);
+        outputweight.open(var4, std::ios::out | std::ios::binary);
 
         std::ostringstream oss5;
-        oss5 <<"3d_outputdepth_" << alpha<<".txt";
+        oss5 <<"3d_outputdepth_" << alpha<<".p";
         std::string var5 = oss5.str();
-        outputdepth.open(var5);
+        outputdepth.open(var5, std::ios::out | std::ios::binary);
 
         std::ostringstream oss6;
-        oss6 <<"3d_outputangle_" << alpha<<".txt";
+        oss6 <<"3d_outputangle_" << alpha<<".p";
         std::string var6 = oss6.str();
-        outputangle.open(var6);
+        outputangle.open(var6, std::ios::out | std::ios::binary);
         
         std::ostringstream oss7;
-        oss7 <<"3d_outputenergy_" << alpha<<".txt";
+        oss7 <<"3d_outputenergy_" << alpha<<".p";
         std::string var7 = oss7.str();
-        outputenergy.open(var7);
-
+        outputenergy.open(var7, std::ios::out | std::ios::binary);
     }
+
     void closeOutput() {
         outputx.close();
         outputy.close();
@@ -1744,8 +1776,12 @@ namespace pbrt {
             outputenergy.close();
         }
     }
+
+    void setTransform(Transform& w2l) {l2w = Inverse(w2l); hasXform = true;}
     std::ofstream outputx, outputy, outputz, outputweight, outputdepth, outputangle, outputenergy;
     int outputCount, dimension, depthG1;
+    Transform l2w;
+    bool hasXform;
   };
 
   void sampleIncidentAngle(float theta, const SampleSetting& setting, const Scene&scene, ExpOutput&output) {
@@ -1753,15 +1789,24 @@ namespace pbrt {
         Vector3f dir = Vector3f(-sin(theta), 0.f, -cos(theta));
 
         float trand, urand;
+        Transform zrotation;
         for (int i = 0; i<setting.raysPerIncidentAngle; ++i){
           trand = 2 * M_PI * ((float) rand() / (RAND_MAX));
           urand = (float) rand() / (RAND_MAX);
           Point3f ori = center + Point3f(setting.radius*sqrt(urand)*cos(trand), setting.radius*sqrt(urand)*sin(trand), 0.f);
+
+          //auto phirand = 2.0 * M_PI *((float)rand()/(RAND_MAX));
+          //Transform w2l = RotateZ(Degrees(phirand));
+
           // create a ray
           Ray ray = Ray(ori, dir);
           int depth = 0;
           int weight = 1;
-          SingleLayerMirror(theta, setting.observe, ray, scene, weight, depth, setting.maxdepth, output);
+          
+          Ray rayTest = ray;
+          //Ray rayTest = w2l(ray);
+          //output.setTransform(w2l);
+          SingleLayerMirror(theta, setting.observe, rayTest, scene, weight, depth, setting.maxdepth, output);
           //SingleLayerGlass(theta, settig.observe, ray, scene, weight, depth, setting.maxdepth, output);
           //DoubleLayerHeightfield(theta,setting.observe, ray, scene, weight, depth, setting.maxdepth, output);
         }
@@ -1785,8 +1830,8 @@ namespace pbrt {
         srand (time(NULL));
         if (setting.uniformSampleIncidentAngles) {
             //sample many output direction for a given sampled incident angle
-            int step = 8;
-            for (int i = 0 ; i < 90; i +=step) {
+            int step = 20;
+            for (int i = 1 ; i < 90; i +=step) {
             //for (int i = 80; i >= 80; i-- ) {
                 for (int j = 0; j < setting.samplesPerDegree; j++){  
                     //float u = ((float) rand()/(RAND_MAX)) * .5;
