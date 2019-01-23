@@ -1660,28 +1660,34 @@ namespace pbrt {
         }
     }
 
-    bool computeWh(Float theta, Point3f inter, Vector3f& wh) {
+    bool computeWh(Float theta, Point3f inter, Vector3f& wh, Float n_glass = 1.5) {
         float observe = 6000.0;
         inter /= observe;
         Vector3f  wo(inter);
+        wo = Normalize(wo);
         Vector3f wi = Vector3f(sin(theta), 0.f, cos(theta));
-        wh = wo+wi;
+        if (wo.z > 0) {
+            wh = wo+wi;
+        } else {
+            wh = -wi - wo * n_glass;
+        }
         if (wh.Length() < 1e-6 || wh.z < 0) {
-            std::cout<< wh << "\n";
-            std::cout<< wo << "\n";
-            std::cout<< wi << "\n";
-            //return false;
+            //std::cout<< wh << "\n";
+            //std::cout<< wo << "\n";
+            //std::cout<< wi << "\n";
+            return false;
         }
 
         wh = Normalize(wh);
         return true;
     }
- 
+
     int addOutput(Point3f inter, float weight, float depth, float theta) {
-        if (depth >= 1 && inter.z >= 0 ) {
-            if (hasXform) {
-                inter = l2w(inter);
-            }
+        if (hasXform) {
+            inter = l2w(inter);
+        }
+        //if (depth >= 1 && inter.z < 1e-6 ) {
+        if (depth >= 1 && inter.z < -1e-5 ) {
             Vector3f wh(0, 0, 1);
             if (computeWh(theta, inter, wh)) {
                 //outputx.write((char*)&inter.x, sizeof(inter.x));
@@ -1806,8 +1812,8 @@ namespace pbrt {
           Ray rayTest = ray;
           //Ray rayTest = w2l(ray);
           //output.setTransform(w2l);
-          SingleLayerMirror(theta, setting.observe, rayTest, scene, weight, depth, setting.maxdepth, output);
-          //SingleLayerGlass(theta, settig.observe, ray, scene, weight, depth, setting.maxdepth, output);
+          //SingleLayerMirror(theta, setting.observe, rayTest, scene, weight, depth, setting.maxdepth, output);
+          SingleLayerGlass(theta, setting.observe, ray, scene, weight, depth, setting.maxdepth, output);
           //DoubleLayerHeightfield(theta,setting.observe, ray, scene, weight, depth, setting.maxdepth, output);
         }
   } 
@@ -1880,7 +1886,9 @@ namespace pbrt {
         // check intersection with observing sphere
         float t = observeIntersect(r, observe);
         Point3f inter = r.o + r.d * t;
-        output.addOutput(inter, weight, depth, theta);
+        if (inter.z > 0) {
+            output.addOutput(inter, weight, depth, theta);
+        }
         return;
       }
     }
@@ -1930,6 +1938,7 @@ namespace pbrt {
         Point3f inter = r.o + r.d * t;
 
         // check rays that go out
+
         bool onedge = std::abs(r.o.x)>9.9 || std::abs(r.o.y)>9.9;
         if (onedge){
           count_goout++;
@@ -1974,6 +1983,10 @@ namespace pbrt {
     float cos = Dot(Vector3f(normal), isect.wo);
     float rprob = FrDielectric(cos, etaI, etaT);
     float rt = (float) rand() / (RAND_MAX);
+    SingleLayerGlass(theta, observe, reflRay, scene, weight, depth+1, maxdepth, output);
+    SingleLayerGlass(theta, observe, tranRay, scene, weight, depth+1, maxdepth, output);
+    return;
+
     if (rt<=rprob){
       // refelctance ray
       SingleLayerGlass(theta, observe, reflRay, scene, weight, depth+1, maxdepth, output);
