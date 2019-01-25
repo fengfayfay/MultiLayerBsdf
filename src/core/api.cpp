@@ -1660,18 +1660,14 @@ namespace pbrt {
         }
     }
 
-    bool computeWh(Float theta, Point3f inter, Vector3f& wh, Float n_glass = 1.5) {
-        float observe = 6000.0;
-        inter /= observe;
-        Vector3f  wo(inter);
-        wo = Normalize(wo);
+    bool computeWh(Float theta, Vector3f& wo, Vector3f& wh, Float n_glass = 1.5) {
         Vector3f wi = Vector3f(sin(theta), 0.f, cos(theta));
         if (wo.z > 0) {
             wh = wo+wi;
-        } else {
+        } else{
             wh = -wi - wo * n_glass;
         }
-        if (wh.Length() < 1e-6 || wh.z < 0) {
+        if (wh.Length() < 1e-5 || wh.z < 1e-5) {
             //std::cout<< wh << "\n";
             //std::cout<< wo << "\n";
             //std::cout<< wi << "\n";
@@ -1683,13 +1679,18 @@ namespace pbrt {
     }
 
     int addOutput(Point3f inter, float weight, float depth, float theta) {
+        float observe = 6000.0;
         if (hasXform) {
             inter = l2w(inter);
         }
-        //if (depth >= 1 && inter.z < 1e-6 ) {
-        if (depth >= 1 && inter.z < -1e-5 ) {
+
+        Vector3f  wo(inter);
+        wo /= observe;
+        wo = Normalize(wo);
+        if (depth >= 1 && wo.z < -1e-5 ) {
+        //if (depth >= 1 && inter.z > 1e-5 ) {
             Vector3f wh(0, 0, 1);
-            if (computeWh(theta, inter, wh)) {
+            if (computeWh(theta, wo, wh)) {
                 //outputx.write((char*)&inter.x, sizeof(inter.x));
                 //outputy.write((char*)&inter.y, sizeof(inter.y));
                 //outputz.write((char*)&inter.z, sizeof(inter.z));
@@ -1700,9 +1701,10 @@ namespace pbrt {
                 outputdepth.write((char*)&depth, sizeof(depth));
                 if (dimension == 3) outputangle.write((char*)&theta, sizeof(theta));
                 depthG1++;
+                outputCount++;
             }
         }
-        return outputCount++;
+        return outputCount;
     }
 
     void init2D(float alpha, float angle) {
