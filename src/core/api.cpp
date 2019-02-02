@@ -1591,7 +1591,7 @@ namespace pbrt {
       setting.totalRays = numrays;
       setting.maxdepth = maxdepth;
       setting.samplesPerDegree = 1;
-      int angleSamples = dimension == 2? 1 : setting.samplesPerDegree * 5;
+      int angleSamples = dimension == 2? 1 : setting.samplesPerDegree * 12;
       //int angleSamples = dimension == 2? 1 : setting.samplesPerDegree * 1;
       int num3d = PbrtOptions.uniformIncidentAngles == true ? numrays/angleSamples : 1;
       setting.raysPerIncidentAngle = dimension == 2 ? numrays : num3d;
@@ -1660,30 +1660,37 @@ namespace pbrt {
         }
     }
 
-    bool computeWh(Float theta, Point3f inter, Vector3f& wh) {
-        float observe = 6000.0;
-        inter /= observe;
-        Vector3f  wo(inter);
+    bool computeWh(Float theta, Vector3f& wo, Vector3f& wh, Float n_glass = 1.5) {
         Vector3f wi = Vector3f(sin(theta), 0.f, cos(theta));
-        wh = wo+wi;
-        if (wh.Length() < 1e-6 || wh.z < 0) {
-            std::cout<< wh << "\n";
-            std::cout<< wo << "\n";
-            std::cout<< wi << "\n";
-            //return false;
+        if (wo.z > 0) {
+            wh = wo+wi;
+        } else{
+            wh = -wi - wo * n_glass;
+        }
+        if (wh.Length() < 1e-5 || wh.z < 1e-5) {
+            //std::cout<< wh << "\n";
+            //std::cout<< wo << "\n";
+            //std::cout<< wi << "\n";
+            return false;
         }
 
         wh = Normalize(wh);
         return true;
     }
- 
+
     int addOutput(Point3f inter, float weight, float depth, float theta) {
-        if (depth >= 1 && inter.z >= 0 ) {
-            if (hasXform) {
-                inter = l2w(inter);
-            }
+        float observe = 6000.0;
+        if (hasXform) {
+            inter = l2w(inter);
+        }
+
+        Vector3f  wo(inter);
+        wo /= observe;
+        wo = Normalize(wo);
+        if (depth >= 1 && wo.z < -1e-5 ) {
+        //if (depth >= 1 && inter.z > 1e-5 ) {
             Vector3f wh(0, 0, 1);
-            if (computeWh(theta, inter, wh)) {
+            if (computeWh(theta, wo, wh)) {
                 //outputx.write((char*)&inter.x, sizeof(inter.x));
                 //outputy.write((char*)&inter.y, sizeof(inter.y));
                 //outputz.write((char*)&inter.z, sizeof(inter.z));
@@ -1694,9 +1701,10 @@ namespace pbrt {
                 outputdepth.write((char*)&depth, sizeof(depth));
                 if (dimension == 3) outputangle.write((char*)&theta, sizeof(theta));
                 depthG1++;
+                outputCount++;
             }
         }
-        return outputCount++;
+        return outputCount;
     }
 
     void init2D(float alpha, float angle) {
@@ -1806,8 +1814,8 @@ namespace pbrt {
           Ray rayTest = ray;
           //Ray rayTest = w2l(ray);
           //output.setTransform(w2l);
-          SingleLayerMirror(theta, setting.observe, rayTest, scene, weight, depth, setting.maxdepth, output);
-          //SingleLayerGlass(theta, settig.observe, ray, scene, weight, depth, setting.maxdepth, output);
+          //SingleLayerMirror(theta, setting.observe, rayTest, scene, weight, depth, setting.maxdepth, output);
+          SingleLayerGlass(theta, setting.observe, ray, scene, weight, depth, setting.maxdepth, output);
           //DoubleLayerHeightfield(theta,setting.observe, ray, scene, weight, depth, setting.maxdepth, output);
         }
   } 
@@ -1830,9 +1838,8 @@ namespace pbrt {
         srand (time(NULL));
         if (setting.uniformSampleIncidentAngles) {
             //sample many output direction for a given sampled incident angle
-            int step = 20;
-            for (int i = 1 ; i < 90; i +=step) {
-            //for (int i = 80; i >= 80; i-- ) {
+            int step = 8;
+            for (int i = 0 ; i < 90; i +=step) {
                 for (int j = 0; j < setting.samplesPerDegree; j++){  
                     //float u = ((float) rand()/(RAND_MAX)) * .5;
                     float u = .5;
@@ -1880,7 +1887,9 @@ namespace pbrt {
         // check intersection with observing sphere
         float t = observeIntersect(r, observe);
         Point3f inter = r.o + r.d * t;
-        output.addOutput(inter, weight, depth, theta);
+        if (inter.z > 0) {
+            output.addOutput(inter, weight, depth, theta);
+        }
         return;
       }
     }
@@ -1930,6 +1939,7 @@ namespace pbrt {
         Point3f inter = r.o + r.d * t;
 
         // check rays that go out
+
         bool onedge = std::abs(r.o.x)>9.9 || std::abs(r.o.y)>9.9;
         if (onedge){
           count_goout++;
@@ -1974,6 +1984,10 @@ namespace pbrt {
     float cos = Dot(Vector3f(normal), isect.wo);
     float rprob = FrDielectric(cos, etaI, etaT);
     float rt = (float) rand() / (RAND_MAX);
+    SingleLayerGlass(theta, observe, reflRay, scene, weight, depth+1, maxdepth, output);
+    SingleLayerGlass(theta, observe, tranRay, scene, weight, depth+1, maxdepth, output);
+    return;
+
     if (rt<=rprob){
       // refelctance ray
       SingleLayerGlass(theta, observe, reflRay, scene, weight, depth+1, maxdepth, output);
