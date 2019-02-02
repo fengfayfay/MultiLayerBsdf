@@ -27,7 +27,7 @@ for i = 1:length(input)
 end
 
 B = A/sum(sum(A));
-B = B * energyRatio;
+B = log(B * energyRatio);
 
 figure
 imagesc(B)

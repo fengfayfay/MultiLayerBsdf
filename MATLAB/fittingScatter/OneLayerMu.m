@@ -17,7 +17,7 @@ function [mean_0, mean_1, cv_0, cv_1, energyRatios, anglevalues, errs, mus] =  O
     %clc
 
     datadir = '/Users/fengxie/work/Github/GaussianData/HeightfieldData/singleLayerSlice/';
-    %datadir = '/Users/fengxie/work/Github/GaussianData/HeightfieldData/1layer/';
+    %datadir = '/Users/fengxie/work/Github/GaussianData/GrooveSim/simData/';
     fundir = '/Users/fengxie/work/Github/GaussianClean/MATLAB/fittingScatter/';
 
     datadir = strcat(datadir, 'alpha', num2str(alpha), '/');
@@ -116,8 +116,8 @@ function [anglevalues, energyRatios, mus] = selectValidAnglesForFitting(ox, oang
         lenIX = length(ix);
         lenIOX = length(iox);
         energy = lenIX/lenIOX
-        %if energy > .02
-        if energy > 0.00 
+        if energy > .01
+        %if energy > 0.00 
             validCount = validCount + 1;
             energyRatios(validCount) = energy;
             anglevalues(validCount) = iangle;
@@ -215,9 +215,9 @@ function [ox, oangle, x, y, z, angle] = read_data(datadir, alpha, bounce)
             z = z(depth == 1);
             angle = angle(depth == 1);
         else  
-            x = x(depth > 1);
-            y = y(depth > 1);
-            z = z(depth > 1);
+            x = x(depth >= bounce);
+            y = y(depth >= bounce);
+            z = z(depth >= bounce);
             angle = angle(depth > 1);
         end
         angle = angle(z>=0);
