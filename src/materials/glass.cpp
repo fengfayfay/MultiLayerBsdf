@@ -63,13 +63,9 @@ void GlassMaterial::ComputeScatteringFunctions(SurfaceInteraction *si,
         si->bsdf->Add(
             ARENA_ALLOC(arena, FresnelSpecular)(R, T, 1.f, eta, mode));
     } else {
-        if (remapRoughness) {
-            urough = TrowbridgeReitzDistribution::RoughnessToAlpha(urough);
-            vrough = TrowbridgeReitzDistribution::RoughnessToAlpha(vrough);
-        }
         MicrofacetDistribution *distrib =
             isSpecular ? nullptr
-                       : ARENA_ALLOC(arena, TrowbridgeReitzDistribution)(
+                       : ARENA_ALLOC(arena, BeckmannDistribution)(
                              urough, vrough);
         if (!R.IsBlack()) {
             
@@ -93,9 +89,11 @@ void GlassMaterial::ComputeScatteringFunctions(SurfaceInteraction *si,
                 si->bsdf->Add(ARENA_ALLOC(arena, SpecularTransmission)(
                     T, 1.f, eta, mode));
             else {
+                bool noFresnel = false;
+                if (ms) noFresnel = ms->noFresnel;
                 if (ms == NULL || ms->gsTransmit == NULL) {
                     si->bsdf->Add(ARENA_ALLOC(arena, MicrofacetTransmission)(
-                        T, distrib, 1.f, eta, mode));
+                        T, distrib, 1.f, eta, mode, noFresnel));
                 } else {
                     si->bsdf->Add(ARENA_ALLOC(arena, MultiScatterTransmission)(
                         T, distrib, 1.f, eta, mode, ms->noFresnel, ms->gsTransmit));
@@ -119,6 +117,7 @@ GlassMaterial *CreateGlassMaterial(const TextureParams &mp) {
     std::shared_ptr<Texture<Float>> bumpMap =
         mp.GetFloatTextureOrNull("bumpmap");
     bool remapRoughness = mp.FindBool("remaproughness", false);
+
     bool mstransmit = mp.FindBool("mstransmit", false);
     GaussianMultiScattering *ms = createGaussianMultiScattering(mp, "uroughness", mstransmit);
 
