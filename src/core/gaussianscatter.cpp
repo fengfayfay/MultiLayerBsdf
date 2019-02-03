@@ -22,12 +22,16 @@ GaussianScatter::GaussianScatter() : energyOnly(false) {
     validateScatter();
 }
 
-GaussianScatter::GaussianScatter(Float alpha, bool energyOnly): alpha(alpha), energyOnly(energyOnly) {
+GaussianScatter::GaussianScatter(Float alpha, bool energyOnly, bool isTransmission): alpha(alpha), 
+                 energyOnly(energyOnly), isTransmission(isTransmission) {
 
     std::cout << "energy only: " << energyOnly <<"\n";
     char buf[10];
     sprintf(buf, "%1.1f", alpha);
-    std::string scatterName = "scatter_" + std::string(buf) + ".txt";
+    std::string prefix_dir = "MultiScatteringCoef/";
+    std::string prefix = isTransmission? "transmission_coef/" : "reflection_coef/";
+    std::string scatterName = prefix_dir + prefix + 
+            "scatter_" + std::string(buf) + ".txt";
     std::cout << "load scatter file:" << scatterName << "\n";
     std::ifstream scatterfile(scatterName);
     validScatter = false;

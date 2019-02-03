@@ -42,6 +42,7 @@
 #include "pbrt.h"
 #include "material.h"
 #include "spectrum.h"
+#include "multiscatter.h"
 
 namespace pbrt {
 
@@ -55,7 +56,8 @@ class MetalMaterial : public Material {
                   const std::shared_ptr<Texture<Float>> &urough,
                   const std::shared_ptr<Texture<Float>> &vrough,
                   const std::shared_ptr<Texture<Float>> &bump,
-                  bool remapRoughness);
+                  bool remapRoughness,
+                  GaussianMultiScattering *ms = NULL);
     void ComputeScatteringFunctions(SurfaceInteraction *si, MemoryArena &arena,
                                     TransportMode mode,
                                     bool allowMultipleLobes) const;
@@ -66,6 +68,7 @@ class MetalMaterial : public Material {
     std::shared_ptr<Texture<Float>> roughness, uRoughness, vRoughness;
     std::shared_ptr<Texture<Float>> bumpMap;
     bool remapRoughness;
+    GaussianMultiScattering* ms;
 };
 
 MetalMaterial *CreateMetalMaterial(const TextureParams &mp);

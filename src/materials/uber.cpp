@@ -67,7 +67,8 @@ void UberMaterial::ComputeScatteringFunctions(SurfaceInteraction *si,
 
     Spectrum ks = op * Ks->Evaluate(*si).Clamp();
     if (!ks.IsBlack()) {
-        Fresnel *fresnel = ARENA_ALLOC(arena, FresnelDielectric)(1.f, e);
+        Fresnel *fresnel = NULL;
+        if (!ms || !ms->noFresnel) fresnel = ARENA_ALLOC(arena, FresnelDielectric)(1.f, e);
         Float roughu, roughv;
         if (roughnessu)
             roughu = roughnessu->Evaluate(*si);
@@ -82,18 +83,13 @@ void UberMaterial::ComputeScatteringFunctions(SurfaceInteraction *si,
         // invoke Beckmann distribution instead of GGX for testing (Mandy)
         MicrofacetDistribution *distrib =
           ARENA_ALLOC(arena, BeckmannDistribution)(roughu, roughv, false);
-        if (gm == NULL && gs == NULL) {
+        if (ms == NULL || ms->gsReflect == NULL) {
             BxDF *spec =
                 ARENA_ALLOC(arena, MicrofacetReflection)(ks, distrib, fresnel);
             si->bsdf->Add(spec);
         } else {
-            if (gs) {
-                BxDF *spec = ARENA_ALLOC(arena, MultiScatterReflection)(ks,distrib, gs);
-                si->bsdf->Add(spec);
-            } else {
-                BxDF *spec = ARENA_ALLOC(arena, GaussianBSDF)(ks,gm,distrib);
-                si->bsdf->Add(spec);
-            }
+            BxDF *spec = ARENA_ALLOC(arena, MultiScatterReflection)(ks,distrib, fresnel, ms->gsReflect);
+            si->bsdf->Add(spec);
         }
     }
 
@@ -113,7 +109,7 @@ UberMaterial *CreateUberMaterial(const TextureParams &mp) {
     std::shared_ptr<Texture<Spectrum>> Kd =
         mp.GetSpectrumTexture("Kd", Spectrum(0.f));
     std::shared_ptr<Texture<Spectrum>> Ks =
-        mp.GetSpectrumTexture("Ks", Spectrum(0.f));
+        mp.GetSpectrumTexture("Ks", Spectrum(1.f));
     std::shared_ptr<Texture<Spectrum>> Kr =
         mp.GetSpectrumTexture("Kr", Spectrum(0.f));
     std::shared_ptr<Texture<Spectrum>> Kt =
@@ -131,30 +127,11 @@ UberMaterial *CreateUberMaterial(const TextureParams &mp) {
     std::shared_ptr<Texture<Float>> bumpMap =
         mp.GetFloatTextureOrNull("bumpmap");
     bool remapRoughness = mp.FindBool("remaproughness", false);
-    bool useMS = mp.FindBool("multiscatter", false);
-    bool energyOnly = mp.FindBool("energyonly", false);
 
-    int numgaussian = mp.FindInt("numgaussian", 0);
-    float extf = mp.FindFloat("extfactor",1);
-
-    Float alpha = mp.FindFloat("roughness", 0.7f);
-    GaussianScatter *gs = NULL;
-    if (useMS) {
-        std::cout << "use MultiScatterReflection\n";
-        gs = new GaussianScatter(alpha, energyOnly);
-    }
-
-    // isotropic roughu = roughv
-    Gaussianmixture *gm = NULL;
-
-    // if (reflectdata) numgaussian = 100; else numgaussian = 50;
-    if (numgaussian > 0) {
-        int dim = 3;
-        gm = new Gaussianmixture(dim,numgaussian,alpha,extf);
-    }
+    GaussianMultiScattering *ms = createGaussianMultiScattering(mp);
     
     return new UberMaterial(Kd, Ks, Kr, Kt, roughness, uroughness, vroughness,
-                            opacity, eta, bumpMap, remapRoughness, gs, gm);
+                            opacity, eta, bumpMap, remapRoughness, ms);
 }
 
 }  // namespace pbrt

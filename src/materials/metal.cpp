@@ -47,14 +47,16 @@ MetalMaterial::MetalMaterial(const std::shared_ptr<Texture<Spectrum>> &eta,
                              const std::shared_ptr<Texture<Float>> &uRoughness,
                              const std::shared_ptr<Texture<Float>> &vRoughness,
                              const std::shared_ptr<Texture<Float>> &bumpMap,
-                             bool remapRoughness)
+                             bool remapRoughness,
+                             GaussianMultiScattering *ms)
     : eta(eta),
       k(k),
       roughness(roughness),
       uRoughness(uRoughness),
       vRoughness(vRoughness),
       bumpMap(bumpMap),
-      remapRoughness(remapRoughness) {}
+      remapRoughness(remapRoughness),
+      ms(ms) {}
 
 void MetalMaterial::ComputeScatteringFunctions(SurfaceInteraction *si,
                                                MemoryArena &arena,
@@ -72,11 +74,20 @@ void MetalMaterial::ComputeScatteringFunctions(SurfaceInteraction *si,
         uRough = TrowbridgeReitzDistribution::RoughnessToAlpha(uRough);
         vRough = TrowbridgeReitzDistribution::RoughnessToAlpha(vRough);
     }
+
+    MicrofacetDistribution *distrib =
+          ARENA_ALLOC(arena, BeckmannDistribution)(uRough, vRough, false);
     Fresnel *frMf = ARENA_ALLOC(arena, FresnelConductor)(1., eta->Evaluate(*si),
                                                          k->Evaluate(*si));
-    MicrofacetDistribution *distrib =
-        ARENA_ALLOC(arena, TrowbridgeReitzDistribution)(uRough, vRough);
-    si->bsdf->Add(ARENA_ALLOC(arena, MicrofacetReflection)(1., distrib, frMf));
+    //MicrofacetDistribution *distrib =
+    //    ARENA_ALLOC(arena, TrowbridgeReitzDistribution)(uRough, vRough);
+
+    if (ms == NULL || ms->gsReflect == NULL) {
+        si->bsdf->Add(ARENA_ALLOC(arena, MicrofacetReflection)(1., distrib, frMf));
+    } else {
+        BxDF *spec = ARENA_ALLOC(arena, MultiScatterReflection)(1., distrib, frMf, ms->gsReflect);
+        si->bsdf->Add(spec);
+    }
 }
 
 const int CopperSamples = 56;
@@ -128,9 +139,11 @@ MetalMaterial *CreateMetalMaterial(const TextureParams &mp) {
         mp.GetFloatTextureOrNull("vroughness");
     std::shared_ptr<Texture<Float>> bumpMap =
         mp.GetFloatTextureOrNull("bumpmap");
-    bool remapRoughness = mp.FindBool("remaproughness", true);
+    bool remapRoughness = mp.FindBool("remaproughness", false);
+    bool smartFresne = mp.FindBool("smartFresnel", false);
+    GaussianMultiScattering *ms = createGaussianMultiScattering(mp);
     return new MetalMaterial(eta, k, roughness, uRoughness, vRoughness, bumpMap,
-                             remapRoughness);
+                             remapRoughness, ms);
 }
 
 }  // namespace pbrt

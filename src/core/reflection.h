@@ -448,7 +448,9 @@ class MicrofacetReflection : public BxDF {
     Float Pdf(const Vector3f &wo, const Vector3f &wi) const;
     std::string ToString() const;
 
-  private:
+    const Fresnel* getFresnel() const {return fresnel; }
+
+  protected:
     // MicrofacetReflection Private Data
     const Spectrum R;
     const MicrofacetDistribution *distribution;
@@ -459,28 +461,31 @@ class MicrofacetTransmission : public BxDF {
   public:
     // MicrofacetTransmission Public Methods
     MicrofacetTransmission(const Spectrum &T,
-                           MicrofacetDistribution *distribution, Float etaA,
-                           Float etaB, TransportMode mode)
+                           MicrofacetDistribution *distribution, 
+                           Float etaA,
+                           Float etaB, TransportMode mode, bool noFresnel = false)
         : BxDF(BxDFType(BSDF_TRANSMISSION | BSDF_GLOSSY)),
           T(T),
           distribution(distribution),
           etaA(etaA),
           etaB(etaB),
           fresnel(etaA, etaB),
-          mode(mode) {}
+          mode(mode),
+          noFresnel(noFresnel) {}
     Spectrum f(const Vector3f &wo, const Vector3f &wi) const;
     Spectrum Sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &u,
                       Float *pdf, BxDFType *sampledType) const;
     Float Pdf(const Vector3f &wo, const Vector3f &wi) const;
     std::string ToString() const;
 
-  private:
+  protected:
     // MicrofacetTransmission Private Data
     const Spectrum T;
     const MicrofacetDistribution *distribution;
     const Float etaA, etaB;
     const FresnelDielectric fresnel;
     const TransportMode mode;
+    const bool noFresnel;
 };
 
 class FresnelBlend : public BxDF {
@@ -553,8 +558,29 @@ class GaussianBSDF : public MicrofacetReflection {
 class MultiScatterReflection : public MicrofacetReflection {
  public:
     // GaussianBSDF Public Methods
-    MultiScatterReflection(const Spectrum &R, MicrofacetDistribution *distribution,
-                           const GaussianScatter *gs):MicrofacetReflection(R, distribution, NULL), gs(gs){}
+    MultiScatterReflection(const Spectrum &R, MicrofacetDistribution *distribution, Fresnel *fresnel, 
+                           const GaussianScatter *gs):MicrofacetReflection(R, distribution, fresnel), gs(gs){}
+
+    Spectrum f(const Vector3f &wo, const Vector3f &wi) const;
+    /*
+    Spectrum Sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &u,
+                   Float *pdf, BxDFType *sampledType) const;
+    Float Pdf(const Vector3f &wo, const Vector3f &wi) const;
+    std::string ToString() const;
+    */
+
+ private:
+    const GaussianScatter *gs;
+};
+
+//Microfacet BSDF with fitted multiscattering components (Feng)
+class MultiScatterTransmission : public MicrofacetTransmission {
+ public:
+    // GaussianBSDF Public Methods
+    MultiScatterTransmission(const Spectrum &T, MicrofacetDistribution *distribution,
+                           Float etaA,
+                           Float etaB, TransportMode mode, bool noFresnel,
+                           const GaussianScatter *gs):MicrofacetTransmission(T, distribution, etaA, etaB, mode, noFresnel), gs(gs){}
 
     Spectrum f(const Vector3f &wo, const Vector3f &wi) const;
     /*

@@ -41,6 +41,7 @@
 // materials/glass.h*
 #include "pbrt.h"
 #include "material.h"
+#include "multiscatter.h"
 
 namespace pbrt {
 
@@ -54,14 +55,16 @@ class GlassMaterial : public Material {
                   const std::shared_ptr<Texture<Float>> &vRoughness,
                   const std::shared_ptr<Texture<Float>> &index,
                   const std::shared_ptr<Texture<Float>> &bumpMap,
-                  bool remapRoughness)
+                  bool remapRoughness,
+                  GaussianMultiScattering* ms=NULL)
         : Kr(Kr),
           Kt(Kt),
           uRoughness(uRoughness),
           vRoughness(vRoughness),
           index(index),
           bumpMap(bumpMap),
-          remapRoughness(remapRoughness) {}
+          remapRoughness(remapRoughness),
+          ms(ms) {}
     void ComputeScatteringFunctions(SurfaceInteraction *si, MemoryArena &arena,
                                     TransportMode mode,
                                     bool allowMultipleLobes) const;
@@ -73,6 +76,7 @@ class GlassMaterial : public Material {
     std::shared_ptr<Texture<Float>> index;
     std::shared_ptr<Texture<Float>> bumpMap;
     bool remapRoughness;
+    GaussianMultiScattering* ms;
 };
 
 GlassMaterial *CreateGlassMaterial(const TextureParams &mp);

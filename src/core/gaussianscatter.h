@@ -76,7 +76,7 @@ class GaussianScatter{
 
   public:
     GaussianScatter();
-    GaussianScatter(Float alpha, bool energyOnly);
+    GaussianScatter(Float alpha, bool energyOnly = false, bool isTransmission = false);
     ~GaussianScatter();
 
     bool isEnergyOnly() const { return energyOnly; }
@@ -123,6 +123,7 @@ class GaussianScatter{
     Float energyAve;
 
     bool energyOnly;
+    bool isTransmission;
   };
 
 }// namespace pbrt

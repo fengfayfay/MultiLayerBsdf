@@ -72,21 +72,35 @@ void GlassMaterial::ComputeScatteringFunctions(SurfaceInteraction *si,
                        : ARENA_ALLOC(arena, TrowbridgeReitzDistribution)(
                              urough, vrough);
         if (!R.IsBlack()) {
-            Fresnel *fresnel = ARENA_ALLOC(arena, FresnelDielectric)(1.f, eta);
+            
+            Fresnel *fresnel = NULL;
+            if (!ms || !ms->noFresnel) fresnel = ARENA_ALLOC(arena, FresnelDielectric)(1.f, eta);
             if (isSpecular)
                 si->bsdf->Add(
                     ARENA_ALLOC(arena, SpecularReflection)(R, fresnel));
-            else
-                si->bsdf->Add(ARENA_ALLOC(arena, MicrofacetReflection)(
-                    R, distrib, fresnel));
+            else {
+                if (ms == NULL || ms->gsReflect == NULL) {
+                    si->bsdf->Add(ARENA_ALLOC(arena, MicrofacetReflection)(
+                        R, distrib, fresnel));
+                } else {
+                    si->bsdf->Add(ARENA_ALLOC(arena, MultiScatterReflection)(
+                        R, distrib, fresnel,  ms->gsReflect));
+                }
+            }
         }
         if (!T.IsBlack()) {
             if (isSpecular)
                 si->bsdf->Add(ARENA_ALLOC(arena, SpecularTransmission)(
                     T, 1.f, eta, mode));
-            else
-                si->bsdf->Add(ARENA_ALLOC(arena, MicrofacetTransmission)(
-                    T, distrib, 1.f, eta, mode));
+            else {
+                if (ms == NULL || ms->gsTransmit == NULL) {
+                    si->bsdf->Add(ARENA_ALLOC(arena, MicrofacetTransmission)(
+                        T, distrib, 1.f, eta, mode));
+                } else {
+                    si->bsdf->Add(ARENA_ALLOC(arena, MultiScatterTransmission)(
+                        T, distrib, 1.f, eta, mode, ms->noFresnel, ms->gsTransmit));
+                }
+            }
         }
     }
 }
@@ -104,9 +118,12 @@ GlassMaterial *CreateGlassMaterial(const TextureParams &mp) {
         mp.GetFloatTexture("vroughness", 0.f);
     std::shared_ptr<Texture<Float>> bumpMap =
         mp.GetFloatTextureOrNull("bumpmap");
-    bool remapRoughness = mp.FindBool("remaproughness", true);
+    bool remapRoughness = mp.FindBool("remaproughness", false);
+    bool mstransmit = mp.FindBool("mstransmit", false);
+    GaussianMultiScattering *ms = createGaussianMultiScattering(mp, "uroughness", mstransmit);
+
     return new GlassMaterial(Kr, Kt, roughu, roughv, eta, bumpMap,
-                             remapRoughness);
+                             remapRoughness, ms);
 }
 
 }  // namespace pbrt
