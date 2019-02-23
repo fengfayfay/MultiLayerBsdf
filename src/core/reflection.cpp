@@ -256,7 +256,8 @@ Spectrum MicrofacetTransmission::f(const Vector3f &wo,
     Vector3f wh = Normalize(wo + wi * eta);
     if (wh.z < 0) wh = -wh;
 
-    Spectrum F = fresnel.Evaluate(Dot(wo, wh));
+    Spectrum F = 0;
+    if (!noFresnel) F = fresnel.Evaluate(Dot(wo, wh));
 
     Float sqrtDenom = Dot(wo, wh) + eta * Dot(wi, wh);
     Float factor = (mode == TransportMode::Radiance) ? (1 / eta) : 1;
@@ -440,7 +441,7 @@ Float computeMultiScattering(Vector3f &wo, Vector3f &wi, Float etaO, Float etaI,
     Float J = computeJacobian(wo, wi, etaO, etaI); 
     Float multi = 0;
     if (gs->isEnergyOnly()) {
-        multi = p;
+        multi = p /cosThetaI;
     } else { 
         multi =  p * J / cosThetaI;
     }
@@ -503,6 +504,9 @@ Spectrum MultiScatterTransmission::f(const Vector3f &woO, const Vector3f &wiO) c
 
     // Compute $\wh$ from $\wo$ and $\wi$ for microfacet transmission
     bool entering = CosTheta(wo) > 0; 
+    Float etaI = entering ? etaA : etaB;
+    Float etaT = entering ? etaB : etaA;
+
     Float eta = entering ? (etaB / etaA) : (etaA / etaB);
     Vector3f wh = Normalize(wo + wi * eta);
     if (wh.z < 0) wh = -wh;
@@ -512,16 +516,15 @@ Spectrum MultiScatterTransmission::f(const Vector3f &woO, const Vector3f &wiO) c
     Spectrum FT = Spectrum(1.0) - F;
 
     Float factor = (mode == TransportMode::Radiance) ? (1 / eta) : 1;
-    /*
     Float sqrtDenom = Dot(wo, wh) + eta * Dot(wi, wh);
-    Spectrum singleScatter =   FT * T *
+    Spectrum singleScatter =  FT *   T *
            std::abs(distribution->D(wh) * distribution->G(wo, wi) * eta * eta *
                     AbsDot(wi, wh) * AbsDot(wo, wh) * factor * factor /
                     (cosThetaI * cosThetaO * sqrtDenom * sqrtDenom));
-    */
-    Float multi = computeMultiScattering(wo, wi, 1, eta, gs);
-    return FT * T * Spectrum(multi) * factor * factor;
-    //return singleScatter +  FT * F * T * Spectrum(multi) * factor * factor;
+
+    Spectrum multi = FT * T * computeMultiScattering(wo, wi, etaI, etaT, gs);
+    Spectrum combine =  (singleScatter + multi) * 0.5; 
+    return multi;
 }
 
 
