@@ -44,6 +44,7 @@
 #include "spectrum.h"
 #include "multiscatter.h"
 
+
 namespace pbrt {
 
 // MetalMaterial Declarations
@@ -69,6 +70,7 @@ class MetalMaterial : public Material {
     std::shared_ptr<Texture<Float>> bumpMap;
     bool remapRoughness;
     GaussianMultiScattering* ms;
+    RealNVPScatter* realNVP;
 };
 
 MetalMaterial *CreateMetalMaterial(const TextureParams &mp);

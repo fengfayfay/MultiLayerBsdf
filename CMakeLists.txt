@@ -410,6 +410,7 @@ SET ( PBRT_CORE_SOURCE
 
   src/core/gaussianscatter.cpp
   src/core/gaussianmixture.cpp
+  src/core/mlbrdf.cpp
   )
 
 SET ( PBRT_CORE_HEADERS
@@ -474,6 +475,7 @@ FILE ( GLOB PBRT_SOURCE
 
 INCLUDE_DIRECTORIES ( src )
 INCLUDE_DIRECTORIES ( src/core )
+INCLUDE_DIRECTORIES (  /Users/fengxie/work/tensorflow_c_api/tensorflow/include )
 
 ###########################################################################
 # pbrt libraries and executables
@@ -511,6 +513,7 @@ SET(ALL_PBRT_LIBS
   glog
   Ptex_static
   ${ZLIB_LIBRARY}
+  /Users/fengxie/work/tensorflow_c_api/tensorflow/lib/libtensorflow.so
 )
 
 # Main renderer

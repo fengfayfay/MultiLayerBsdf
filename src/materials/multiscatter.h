@@ -2,6 +2,7 @@
 #define _MULTISCATTER_H
 
 #include "gaussianscatter.h"
+#include "mlbrdf.h"
 
 namespace pbrt{
 class GaussianMultiScattering{
@@ -10,6 +11,7 @@ public:
     
     GaussianScatter* gsReflect;
     GaussianScatter* gsTransmit;
+    RealNVPScatter* realNVPReflect;
     bool noFresnel;
 };
 

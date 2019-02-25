@@ -9,13 +9,12 @@ GaussianMultiScattering* createGaussianMultiScattering(const TextureParams &mp, 
     bool energyOnly = mp.FindBool("energyonly", false);
     ms->noFresnel = mp.FindBool("noFresnel", true);
 
-    int numgaussian = mp.FindInt("numgaussian", 0);
-    float extf = mp.FindFloat("extfactor",1);
-
     Float alpha = mp.FindFloat(roughness, 0.7f);
     if (useMS) {
         std::cout << "use MultiScatterReflection\n";
         ms->gsReflect = new GaussianScatter(alpha, energyOnly);
+        ms->realNVPReflect = new RealNVPScatter();
+
         if (hasTransmission) ms->gsTransmit = new GaussianScatter(alpha, energyOnly, true);
     }
     return ms;

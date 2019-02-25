@@ -41,6 +41,7 @@
 #include "stats.h"
 #include <stdarg.h>
 
+
 namespace pbrt {
 
 // BxDF Utility Functions
@@ -396,7 +397,9 @@ Float computeJacobian(const Vector3f &wo, const Vector3f &wi, Float etaO, Float 
     */
 }
 
-Float computeMultiScattering(Vector3f &wo, Vector3f &wi, Float etaO, Float etaI, const GaussianScatter* gs) {
+Float computeMultiScattering(Vector3f &wo, Vector3f &wi, Float alpha, 
+    Float etaO, Float etaI, 
+    const GaussianScatter* gs, RealNVPScatter *realNVP) {
     Float cosThetaI = AbsCosTheta(wi);
     Float cosThetaO = AbsCosTheta(wo);
     // handle degenerate cases
@@ -419,6 +422,9 @@ Float computeMultiScattering(Vector3f &wo, Vector3f &wi, Float etaO, Float etaI,
     }
 
     wo.z = abs(wo.z);
+
+    float thetaO = acos(wo.z);
+
     wi.z = abs(wi.z);
     
     Vector3f wh = etaI * wi + etaO*wo;
@@ -431,8 +437,9 @@ Float computeMultiScattering(Vector3f &wo, Vector3f &wi, Float etaO, Float etaI,
     Float zo = wo.z > 1? 1: wo.z;
     Float zi = wi.z > 1? 1: wi.z;
     //zo = acos(zo); 
-    
-    Float p = gs->prob(x,y, zo, zi);
+   
+    Float p = realNVP->eval(thetaO, alpha, Vector2f(x, y)); 
+    //Float p = gs->prob(x,y, zo, zi);
     if (isNaN(p)) {
         std::cout<< "has NaN prob" << "\n";
         fflush(stdout);
@@ -452,8 +459,8 @@ Float computeMultiScattering(Vector3f &wo, Vector3f &wi, Float etaO, Float etaI,
 //////MultiScatterReflection:  Feng
 ////////////////////////////////////////////////////////////////////////////////////////////
 Spectrum MultiScatterReflection::f(const Vector3f &woO, const Vector3f &wiO) const {
-    Spectrum singleScatter = MicrofacetReflection::f(woO, wiO);
-
+    //Spectrum singleScatter = MicrofacetReflection::f(woO, wiO);
+    Spectrum singleScatter (0);
 
     Vector3f wo = Normalize(woO);
     Vector3f wi = Normalize(wiO);
@@ -478,7 +485,7 @@ Spectrum MultiScatterReflection::f(const Vector3f &woO, const Vector3f &wiO) con
     if (wo.z < 1e-6 || wi.z < 1e-6) {
         return singleScatter;
     }
-    Float multi = computeMultiScattering(wo, wi, 1, 1, gs);
+    Float multi = computeMultiScattering(wo, wi, alpha, 1, 1, gs, realNVP);
     /*
     Float rgb[3];
     singleScatter.ToRGB(rgb);
@@ -522,7 +529,7 @@ Spectrum MultiScatterTransmission::f(const Vector3f &woO, const Vector3f &wiO) c
                     AbsDot(wi, wh) * AbsDot(wo, wh) * factor * factor /
                     (cosThetaI * cosThetaO * sqrtDenom * sqrtDenom));
 
-    Spectrum multi = FT * T * computeMultiScattering(wo, wi, etaI, etaT, gs);
+    Spectrum multi = FT * T * computeMultiScattering(wo, wi, alpha, etaI, etaT, gs, NULL);
     Spectrum combine =  (singleScatter + multi) * 0.5; 
     return multi;
 }

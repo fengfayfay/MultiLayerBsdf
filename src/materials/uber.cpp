@@ -88,7 +88,7 @@ void UberMaterial::ComputeScatteringFunctions(SurfaceInteraction *si,
                 ARENA_ALLOC(arena, MicrofacetReflection)(ks, distrib, fresnel);
             si->bsdf->Add(spec);
         } else {
-            BxDF *spec = ARENA_ALLOC(arena, MultiScatterReflection)(ks,distrib, fresnel, ms->gsReflect);
+            BxDF *spec = ARENA_ALLOC(arena, MultiScatterReflection)(ks,distrib, fresnel, ms->gsReflect, roughu, ms->realNVPReflect);
             si->bsdf->Add(spec);
         }
     }

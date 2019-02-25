@@ -85,7 +85,7 @@ void MetalMaterial::ComputeScatteringFunctions(SurfaceInteraction *si,
     if (ms == NULL || ms->gsReflect == NULL) {
         si->bsdf->Add(ARENA_ALLOC(arena, MicrofacetReflection)(1., distrib, frMf));
     } else {
-        BxDF *spec = ARENA_ALLOC(arena, MultiScatterReflection)(1., distrib, frMf, ms->gsReflect);
+        BxDF *spec = ARENA_ALLOC(arena, MultiScatterReflection)(1., distrib, frMf, ms->gsReflect, uRough, ms->realNVPReflect);
         si->bsdf->Add(spec);
     }
 }
