@@ -175,6 +175,8 @@ struct Options {
     int dimension = 3;
     //bool uniformIncidentAngles = true;
     bool uniformIncidentAngles = false;
+    bool useFresnel = false;
+    
 };
 
 extern Options PbrtOptions;

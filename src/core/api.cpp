@@ -1652,7 +1652,13 @@ namespace pbrt {
 
   class ExpOutput {
   public:
-    ExpOutput(int dimension = 3, float alpha = .5, float angle = 0): outputCount(0), dimension(dimension), depthG1(0), hasXform(false) {
+    ExpOutput(int dimension = 3, float alpha = .5, float angle = 0, 
+             bool hasFresnel = false): 
+             outputCount(0), 
+             dimension(dimension), 
+             depthG1(0), 
+             hasXform(false),
+             hasFresnel(hasFresnel) {
         if (dimension == 3) {
             init3D(alpha);
         } else {
@@ -1678,7 +1684,7 @@ namespace pbrt {
         return true;
     }
 
-    int addOutput(Point3f inter, float weight, float depth, float theta) {
+    int addOutput(Point3f inter, float weight, int depth, float theta) {
         float observe = 6000.0;
         if (hasXform) {
             inter = l2w(inter);
@@ -1687,13 +1693,11 @@ namespace pbrt {
         Vector3f  wo(inter);
         wo /= observe;
         wo = Normalize(wo);
-        if (depth >= 1 && wo.z < -1e-5 ) {
-        //if (depth >= 1 && inter.z > 1e-5 ) {
+        //if (depth >= 1 && wo.z < -1e-5 ) {
+        if (depth >= 1 && inter.z > 1e-5 ) {
             Vector3f wh(0, 0, 1);
             if (computeWh(theta, wo, wh)) {
-                //outputx.write((char*)&inter.x, sizeof(inter.x));
-                //outputy.write((char*)&inter.y, sizeof(inter.y));
-                //outputz.write((char*)&inter.z, sizeof(inter.z));
+                outputwo.write((char*)&wo, sizeof(wo));
                 outputx.write((char*)&wh.x, sizeof(wh.x));
                 outputy.write((char*)&wh.y, sizeof(wh.y));
                 outputz.write((char*)&wh.z, sizeof(wh.z));
@@ -1734,48 +1738,34 @@ namespace pbrt {
         outputdepth.open(var5);
     }
 
+    void openStream(std::ofstream& output, const std::string& prefix, float alpha) {
+        std::ostringstream oss;
+        oss <<prefix << alpha<<".p";
+        output.open(oss.str(), std::ios::out | std::ios::binary);
+    } 
+
     void init3D(float alpha) {
-        std::ostringstream oss1;
-        oss1 <<"3d_outputx_" << alpha<<".p";
-        std::string var1 = oss1.str();
-        //outputx.open(var1);
-        outputx.open(var1, std::ios::out | std::ios::binary);
+        openStream(outputx, "3d_outputx_", alpha);
+        openStream(outputy, "3d_outputy_", alpha);
+        openStream(outputz, "3d_outputz_", alpha);
+        openStream(outputweight, "3d_outputweight_", alpha);
+        openStream(outputdepth, "3d_outputdepth_", alpha);
+        openStream(outputangle, "3d_outputangle_", alpha);
+        openStream(outputenergy, "3d_outputenergy_", alpha);
+        openStream(outputwo, "3d_outputwo_", alpha);
 
-        std::ostringstream oss2;
-        oss2 <<"3d_outputy_" << alpha<<".p";
-        std::string var2 = oss2.str();
-        outputy.open(var2, std::ios::out | std::ios::binary);
-
-        std::ostringstream oss3;
-        oss3 <<"3d_outputz_" << alpha<<".p";
-        std::string var3 = oss3.str();
-        outputz.open(var3, std::ios::out | std::ios::binary);
-
-        std::ostringstream oss4;
-        oss4 <<"3d_outputweight_" << alpha<<".p";
-        std::string var4 = oss4.str();
-        outputweight.open(var4, std::ios::out | std::ios::binary);
-
-        std::ostringstream oss5;
-        oss5 <<"3d_outputdepth_" << alpha<<".p";
-        std::string var5 = oss5.str();
-        outputdepth.open(var5, std::ios::out | std::ios::binary);
-
-        std::ostringstream oss6;
-        oss6 <<"3d_outputangle_" << alpha<<".p";
-        std::string var6 = oss6.str();
-        outputangle.open(var6, std::ios::out | std::ios::binary);
-        
-        std::ostringstream oss7;
-        oss7 <<"3d_outputenergy_" << alpha<<".p";
-        std::string var7 = oss7.str();
-        outputenergy.open(var7, std::ios::out | std::ios::binary);
+        if (hasFresnel) {
+            openStream(outputfresnel, "3d_outputfresnel_", alpha);
+        }
+    
     }
 
     void closeOutput() {
         outputx.close();
         outputy.close();
         outputz.close();
+        outputwo.close();
+        outputfresnel.close();
         outputweight.close();
         outputdepth.close();
         if (dimension == 3) {
@@ -1787,9 +1777,11 @@ namespace pbrt {
 
     void setTransform(Transform& w2l) {l2w = Inverse(w2l); hasXform = true;}
     std::ofstream outputx, outputy, outputz, outputweight, outputdepth, outputangle, outputenergy;
+    std::ofstream  outputwo;
+    std::ofstream  outputfresnel;
     int outputCount, dimension, depthG1;
     Transform l2w;
-    bool hasXform;
+    bool hasXform, hasFresnel;
   };
 
   void sampleIncidentAngle(float theta, const SampleSetting& setting, const Scene&scene, ExpOutput&output) {
@@ -1814,8 +1806,8 @@ namespace pbrt {
           Ray rayTest = ray;
           //Ray rayTest = w2l(ray);
           //output.setTransform(w2l);
-          //SingleLayerMirror(theta, setting.observe, rayTest, scene, weight, depth, setting.maxdepth, output);
-          SingleLayerGlass(theta, setting.observe, ray, scene, weight, depth, setting.maxdepth, output);
+          SingleLayerMirror(theta, setting.observe, rayTest, scene, weight, depth, setting.maxdepth, output);
+          //SingleLayerGlass(theta, setting.observe, ray, scene, weight, depth, setting.maxdepth, output);
           //DoubleLayerHeightfield(theta,setting.observe, ray, scene, weight, depth, setting.maxdepth, output);
         }
   } 
@@ -1924,8 +1916,8 @@ namespace pbrt {
   }
 
   void SingleLayerGlass(float theta, float observe, const Ray &r, const Scene& scene, int weight, int depth, int maxdepth, ExpOutput& output) {
-    float etaI = 1;
-    float etaT = 1.5;
+    float etaA = 1;
+    float etaB = 1.5;
 
     // check intersection
     SurfaceInteraction isect;
@@ -1958,6 +1950,7 @@ namespace pbrt {
 
     Normal3f normal = isect.shading.n;
     bool entering = Dot(normal, isect.wo)>0;
+
     // check for bad rays
     if (Dot(isect.n, isect.wo) * Dot(isect.shading.n, isect.wo)<=0){
       count++;
@@ -1966,6 +1959,10 @@ namespace pbrt {
     Normal3f nl = entering?normal:-normal;
     Vector3f wi = Normalize(2*Dot(Vector3f(nl), isect.wo)*Vector3f(nl) - isect.wo);
 
+    Float etaI = entering ? etaA : etaB;
+    Float etaT = entering ? etaB : etaA;
+
+    //Float eta = entering ? (etaB / etaA) : (etaA / etaB);
     Vector3f tdir;
     float e = entering? etaI/etaT:etaT/etaI;
     bool tr = Refract(isect.wo, nl, e, &tdir);
@@ -1982,11 +1979,11 @@ namespace pbrt {
 
     // specular reflection + specular refraction
     float cos = Dot(Vector3f(normal), isect.wo);
-    float rprob = FrDielectric(cos, etaI, etaT);
+    float rprob = FrDielectric(cos, etaA, etaB);
     float rt = (float) rand() / (RAND_MAX);
-    SingleLayerGlass(theta, observe, reflRay, scene, weight, depth+1, maxdepth, output);
-    SingleLayerGlass(theta, observe, tranRay, scene, weight, depth+1, maxdepth, output);
-    return;
+    //SingleLayerGlass(theta, observe, reflRay, scene, weight, depth+1, maxdepth, output);
+    //SingleLayerGlass(theta, observe, tranRay, scene, weight, depth+1, maxdepth, output);
+    //return;
 
     if (rt<=rprob){
       // refelctance ray
