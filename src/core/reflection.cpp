@@ -437,9 +437,13 @@ Float computeMultiScattering(Vector3f &wo, Vector3f &wi, Float alpha,
     Float zo = wo.z > 1? 1: wo.z;
     Float zi = wi.z > 1? 1: wi.z;
     //zo = acos(zo); 
-   
-    Float p = realNVP->eval(thetaO, alpha, Vector2f(x, y)); 
-    //Float p = gs->prob(x,y, zo, zi);
+
+    Float p = 0; 
+    if (realNVP!=NULL) {
+        p = realNVP->eval(thetaO, alpha, Vector2f(x, y)); 
+    } else {
+        p = gs->prob(x,y, zo, zi);
+    }
     if (isNaN(p)) {
         std::cout<< "has NaN prob" << "\n";
         fflush(stdout);
@@ -459,8 +463,8 @@ Float computeMultiScattering(Vector3f &wo, Vector3f &wi, Float alpha,
 //////MultiScatterReflection:  Feng
 ////////////////////////////////////////////////////////////////////////////////////////////
 Spectrum MultiScatterReflection::f(const Vector3f &woO, const Vector3f &wiO) const {
-    //Spectrum singleScatter = MicrofacetReflection::f(woO, wiO);
     Spectrum singleScatter (0);
+    if (!realNVP) singleScatter = MicrofacetReflection::f(woO, wiO);
 
     Vector3f wo = Normalize(woO);
     Vector3f wi = Normalize(wiO);

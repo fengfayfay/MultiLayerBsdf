@@ -83,7 +83,7 @@ void UberMaterial::ComputeScatteringFunctions(SurfaceInteraction *si,
         // invoke Beckmann distribution instead of GGX for testing (Mandy)
         MicrofacetDistribution *distrib =
           ARENA_ALLOC(arena, BeckmannDistribution)(roughu, roughv, false);
-        if (ms == NULL || ms->gsReflect == NULL) {
+        if (ms == NULL) {
             BxDF *spec =
                 ARENA_ALLOC(arena, MicrofacetReflection)(ks, distrib, fresnel);
             si->bsdf->Add(spec);

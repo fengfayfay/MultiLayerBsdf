@@ -7,7 +7,7 @@
 namespace pbrt{
 class GaussianMultiScattering{
 public:
-    GaussianMultiScattering(): gsReflect(NULL), gsTransmit(NULL) {}
+    GaussianMultiScattering(): gsReflect(NULL), gsTransmit(NULL), realNVPReflect(NULL) {}
     
     GaussianScatter* gsReflect;
     GaussianScatter* gsTransmit;
