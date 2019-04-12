@@ -176,7 +176,7 @@ struct Options {
     //bool uniformIncidentAngles = true;
     bool uniformIncidentAngles = false;
     bool useFresnel = false;
-    
+    int simulationType = 0; //0: mirror, 1: glass
 };
 
 extern Options PbrtOptions;

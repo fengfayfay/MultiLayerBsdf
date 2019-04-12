@@ -1547,6 +1547,7 @@ namespace pbrt {
     int samplesPerDegree;
     int maxdepth;
     bool uniformSampleIncidentAngles;
+    int simulationType;
   };
 
   void pbrtWorldEnd() {
@@ -1585,6 +1586,7 @@ namespace pbrt {
 
       SampleSetting setting;
       setting.uniformSampleIncidentAngles = PbrtOptions.uniformIncidentAngles;
+      setting.simulationType = PbrtOptions.simulationType;
       setting.radius = radius;
       setting.height = height;
       setting.observe = observe;
@@ -1650,15 +1652,16 @@ namespace pbrt {
     // // ImageTexture<RGBSpectrum, Spectrum>::ClearCache();
   }
 
-  class ExpOutput {
+  class ExpOutputStream {
   public:
-    ExpOutput(int dimension = 3, float alpha = .5, float angle = 0, 
-             bool hasFresnel = false): 
+    ExpOutputStream(int dimension = 3, float alpha = .5, float angle = 0, 
+             bool hasFresnel = false, std::string prefix = ""): 
              outputCount(0), 
              dimension(dimension), 
              depthG1(0), 
              hasXform(false),
-             hasFresnel(hasFresnel) {
+             hasFresnel(hasFresnel),
+             prefix(prefix) {
         if (dimension == 3) {
             init3D(alpha);
         } else {
@@ -1694,7 +1697,8 @@ namespace pbrt {
         wo /= observe;
         wo = Normalize(wo);
         //if (depth >= 1 && wo.z < -1e-5 ) {
-        if (depth >= 1 && inter.z > 1e-5 ) {
+        //if (depth >= 1 && inter.z > 1e-5 ) {
+        if (1) {
             Vector3f wh(0, 0, 1);
             if (computeWh(theta, wo, wh)) {
                 outputwo.write((char*)&wo, sizeof(wo));
@@ -1738,9 +1742,9 @@ namespace pbrt {
         outputdepth.open(var5);
     }
 
-    void openStream(std::ofstream& output, const std::string& prefix, float alpha) {
+    void openStream(std::ofstream& output, const std::string& sname, float alpha) {
         std::ostringstream oss;
-        oss <<prefix << alpha<<".p";
+        oss << prefix << sname << alpha<<".p";
         output.open(oss.str(), std::ios::out | std::ios::binary);
     } 
 
@@ -1782,6 +1786,29 @@ namespace pbrt {
     int outputCount, dimension, depthG1;
     Transform l2w;
     bool hasXform, hasFresnel;
+    std::string prefix;
+  };
+
+  struct ExpOutput {
+    ExpOutput(int dimension = 3, float alpha = .5, float angle = 0, 
+             bool hasFresnel = false): 
+             reflectionStream(dimension, alpha, angle, hasFresnel, "reflection_"), 
+             refractionStream(dimension, alpha, angle, hasFresnel, "refraction_") {} 
+
+    int addOutput(Point3f inter, float weight, int depth, float theta) {
+        if (depth >= 1 && inter.z > 1e-5 ) {
+            return reflectionStream.addOutput(inter, weight, depth, theta);
+        } else {
+            if (inter.z < -1e-5 && depth >=1) return refractionStream.addOutput(inter, weight, depth, theta);
+        }
+        return -1;
+    }
+    void closeOutput() {
+        reflectionStream.closeOutput();
+        refractionStream.closeOutput();
+    }
+    ExpOutputStream reflectionStream;
+    ExpOutputStream refractionStream;
   };
 
   void sampleIncidentAngle(float theta, const SampleSetting& setting, const Scene&scene, ExpOutput&output) {
@@ -1806,9 +1833,14 @@ namespace pbrt {
           Ray rayTest = ray;
           //Ray rayTest = w2l(ray);
           //output.setTransform(w2l);
-          SingleLayerMirror(theta, setting.observe, rayTest, scene, weight, depth, setting.maxdepth, output);
-          //SingleLayerGlass(theta, setting.observe, ray, scene, weight, depth, setting.maxdepth, output);
-          //DoubleLayerHeightfield(theta,setting.observe, ray, scene, weight, depth, setting.maxdepth, output);
+
+          switch (setting.simulationType ) {
+          case 0:
+            SingleLayerMirror(theta, setting.observe, rayTest, scene, weight, depth, setting.maxdepth, output);
+          case 1:
+            SingleLayerGlass(theta, setting.observe, ray, scene, weight, depth, setting.maxdepth, output);
+            //DoubleLayerHeightfield(theta,setting.observe, ray, scene, weight, depth, setting.maxdepth, output);
+          }
         }
   } 
   // 2d experiment, incidence angle fixed
@@ -1893,7 +1925,14 @@ namespace pbrt {
     }
 
     Normal3f normal = isect.shading.n;
-    bool entering = Dot(normal, isect.wo)>0;
+    float cos = Dot(Vector3f(normal), isect.wo);
+    bool entering = cos > 0;
+    float etaA = 1.0, etaB = 1.5;
+    //hack before because dielectric has low reflectance fresnel
+    float rprob = 1.0-FrDielectric(cos, etaA, etaB);
+    float rt = (float) rand() / (RAND_MAX);
+    if (rt > rprob) return;
+    
     // check for bad rays
     if (Dot(isect.n, isect.wo) * Dot(isect.shading.n, isect.wo)<=0){
       count++;
@@ -1981,9 +2020,6 @@ namespace pbrt {
     float cos = Dot(Vector3f(normal), isect.wo);
     float rprob = FrDielectric(cos, etaA, etaB);
     float rt = (float) rand() / (RAND_MAX);
-    //SingleLayerGlass(theta, observe, reflRay, scene, weight, depth+1, maxdepth, output);
-    //SingleLayerGlass(theta, observe, tranRay, scene, weight, depth+1, maxdepth, output);
-    //return;
 
     if (rt<=rprob){
       // refelctance ray

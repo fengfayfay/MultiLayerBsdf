@@ -105,6 +105,8 @@ int main(int argc, char *argv[]) {
           options.dimension = atoi(argv[++i]);
         } else if (!strncmp(argv[i], "--nthreads=", 11)) {
             options.nThreads = atoi(&argv[i][11]);
+        } else if (!strncmp(argv[i], "--simtype=", 10)) {
+            options.simulationType = atoi(&argv[i][10]);
         } else if (!strcmp(argv[i], "--outfile") || !strcmp(argv[i], "-outfile")) {
             if (i + 1 == argc)
                 usage("missing value after --outfile argument");
