@@ -1,4 +1,5 @@
 #include "mlbrdf.h"
+#include "spectrum.h"
 //#include <stdio.h>
 //#include <stdlib.h>
 //#include <string.h>
@@ -12,7 +13,55 @@ void free_buffer(void* data, size_t length) { free(data); }
 
 void deallocator(void* ptr, size_t len, void* arg) { free((void*)ptr); }
 
-RealNVPScatter::RealNVPScatter(const std::string& modelPathPrefix){
+RealNVPScatterSpectrum::RealNVPScatterSpectrum(const std::string& pathPrefix, int numChannels):
+            modelPathPrefix(pathPrefix), numChannels(numChannels) {
+    nvpScatter = new RealNVPScatter[numChannels];
+    for (int i = 0; i < numChannels; i++) {
+        std::ostringstream oss;
+        oss << modelPathPrefix << "_" << i; 
+        nvpScatter[i].init(oss.str());
+    }
+    //energyRatio.x = 0.953;
+    energyRatio.x = 0.9575;
+    //energyRatio.y = 0.7612;
+    energyRatio.y = 0.780155;
+
+    //energyRatio.z = 0.287;
+    energyRatio.z = 0.314;
+    //initialize energy ratio
+}
+
+RealNVPScatterSpectrum::~RealNVPScatterSpectrum() {
+    delete [] nvpScatter;
+}
+
+Spectrum 
+RealNVPScatterSpectrum::eval(float thetaI, float alpha, const Vector2f &sampleN){
+    
+    Float value[3];
+    value[0] = nvpScatter[0].eval(thetaI, alpha, sampleN);
+    if (isnan(value[0])) value[0] = 0;
+    for (int i = 0; i < numChannels; i++) {
+        //value[i] = nvpScatter[i].eval(thetaI, alpha, sampleN);
+        //if (isnan(value[i])) value[i] = 0;
+        value[i] = value[0];
+        value[i] *= energyRatio[i];
+    }
+    //convert rgb value to spectrum
+    
+    return Spectrum::FromRGB(value);
+}
+
+pbrt::Vector2f RealNVPScatterSpectrum::sample(float thetaI, float alpha) {
+    return nvpScatter[0].sample(thetaI, alpha);
+}
+
+RealNVPScatter::RealNVPScatter(){
+}
+
+void
+RealNVPScatter::init(const std::string& pathPrefix) {
+    modelPathPrefix = pathPrefix;
     loadAndRestore();
     setupSampleTensors();
     setupEvalTensors();
@@ -22,7 +71,8 @@ bool
 RealNVPScatter::loadAndRestore() {
     // load graph
     // ================================================================================
-    graph_def = read_file("./exported/graph.pb");
+    std::string filePath = modelPathPrefix + "/graph.pb";
+    graph_def = read_file(filePath.c_str());
     graph = TF_NewGraph();
     
     status = TF_NewStatus();
@@ -69,7 +119,11 @@ RealNVPScatter::loadAndRestore() {
     TF_Operation* checkpoint_op = TF_GraphOperationByName(graph, "save/Const");
     TF_Operation* restore_op = TF_GraphOperationByName(graph, "save/restore_all");
 
-    const char* checkpoint_path_str = "./exported/model";
+
+
+
+    filePath = modelPathPrefix + "/model";
+    const char* checkpoint_path_str = filePath.c_str();
     size_t checkpoint_path_str_len = strlen(checkpoint_path_str);
     size_t encoded_size = TF_StringEncodedSize(checkpoint_path_str_len);
 
@@ -383,7 +437,12 @@ RealNVPScatter::~RealNVPScatter() {
 //Required MISC functions
 
 TF_Buffer* read_file(const char* file) {
+
     FILE* f = fopen(file, "rb");
+    if (!f) {
+        std::cout << file << " missing\n";
+        return NULL;
+    }
     fseek(f, 0, SEEK_END);
     long fsize = ftell(f);
     fseek(f, 0, SEEK_SET);  // same as rewind(f);

@@ -562,7 +562,7 @@ class MultiScatterReflection : public MicrofacetReflection {
     MultiScatterReflection(const Spectrum &R, MicrofacetDistribution *distribution, Fresnel *fresnel, 
                            const GaussianScatter *gs,
                            Float alpha = 0.5,
-                           RealNVPScatter* realNVP = NULL):
+                           RealNVPScatterSpectrum* realNVP = NULL):
                            MicrofacetReflection(R, distribution, fresnel), 
                            gs(gs),
                            alpha(alpha), realNVP(realNVP){}
@@ -578,7 +578,7 @@ class MultiScatterReflection : public MicrofacetReflection {
  private:
     const GaussianScatter *gs;
     Float alpha;
-    RealNVPScatter* realNVP;
+    RealNVPScatterSpectrum* realNVP;
 };
 
 //Microfacet BSDF with fitted multiscattering components (Feng)
@@ -590,7 +590,7 @@ class MultiScatterTransmission : public MicrofacetTransmission {
                            Float etaB, TransportMode mode, bool noFresnel,
                            const GaussianScatter *gs,
                            Float alpha = 0,
-                           RealNVPScatter* realNVP = NULL):
+                           RealNVPScatterSpectrum* realNVP = NULL):
                            MicrofacetTransmission(T, distribution, etaA, etaB, mode, noFresnel), 
                            gs(gs),
                            alpha(alpha), realNVP(realNVP){}
@@ -606,7 +606,7 @@ class MultiScatterTransmission : public MicrofacetTransmission {
  private:
     const GaussianScatter *gs;
     Float alpha;
-    RealNVPScatter* realNVP;
+    RealNVPScatterSpectrum* realNVP;
 };
 
 }  // namespace pbrt

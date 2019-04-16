@@ -10,8 +10,9 @@
 namespace pbrt{
 class RealNVPScatter {
 public:
-    RealNVPScatter(const std::string& modelPathPrefix=".");
+    RealNVPScatter();
     ~RealNVPScatter();
+    void init(const std::string& modelPathPrefix=".");
     bool loadAndRestore();
     bool setupSampleTensors();
     bool setupEvalTensors();
@@ -20,7 +21,7 @@ public:
     pbrt::Vector2f  sample(float thetaI, float alpha);      
 
 private:
-    std::string modelPath;
+    std::string modelPathPrefix;
     TF_Session* sess;
     TF_Graph* graph;
     TF_Status* status;
@@ -35,5 +36,20 @@ private:
     TF_Output sample_run_outputs[1];
     TF_Output eval_run_outputs[1];
 };
+
+class RealNVPScatterSpectrum {
+public:
+    RealNVPScatterSpectrum(const std::string& modelPathPrefix=".", int numChannels = 3);
+    ~RealNVPScatterSpectrum();
+
+    Spectrum eval(float thetaI, float alpha, const Vector2f &sampleN);
+    pbrt::Vector2f sample(float thetaI, float alpha);
+private:
+    const std::string modelPathPrefix;
+    int numChannels;
+    RealNVPScatter *nvpScatter;
+    Vector3f energyRatio;
+};
+
 }
 #endif

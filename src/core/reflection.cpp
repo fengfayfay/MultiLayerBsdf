@@ -231,6 +231,8 @@ Spectrum MicrofacetReflection::f(const Vector3f &wo, const Vector3f &wi) const {
     if (cosThetaI == 0 || cosThetaO == 0) return Spectrum(0.);
     if (wh.x == 0 && wh.y == 0 && wh.z == 0) return Spectrum(0.);
     wh = Normalize(wh);
+    //flip wh to be on the same side as shading n
+    if (wh.z < 0) wh *= -1;
 
     Spectrum F (1.0);
     if (fresnel) F = fresnel->Evaluate(Dot(wi, wh));
@@ -256,6 +258,8 @@ Spectrum MicrofacetTransmission::f(const Vector3f &wo,
     Float eta = CosTheta(wo) > 0 ? (etaB / etaA) : (etaA / etaB);
     Vector3f wh = Normalize(wo + wi * eta);
     if (wh.z < 0) wh = -wh;
+
+    if (Dot(wo, wh) * Dot(wi, wh) > -1e-6) return Spectrum(0);
 
     Spectrum F = 0;
     if (!noFresnel) F = fresnel.Evaluate(Dot(wo, wh));
@@ -380,30 +384,29 @@ bool FourierBSDFTable::GetWeightsAndOffset(Float cosTheta, int *offset,
 }
 
 Float computeJacobian(const Vector3f &wo, const Vector3f &wi, Float etaO, Float etaI) {
-    Float zs = etaI * wi.z + etaO * wo.z;
-    if (fabs(zs) < 1e-6 or fabs(wo.z) < 1e-6) return  0;
-    Float zs_inv = 1.0/zs;
-    Float zo_inv = 1.0/wo.z;
-    Float dudx = zs_inv +(etaO * wo.x + etaI * wi.x) * etaO * wo.x * zo_inv * zs_inv * zs_inv;
-    Float dudy = zs_inv +(etaO * wo.y + etaI * wi.y) * etaO * wo.y * zo_inv * zs_inv * zs_inv;
-    Float J = fabs(dudx * dudy * wo.z);
-    return J;
-    /*
-    Float denom = wi.z + wo.z;
-    denom = denom * denom * denom;
-    if (fabs(denom) < 1e-6) return 0;
-    Float J = fabs((wo.z * wi.z + wi.y * wo.y + wi.x * wo.x + 1)/denom);
-    return J; 
-    */
+    Vector3f h = etaI * wi + etaO * wo;
+
+    //if (fabs(h.z) < 1e-6 or fabs(wo.z) < 1e-6) return  0;
+
+    float denom = wi.z * h.z * h.z;
+    
+    Float dxdxi = etaI * (h.z * wi.z + h.x * wi.x);
+    Float dydyi = etaI * (h.z * wi.z + h.y * wi.y);
+    Float dxdyi = etaI * (h.x * wi.y);
+    Float dydxi = etaI * (h.y * wi.x);
+    Float J = (dxdxi * dydyi - dydxi * dxdyi)/(denom * denom);
+    J *= wi.z;
+    
+    return fabs(J);
 }
 
-Float computeMultiScattering(Vector3f &wo, Vector3f &wi, Float alpha, 
+Spectrum computeMultiScattering(Vector3f &wo, Vector3f &wi, Float alpha, 
     Float etaO, Float etaI, 
-    const GaussianScatter* gs, RealNVPScatter *realNVP) {
+    const GaussianScatter* gs, RealNVPScatterSpectrum *realNVP) {
     Float cosThetaI = AbsCosTheta(wi);
     Float cosThetaO = AbsCosTheta(wo);
     // handle degenerate cases
-    if (cosThetaI == 0 || cosThetaO == 0) return 0;
+    if (cosThetaI == 0 || cosThetaO == 0) return Spectrum(0);
 
     Float phi = atan2(wo.y, wo.x);
     if (phi < 0) phi += 2.0 * M_PI;
@@ -438,19 +441,14 @@ Float computeMultiScattering(Vector3f &wo, Vector3f &wi, Float alpha,
     Float zi = wi.z > 1? 1: wi.z;
     //zo = acos(zo); 
 
-    Float p = 0; 
+    Spectrum p(0); 
     if (realNVP!=NULL) {
         p = realNVP->eval(thetaO, alpha, Vector2f(x, y)); 
     } else {
-        p = gs->prob(x,y, zo, zi);
-    }
-    if (isNaN(p)) {
-        std::cout<< "has NaN prob" << "\n";
-        fflush(stdout);
-        return 0;
+        p = Spectrum(gs->prob(x,y, zo, zi));
     }
     Float J = computeJacobian(wo, wi, etaO, etaI); 
-    Float multi = 0;
+    Spectrum multi(0);
     if (gs->isEnergyOnly()) {
         multi = p /cosThetaI;
     } else { 
@@ -489,15 +487,10 @@ Spectrum MultiScatterReflection::f(const Vector3f &woO, const Vector3f &wiO) con
     if (wo.z < 1e-6 || wi.z < 1e-6) {
         return singleScatter;
     }
-    Float multi = computeMultiScattering(wo, wi, alpha, 1, 1, gs, realNVP);
-    /*
-    Float rgb[3];
-    singleScatter.ToRGB(rgb);
-    if (multi > .1 * rgb[0]) {
-        std::cout<<"multiscatter, single scatter " << multi << " " << singleScatter << "\n";
-    }
-    */
-    return singleScatter +  R * F * Spectrum(multi);
+    Spectrum multi = computeMultiScattering(wo, wi, alpha, 1, 1, gs, realNVP);
+
+    //return singleScatter +  R * F * Spectrum(multi);
+    return R *  multi;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -521,11 +514,20 @@ Spectrum MultiScatterTransmission::f(const Vector3f &woO, const Vector3f &wiO) c
     Float eta = entering ? (etaB / etaA) : (etaA / etaB);
     Vector3f wh = Normalize(wo + wi * eta);
     if (wh.z < 0) wh = -wh;
+    
+    if (Dot(wo, wh) * Dot(wi, wh) > -1e-6) return Spectrum(0);
 
-    Spectrum F (0);
-    if (!noFresnel) F = fresnel.Evaluate(Dot(wo, wh));
-    Spectrum FT = Spectrum(1.0) - F;
+    //Float FrDielectric(Float cosThetaI, Float etaI, Float etaT) 
+    Float F = FrDielectric(Dot(wo, wh), etaA, etaB);
+    if (!noFresnel) F =  1.0 - F;
+    if (F < 0) F = 0;
+   
+     
+    Spectrum FT(F);
+    
 
+    //factor term cancel out eta * eta in the single scatter evaluation function
+    //original equation from walter paper is FDG * absdot(wi, wh) * absdot(wo, wh) / {dot(wi,n) * dot(wo, n) * sqrtDenom^2}
     Float factor = (mode == TransportMode::Radiance) ? (1 / eta) : 1;
     Float sqrtDenom = Dot(wo, wh) + eta * Dot(wi, wh);
     Spectrum singleScatter =  FT *   T *
@@ -533,8 +535,12 @@ Spectrum MultiScatterTransmission::f(const Vector3f &woO, const Vector3f &wiO) c
                     AbsDot(wi, wh) * AbsDot(wo, wh) * factor * factor /
                     (cosThetaI * cosThetaO * sqrtDenom * sqrtDenom));
 
-    Spectrum multi = FT * T * computeMultiScattering(wo, wi, alpha, etaI, etaT, gs, NULL);
-    Spectrum combine =  (singleScatter + multi) * 0.5; 
+    Spectrum ms =  computeMultiScattering(wo, wi, alpha, etaI, etaT, gs, NULL) * (1.0 - 0.0715);
+    //printf("ms transmit: %f\n", ms);
+    //fflush(stdout);
+    Spectrum multi(ms);
+    //Spectrum combine =  singleScatter + multi; 
+    //return combine;
     return multi;
 }
 
