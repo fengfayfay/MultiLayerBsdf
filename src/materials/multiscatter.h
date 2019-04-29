@@ -12,6 +12,7 @@ public:
     GaussianScatter* gsReflect;
     GaussianScatter* gsTransmit;
     RealNVPScatterSpectrum* realNVPReflect;
+    RealNVPScatterSpectrum* realNVPTransmit;
     bool noFresnel;
 };
 

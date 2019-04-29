@@ -235,7 +235,7 @@ Spectrum MicrofacetReflection::f(const Vector3f &wo, const Vector3f &wi) const {
     if (wh.z < 0) wh *= -1;
 
     Spectrum F (1.0);
-    if (fresnel) F = fresnel->Evaluate(Dot(wi, wh));
+    //if (fresnel) F = fresnel->Evaluate(Dot(wi, wh));
     return R * distribution->D(wh) * distribution->G(wo, wi) * F /
            (4 * cosThetaI * cosThetaO);
 }
@@ -388,73 +388,106 @@ Float computeJacobian(const Vector3f &wo, const Vector3f &wi, Float etaO, Float 
 
     //if (fabs(h.z) < 1e-6 or fabs(wo.z) < 1e-6) return  0;
 
+    /*
     float denom = wi.z * h.z * h.z;
+    denom *= denom;
+    if (denom < 1e-6) return 1;
     
     Float dxdxi = etaI * (h.z * wi.z + h.x * wi.x);
     Float dydyi = etaI * (h.z * wi.z + h.y * wi.y);
     Float dxdyi = etaI * (h.x * wi.y);
     Float dydxi = etaI * (h.y * wi.x);
-    Float J = (dxdxi * dydyi - dydxi * dxdyi)/(denom * denom);
+    Float J = (dxdxi * dydyi - dydxi * dxdyi)/denom;
     J *= wi.z;
-    
-    return fabs(J);
+   
+    */
+
+    //denom = (wo(3) + wi(3));
+    //jacobian = abs(wo(3)* wi(3)  + wo(2)*wi(2) + wo(1)*wi(1) + 1)/denom; 
+
+    Float denom = h.z;
+    denom = denom * denom * denom;
+    //if (denom < 1e-6) return 0;
+    Float jacobian = fabs((Dot(wo, wi) + 1.0) / denom);
+    return jacobian;
 }
 
 Spectrum computeMultiScattering(Vector3f &wo, Vector3f &wi, Float alpha, 
     Float etaO, Float etaI, 
-    const GaussianScatter* gs, RealNVPScatterSpectrum *realNVP) {
+    const GaussianScatter* gs, RealNVPScatterSpectrum *realNVP, const MicrofacetDistribution *distribution) {
+
+    if (realNVP) {
+        Vector3f tmp = wo;
+        wo = wi;
+        wi = tmp;
+    }
     Float cosThetaI = AbsCosTheta(wi);
     Float cosThetaO = AbsCosTheta(wo);
+
+    //std::cout << "\nwo: "<< wo << " wi: "<< wi <<"\n";
+
     // handle degenerate cases
     if (cosThetaI == 0 || cosThetaO == 0) return Spectrum(0);
 
     Float phi = atan2(wo.y, wo.x);
-    if (phi < 0) phi += 2.0 * M_PI;
     if (fabs(phi) > 1e-5) {
         phi = Degrees(phi);
         Transform rotation = RotateZ(-phi);
         wo = rotation(wo);
-        if (fabs(wo.y) > 1e-3) {
+        if (fabs(wo.y) > 1e-3 || wo.z < 1e-6) {
             std::cout << "phi: " << phi << "mu: " << cosThetaO << "\n";
-            std::cout<< "wo " << wo << "\n";
-            std::cout<< "rotation" << rotation << "\n";
+            std::cout<< "wo: " << wo << "\n";
+            std::cout<< "rotation:" << rotation << "\n";
             fflush(stdout);
         }
         assert(fabs(wo.y) < 1e-5);
         wi = rotation(wi);
     }
 
-    wo.z = abs(wo.z);
 
-    float thetaO = acos(wo.z);
+    Float thetaO = acos(wo.z);
+    Float thetaI = acos(wi.z);
 
-    wi.z = abs(wi.z);
+    Float phiI = atan2(wi.y, wi.x);
+
+    //std::cout << "thetaO: "<< Degrees(thetaO) << " phiO: "<< phi <<  " thetaI: "<< Degrees(thetaI) << " phiI: "<< Degrees(phiI) << "\n";
     
     Vector3f wh = etaI * wi + etaO*wo;
-    wh = Normalize(wh);
-    if (wh.z < 0) wh = -wh;
     
     // calculate probability in slope domain using fitted GMM
     Float x = wh.x/wh.z;
     Float y = wh.y/wh.z;
-    Float zo = wo.z > 1? 1: wo.z;
-    Float zi = wi.z > 1? 1: wi.z;
-    //zo = acos(zo); 
 
-    Spectrum p(0); 
-    if (realNVP!=NULL) {
-        p = realNVP->eval(thetaO, alpha, Vector2f(x, y)); 
-    } else {
-        p = Spectrum(gs->prob(x,y, zo, zi));
-    }
     Float J = computeJacobian(wo, wi, etaO, etaI); 
-    Spectrum multi(0);
-    if (gs->isEnergyOnly()) {
-        multi = p /cosThetaI;
-    } else { 
-        multi =  p * J / cosThetaI;
+    Float sbrdf =  (distribution->D(wh) * distribution->G(wo, wi) /
+           (4 * cosThetaI * cosThetaO)) ;
+    
+    //if (Degrees(thetaO) > 85.0 || Degrees(thetaI) > 85.0) return sbrdf;
+    Float p = 0;
+
+    if (realNVP!=NULL) {
+        //float theta_o = acos(fabs(wo.z));
+        //float testz = (Degrees(theta_o) < 5) ? cos(Radians(5.0)) : fabs(wo.z);
+        //Float p = realNVP->eval(fabs(wo.z), alpha, Vector2f(x, y)); 
+        Float p = realNVP->eval(fabs(thetaO), alpha, Vector2f(x, y)); 
+        Float multiS =  p *  J  / cosThetaI; 
+        //std::cout << "MSBRDF: " << multiS << " SBRDF: " << sbrdf <<"\n";
+        return multiS;
+
+    } else {
+        Float zo = abs(wo.z);
+        zo = zo > 1? 1: zo;
+        Float zi = abs(wi.z);
+        zi = zi > 1? 1: zi;
+        if (gs != NULL) p = gs->prob(x,y, zo, zi);
+        Float multi = 0;
+        if (gs->isEnergyOnly()) {
+            multi = p /cosThetaI;
+        } else { 
+            multi =  p * J / cosThetaI;
+        }
+        return multi;
     }
-    return multi;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -468,7 +501,8 @@ Spectrum MultiScatterReflection::f(const Vector3f &woO, const Vector3f &wiO) con
     Vector3f wi = Normalize(wiO);
     Vector3f wh = Normalize(wo + wi);
     
-    if (wh.z < 1e-6) return singleScatter;
+    //if (wh.z < 1e-6) return singleScatter;
+    if (wo.z * wi.z < 0) return 0;
 
     //printf("reached multi scattering eval\n");
     //fflush(stdout);
@@ -484,13 +518,15 @@ Spectrum MultiScatterReflection::f(const Vector3f &woO, const Vector3f &wiO) con
     if (wo.z * wi.z < 0) { 
         return singleScatter; 
     }
+
+    /*
     if (wo.z < 1e-6 || wi.z < 1e-6) {
         return singleScatter;
     }
-    Spectrum multi = computeMultiScattering(wo, wi, alpha, 1, 1, gs, realNVP);
+    */
+    Spectrum multi = computeMultiScattering(wo, wi, alpha, 1, 1, gs, realNVP, distribution);
 
-    //return singleScatter +  R * F * Spectrum(multi);
-    return R *  multi;
+    return singleScatter +  R *  Spectrum(multi);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -512,7 +548,7 @@ Spectrum MultiScatterTransmission::f(const Vector3f &woO, const Vector3f &wiO) c
     Float etaT = entering ? etaB : etaA;
 
     Float eta = entering ? (etaB / etaA) : (etaA / etaB);
-    Vector3f wh = Normalize(wo + wi * eta);
+    Vector3f wh = Normalize(etaI * wo +  etaT * wi);
     if (wh.z < 0) wh = -wh;
     
     if (Dot(wo, wh) * Dot(wi, wh) > -1e-6) return Spectrum(0);
@@ -522,25 +558,21 @@ Spectrum MultiScatterTransmission::f(const Vector3f &woO, const Vector3f &wiO) c
     if (!noFresnel) F =  1.0 - F;
     if (F < 0) F = 0;
    
-     
-    Spectrum FT(F);
+    /* 
+    Float sqrtDenom = Dot(wo, wh) * etaI  + etaT * Dot(wi, wh);
+    Spectrum singleScatter =  F  *  T *
+           std::abs(distribution->D(wh) * distribution->G(wo, wi) * etaT * etaT*
+                    AbsDot(wi, wh) * AbsDot(wo, wh) /
+                    (cosThetaI * cosThetaO * sqrtDenom * sqrtDenom));
     
+    Spectrum multi(singleScatter);
+    */
 
     //factor term cancel out eta * eta in the single scatter evaluation function
     //original equation from walter paper is FDG * absdot(wi, wh) * absdot(wo, wh) / {dot(wi,n) * dot(wo, n) * sqrtDenom^2}
-    Float factor = (mode == TransportMode::Radiance) ? (1 / eta) : 1;
-    Float sqrtDenom = Dot(wo, wh) + eta * Dot(wi, wh);
-    Spectrum singleScatter =  FT *   T *
-           std::abs(distribution->D(wh) * distribution->G(wo, wi) * eta * eta *
-                    AbsDot(wi, wh) * AbsDot(wo, wh) * factor * factor /
-                    (cosThetaI * cosThetaO * sqrtDenom * sqrtDenom));
 
-    Spectrum ms =  computeMultiScattering(wo, wi, alpha, etaI, etaT, gs, NULL) * (1.0 - 0.0715);
-    //printf("ms transmit: %f\n", ms);
-    //fflush(stdout);
+    Spectrum ms =  F * T *  computeMultiScattering(entering? wo:wi, entering? wi: wo, alpha, etaI, etaT, gs, realNVP, distribution);
     Spectrum multi(ms);
-    //Spectrum combine =  singleScatter + multi; 
-    //return combine;
     return multi;
 }
 

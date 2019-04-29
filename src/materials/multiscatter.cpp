@@ -13,20 +13,36 @@ GaussianMultiScattering* createGaussianMultiScattering(const TextureParams &mp, 
     //add find string to nvp model path
     ms->realNVPReflect = NULL;
     ms->gsReflect = NULL;
+    ms->realNVPTransmit = NULL;
+    ms->gsTransmit = NULL;
 
     Float alpha = mp.FindFloat(roughness, 0.7f);
     bool useNVP = mp.FindBool("usenvp", false);
     int numChannels = mp.FindInt("numChannels", 3);
+    int nfloats = 0;
+    //Vector3f energyRatio(0.9575, 0.780155, 0.314);
+    Vector3f energyRatio(1.0, 1.0, 1.0);
+    energyRatio = mp.FindVector3f("energyRatio", energyRatio);
+    
+    std::string modelPrefix = mp.FindString("modelPrefix", "exported");
     
     if (useMS) {
-        std::cout << "use MultiScatterReflection\n";
+        std::cout << "use MultiScatter\n";
         if (useNVP) {
             std::cout << "use real nvp\n";
             //ms->realNVPReflect = new RealNVPScatter();
-            ms->realNVPReflect = new RealNVPScatterSpectrum("exported/gold", numChannels);
-        } 
-        ms->gsReflect = new GaussianScatter(alpha, energyOnly);
-        if (hasTransmission) ms->gsTransmit = new GaussianScatter(alpha, energyOnly, true);
+            if (hasTransmission) {
+                ms->realNVPTransmit = new RealNVPScatterSpectrum(energyRatio, modelPrefix, numChannels);
+            } else {
+                ms->realNVPReflect = new RealNVPScatterSpectrum(energyRatio, modelPrefix, numChannels);
+            }
+        } else {
+            if (hasTransmission)  {
+                ms->gsTransmit = new GaussianScatter(alpha, energyOnly, true); 
+            } else {
+                ms->gsReflect = new GaussianScatter(alpha, energyOnly);
+            }
+        }
     }
     return ms;
 }

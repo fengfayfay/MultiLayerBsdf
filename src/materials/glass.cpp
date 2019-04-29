@@ -75,12 +75,12 @@ void GlassMaterial::ComputeScatteringFunctions(SurfaceInteraction *si,
                 si->bsdf->Add(
                     ARENA_ALLOC(arena, SpecularReflection)(R, fresnel));
             else {
-                if (ms == NULL || ms->gsReflect == NULL) {
+                if (ms == NULL || (ms->gsReflect == NULL && ms->realNVPReflect == NULL) ) {
                     si->bsdf->Add(ARENA_ALLOC(arena, MicrofacetReflection)(
                         R, distrib, fresnel));
                 } else {
                     si->bsdf->Add(ARENA_ALLOC(arena, MultiScatterReflection)(
-                        R, distrib, fresnel,  ms->gsReflect));
+                        R, distrib, fresnel,  ms->gsReflect, urough, ms->realNVPReflect));
                 }
             }
         }
@@ -91,12 +91,12 @@ void GlassMaterial::ComputeScatteringFunctions(SurfaceInteraction *si,
             else {
                 bool noFresnel = false;
                 if (ms) noFresnel = ms->noFresnel;
-                if (ms == NULL || ms->gsTransmit == NULL) {
+                if (ms == NULL || (ms->gsTransmit == NULL && ms->realNVPTransmit == NULL)) {
                     si->bsdf->Add(ARENA_ALLOC(arena, MicrofacetTransmission)(
                         T, distrib, 1.f, eta, mode, noFresnel));
                 } else {
                     si->bsdf->Add(ARENA_ALLOC(arena, MultiScatterTransmission)(
-                        T, distrib, 1.f, eta, mode, ms->noFresnel, ms->gsTransmit));
+                        T, distrib, 1.f, eta, mode, ms->noFresnel, ms->gsTransmit, urough, ms->realNVPTransmit));
                 }
             }
         }

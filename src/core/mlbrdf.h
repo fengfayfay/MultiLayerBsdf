@@ -39,10 +39,11 @@ private:
 
 class RealNVPScatterSpectrum {
 public:
-    RealNVPScatterSpectrum(const std::string& modelPathPrefix=".", int numChannels = 3);
+    RealNVPScatterSpectrum(Vector3f& energyRatio, const std::string& modelPathPrefix=".", int numChannels = 3);
     ~RealNVPScatterSpectrum();
 
-    Spectrum eval(float thetaI, float alpha, const Vector2f &sampleN);
+    //Spectrum eval(float thetaI, float alpha, const Vector2f &sampleN);
+    Float eval(float thetaI, float alpha, const Vector2f &sampleN);
     pbrt::Vector2f sample(float thetaI, float alpha);
 private:
     const std::string modelPathPrefix;
