@@ -1,0 +1,50 @@
+Film "image" 
+	"integer xresolution" [300] "integer yresolution" [300]
+    "string filename" "area2_ms_MS_gs_a_ALPHA_rxy_ROTATION.png"
+Integrator "path" "integer maxdepth" [1]
+Sampler "halton" "integer pixelsamples" [16] 
+
+#LookAt 0 3 8  0 .8 0   0 1 0
+LookAt 0 0 8  0 0 0   0 1 0
+Camera "perspective" "float fov" [22]
+
+WorldBegin
+
+
+AttributeBegin
+Material "matte" "color Kd" [1 1 1]
+AreaLightSource "diffuse"  "color L" [LIGHTINTENSITY LIGHTINTENSITY LIGHTINTENSITY]
+#CoordinateSystem "camera"
+Rotate -ROTATION 0 1 0
+Rotate -ROTATION 1 0 0
+Translate 0 0 8
+ReverseOrientation
+Shape "disk" "float radius" [1]
+AttributeEnd
+
+MakeNamedMaterial "Gold"
+        "string type" [ "metal" ]
+        "spectrum eta" "spds/Au.eta.spd"
+        "spectrum k" "spds/Au.k.spd"
+        "float roughness" ALPHA 
+        "bool remaproughness" "false"
+        "bool useBeckman" "true"
+        "bool multiscatter" "MS"
+        "bool usenvp" "false"
+        "string modelPrefix" "/Users/fengxie/tensor_results_ms_reflection_enhancedData/bounce_all/aALPHA/h_HIDDEN_bj_4"
+
+
+AttributeBegin
+#Material "uber" "rgb Kd" [1 1 1] "rgb Ks" [1 1 1] 
+#"float roughness" [0.3] "bool remaproughness" "false" "float extfactor" [2.0] "integer numgaussian" [20]
+NamedMaterial "Gold"
+Translate 0 0 0
+#Translate 0 1 0
+#Rotate 60 1 1 1
+#Scale .9 .9 .9
+Shape "sphere"
+AttributeEnd
+
+
+WorldEnd
+
