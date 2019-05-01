@@ -1,4 +1,4 @@
-function [obj, err, W, M, R] = fitting_slopedomain(dir,fundir,alpha,angle,input,...
+function [obj, err, W, M, R] = fitting_slopedomain(dir,fundir, ni, no, clampvalue, alpha,angle,input,...
     trainnum, generatenum, gaussiannumvec, xnum, ynum,accelerated,maxiter,tol,softinit, W, M, R, energyRatio)
 
 % fitting 2d mirror heightfield data in slope domain using a mixture of gaussians
@@ -25,18 +25,20 @@ countvec = zeros(1,length(gaussiannumvec));
 % preprocess data
 incident = [sin(angle), 0, cos(angle)];
 boundary_ratio = 99/100;
-[train, test,range] = preprocess(input,incident,...
+[train, test] = preprocess(clampvalue, input,incident,...
     boundary_ratio,xnum,ynum,trainnum,generatenum);
 
 % plot the input data
 titlestring = ['Gaussian heightfield slope distribution, alpha=', num2str(alpha),' angle=',num2str(rad2deg(angle))];
 filename = [dir,'slope_',num2str(rad2deg(angle)),'_alpha_',num2str(alpha), '_sim'];
 
-[~,result] = plotbygrid(xnum,ynum,test,range,titlestring,filename, energyRatio);
+range = 1.5 * clampvalue;
+%[~,result] = plotbygrid(xnum,ynum,test,range,titlestring,filename, energyRatio);
+[~,result] = plotbygrid(xnum,ynum,train,range,titlestring,filename, energyRatio);
 result = result/sum(result(:));
 filename = [dir,'brdf_',num2str(rad2deg(angle)),'_alpha_',num2str(alpha), '_sim'];
 titlestring = ['Reflectance from raytraced Gaussian Heightfield, alpha=', num2str(alpha),' angle=',num2str(rad2deg(angle))];
-[~,brdfsimulated] = plotgrid(input, xnum, ynum, titlestring, filename, energyRatio);
+%[~,brdfsimulated] = plotgrid(input, xnum, ynum, titlestring, filename, energyRatio);
 
 cd(fundir)
 
@@ -58,8 +60,6 @@ for j = 1:length(gaussiannumvec)
     % save gm result
     filename = [dir,'slopeomain_',num2str(rad2deg(angle)),'_alpha_',num2str(alpha), '_#G',num2str(numGaussian),'.mat'];
     %save(filename,'obj')
-    filename = [dir,'brdf_',num2str(rad2deg(angle)),'_alpha_',num2str(alpha), '_gmm'];
-    gm2brdf(obj, 2, rad2deg(angle),alpha, 0, filename, energyRatio);
      
     
     %% generate points from fitted model
@@ -69,8 +69,13 @@ for j = 1:length(gaussiannumvec)
     titlestring = ['Slope distribution generated using GMM, alpha=', num2str(alpha),' angle=',num2str(rad2deg(angle)),' #G=',num2str(numGaussian)];
     filename = [dir,'slope_',num2str(rad2deg(angle)),'_alpha_',num2str(alpha), '_gmm'];
     [count,predict] = plotbygrid(xnum,ynum,Y,range, titlestring,filename, energyRatio);
-    predict = predict/sum(predict(:));
     
+    filename = [dir,'brdf_',num2str(rad2deg(angle)),'_alpha_',num2str(alpha), '_gmm'];
+    gm2brdf(obj, 2, rad2deg(angle),alpha, 0, filename, energyRatio, ni, no);
+    filename = [dir,'bsdfwalter_',num2str(rad2deg(angle)),'_alpha_',num2str(alpha)];
+    bsdf(rad2deg(angle),alpha, filename, ni, no, energyRatio);
+
+    predict = predict/sum(predict(:));
     % calculate relative L2 error
     [err,~,~,~] = relativel2err(result,predict);
     fprintf('err: %4.6f\n', err)
@@ -88,9 +93,20 @@ countvec_filename = [dir,'slopedomain_',num2str(rad2deg(angle)),'_angle_',num2st
 
 end
 
-function [train, test,range] = preprocess(input,incident,...
+function [train, test] = preprocess(clampvalue, input,incident,...
     boundary_ratio,xnum,ynum,trainnum,generatenum)
 
+
+    h = input;
+    xdividez = h(:,1)./h(:,3);
+    ydividez = h(:,2)./h(:,3);
+    xtrain = xdividez(1:trainnum);
+    ytrain = ydividez(1:trainnum);
+    xtrain_new = xtrain(abs(xtrain)<=clampvalue & abs(ytrain)<=clampvalue);
+    ytrain_new = ytrain(abs(xtrain)<=clampvalue & abs(ytrain)<=clampvalue);
+    train = [xtrain_new, ytrain_new];
+    
+    %{
     h = (input + incident)/2;
     hnorm = repmat(sqrt(sum(h.^2,2)),1,3);
     h = h./hnorm;
@@ -106,13 +122,13 @@ function [train, test,range] = preprocess(input,incident,...
     yrange = yrange - sortedyz(1);
     range = max(xrange, yrange) * 1.25;
     fprintf('plotting range is %4.2f\n',range)
-
     % training data
     xtrain = xdividez(1:trainnum);
     ytrain = ydividez(1:trainnum);
     xtrain_new = xtrain(abs(xtrain)<=range/2 & abs(ytrain)<=range/2);
     ytrain_new = ytrain(abs(xtrain)<=range/2 & abs(ytrain)<=range/2);
     train = [xtrain_new, ytrain_new];
+    %}
 
     % testing data
     indexrange = trainnum+1:trainnum+generatenum;

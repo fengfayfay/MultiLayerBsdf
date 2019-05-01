@@ -79,6 +79,20 @@ void MetalMaterial::ComputeScatteringFunctions(SurfaceInteraction *si,
     si->bsdf->Add(ARENA_ALLOC(arena, MicrofacetReflection)(1., distrib, frMf));
 }
 
+Fresnel *
+MetalMaterial::createFresnel(){
+    SurfaceInteraction si;
+    Spectrum fEtaT, fK;
+    fEtaT = eta->Evaluate(si);
+    fK = k->Evaluate(si);
+    Float values[3];
+    fEtaT.ToRGB(values);
+    std::cout << "eta: " << values[0] << " " <<  values[1] << " " <<  values[2] << "\n";
+    fK.ToRGB(values);
+    std::cout << "k: " << values[0] << " " <<  values[1] << " " <<  values[2] << "\n";
+    return new FresnelConductor(1., fEtaT, fK);
+}
+
 const int CopperSamples = 56;
 const Float CopperWavelengths[CopperSamples] = {
     298.7570554, 302.4004341, 306.1337728, 309.960445,  313.8839949,

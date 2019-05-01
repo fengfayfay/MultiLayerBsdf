@@ -40,6 +40,7 @@
 
 // materials/metal.h*
 #include "pbrt.h"
+#include "reflection.h"
 #include "material.h"
 #include "spectrum.h"
 
@@ -59,6 +60,7 @@ class MetalMaterial : public Material {
     void ComputeScatteringFunctions(SurfaceInteraction *si, MemoryArena &arena,
                                     TransportMode mode,
                                     bool allowMultipleLobes) const;
+    Fresnel* createFresnel();
 
   private:
     // MetalMaterial Private Data

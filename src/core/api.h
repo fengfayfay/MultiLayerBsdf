@@ -95,11 +95,15 @@ class ExpOutput;
  void experiment2d(float alpha, const SampleSetting&, const Scene& scene);
  void experiment3d(float alpha, const SampleSetting&, const Scene& scene);
 float observeIntersect(const Ray &ray, float observe);
- void SingleLayerMirror(float theta, float observe, const Ray &ray, const Scene& scene, int weight,int depth, int maxdepth, ExpOutput&);
+ void SingleLayerMirror(float theta, const SampleSetting& setting, const Ray &ray, const Scene& scene, int weight,
+    int depth, Spectrum& fresnel, ExpOutput&);
 
- void SingleLayerGlass(float theta, float observe, const Ray &ray, const Scene& scene, int weight,int depth, int maxdepth, ExpOutput&);
+ void SingleLayerGlass(float theta, const SampleSetting& setting, const Ray &ray, const Scene& scene, int weight,int depth,
+    Spectrum& fresnel, ExpOutput&);
 
- void DoubleLayerHeightfield(float theta, float observe, const Ray &ray, const Scene& scene, int weight,int depth, int maxdepth, ExpOutput&);
+ void DoubleLayerHeightfield(float theta, const SampleSetting& setting, const Ray &ray, const Scene& scene, 
+    int weight,int depth,  
+    Spectrum& fresnel, ExpOutput&);
 
 }  // namespace pbrt
 

@@ -267,6 +267,7 @@ namespace pbrt {
   static std::map<std::string, TransformSet> namedCoordinateSystems;
   static std::unique_ptr<RenderOptions> renderOptions;
   static GraphicsState graphicsState;
+  static std::shared_ptr<MaterialInstance> lastMaterial;
   static std::vector<GraphicsState> pushedGraphicsStates;
   static std::vector<TransformSet> pushedTransforms;
   static std::vector<uint32_t> pushedActiveTransformBits;
@@ -1131,6 +1132,7 @@ namespace pbrt {
     std::shared_ptr<Material> mtl = MakeMaterial(name, mp);
     graphicsState.currentMaterial =
       std::make_shared<MaterialInstance>(name, mtl, params);
+    lastMaterial = graphicsState.currentMaterial;
 
     if (PbrtOptions.cat || PbrtOptions.toPly) {
       printf("%*sMaterial \"%s\" ", catIndentCount, "", name.c_str());
@@ -1173,6 +1175,7 @@ namespace pbrt {
       return;
     }
     graphicsState.currentMaterial = iter->second;
+    lastMaterial = graphicsState.currentMaterial;
     if (PbrtOptions.cat || PbrtOptions.toPly)
       printf("%*sNamedMaterial \"%s\"\n", catIndentCount, "", name.c_str());
   }
@@ -1548,6 +1551,9 @@ namespace pbrt {
     int maxdepth;
     bool uniformSampleIncidentAngles;
     int simulationType;
+    int channel;
+    //Fresnel *frConductor;
+    Fresnel *fresnel;
   };
 
   void pbrtWorldEnd() {
@@ -1586,7 +1592,11 @@ namespace pbrt {
 
       SampleSetting setting;
       setting.uniformSampleIncidentAngles = PbrtOptions.uniformIncidentAngles;
-      setting.simulationType = PbrtOptions.simulationType;
+      std::cout << "uniform sample incident angle "<< setting.uniformSampleIncidentAngles <<"\n";
+
+      setting.simulationType = PbrtOptions.simulationType;  
+      std::cout << "simulation type: "<< setting.simulationType << "\n";
+
       setting.radius = radius;
       setting.height = height;
       setting.observe = observe;
@@ -1598,9 +1608,27 @@ namespace pbrt {
       int num3d = PbrtOptions.uniformIncidentAngles == true ? numrays/angleSamples : 1;
       setting.raysPerIncidentAngle = dimension == 2 ? numrays : num3d;
 
+      //fixed metal type with fixed fresnel coefficients
+      
+      std::shared_ptr<MetalMaterial> metalMaterial = 
+            std::dynamic_pointer_cast<MetalMaterial> (lastMaterial->material);
+      if (metalMaterial) {
+        std::cout << "use conductor fresnel" << "\n";
+        setting.fresnel = metalMaterial->createFresnel();
+      } else {
+        setting.fresnel = new FresnelDielectric(1, 1.5);
+      }
+
+      //add code to create dielectric fresnel
+
       std::cout<<"rays per incident angle " << setting.raysPerIncidentAngle << std::endl;
       //std::cout<<"samples over incident angle range " << angleSamples << std::endl;
 
+      //int numChannels = setting.simulationType == 0 ? 3 : 1;
+      int numChannels = 1;
+      for (int c = 0; c < numChannels; c++) {
+      setting.channel = c;
+      std::cout << "channel " << setting.channel << "\n";
       if (dimension == 2){
 
         experiment2d(alpha, setting, *scene);
@@ -1613,6 +1641,7 @@ namespace pbrt {
 
       std::cout<<"bad rays "<<count<<std::endl;
       std::cout<<"rays that go out: "<<count_goout<<std::endl;
+      }
 
       // original rendering process
       // // This is kind of ugly; we directly override the current profiler
@@ -1655,13 +1684,15 @@ namespace pbrt {
   class ExpOutputStream {
   public:
     ExpOutputStream(int dimension = 3, float alpha = .5, float angle = 0, 
-             bool hasFresnel = false, std::string prefix = ""): 
+             bool hasFresnel = false, std::string prefix = "", int channel = 0): 
+             badrays(0),
              outputCount(0), 
              dimension(dimension), 
              depthG1(0), 
              hasXform(false),
              hasFresnel(hasFresnel),
-             prefix(prefix) {
+             prefix(prefix),
+             channel(channel) {
         if (dimension == 3) {
             init3D(alpha);
         } else {
@@ -1687,7 +1718,13 @@ namespace pbrt {
         return true;
     }
 
-    int addOutput(Point3f inter, float weight, int depth, float theta) {
+    int addBadOutput() {
+        return badrays++;
+    }
+    int addOutput(Point3f inter, float weight, int depth, float theta, Spectrum &fresnel) {
+       
+        Float rgbFresnel[3]; 
+        fresnel.ToRGB(rgbFresnel);
         float observe = 6000.0;
         if (hasXform) {
             inter = l2w(inter);
@@ -1707,6 +1744,7 @@ namespace pbrt {
                 outputz.write((char*)&wh.z, sizeof(wh.z));
                 outputweight.write((char*)&weight, sizeof(weight));
                 outputdepth.write((char*)&depth, sizeof(depth));
+                outputfresnel.write((char*)&rgbFresnel, sizeof(Float)*3);
                 if (dimension == 3) outputangle.write((char*)&theta, sizeof(theta));
                 depthG1++;
                 outputCount++;
@@ -1744,7 +1782,8 @@ namespace pbrt {
 
     void openStream(std::ofstream& output, const std::string& sname, float alpha) {
         std::ostringstream oss;
-        oss << prefix << sname << alpha<<".p";
+        oss << prefix << channel << "_" << sname << alpha<<".p";
+        std::cout<<"output stream name: " << oss.str() <<"\n";
         output.open(oss.str(), std::ios::out | std::ios::binary);
     } 
 
@@ -1774,7 +1813,7 @@ namespace pbrt {
         outputdepth.close();
         if (dimension == 3) {
             outputangle.close();
-            outputenergy << outputCount << " " << depthG1 << "\n"; 
+            outputenergy << badrays << " " << outputCount << " " << depthG1 << "\n"; 
             outputenergy.close();
         }
     }
@@ -1783,23 +1822,30 @@ namespace pbrt {
     std::ofstream outputx, outputy, outputz, outputweight, outputdepth, outputangle, outputenergy;
     std::ofstream  outputwo;
     std::ofstream  outputfresnel;
-    int outputCount, dimension, depthG1;
+    int badrays, outputCount, dimension, depthG1;
     Transform l2w;
     bool hasXform, hasFresnel;
     std::string prefix;
+    int channel;
   };
 
   struct ExpOutput {
     ExpOutput(int dimension = 3, float alpha = .5, float angle = 0, 
-             bool hasFresnel = false): 
-             reflectionStream(dimension, alpha, angle, hasFresnel, "reflection_"), 
-             refractionStream(dimension, alpha, angle, hasFresnel, "refraction_") {} 
+             bool hasFresnel = false, int channel = 0): 
+             reflectionStream(dimension, alpha, angle, hasFresnel, "reflection_", channel), 
+             refractionStream(dimension, alpha, angle, hasFresnel, "refraction_", channel) {} 
 
-    int addOutput(Point3f inter, float weight, int depth, float theta) {
+    int addBadOutput(int streamid) {
+        //todo: choose which stream
+        return streamid == 0? reflectionStream.addBadOutput() : refractionStream.addBadOutput();
+    }
+
+    //need to add fresnel to output
+    int addOutput(Point3f inter, float weight, int depth, float theta, Spectrum &fresnel) {
         if (depth >= 1 && inter.z > 1e-5 ) {
-            return reflectionStream.addOutput(inter, weight, depth, theta);
+            return reflectionStream.addOutput(inter, weight, depth, theta, fresnel);
         } else {
-            if (inter.z < -1e-5 && depth >=1) return refractionStream.addOutput(inter, weight, depth, theta);
+            if (inter.z < -1e-5 && depth >=1) return refractionStream.addOutput(inter, weight, depth, theta, fresnel);
         }
         return -1;
     }
@@ -1834,12 +1880,16 @@ namespace pbrt {
           //Ray rayTest = w2l(ray);
           //output.setTransform(w2l);
 
+          Spectrum fresnel(1);
+
           switch (setting.simulationType ) {
           case 0:
-            SingleLayerMirror(theta, setting.observe, rayTest, scene, weight, depth, setting.maxdepth, output);
+            SingleLayerMirror(theta, setting, rayTest, scene, weight, depth, fresnel, output);
+            break;
           case 1:
-            SingleLayerGlass(theta, setting.observe, ray, scene, weight, depth, setting.maxdepth, output);
-            //DoubleLayerHeightfield(theta,setting.observe, ray, scene, weight, depth, setting.maxdepth, output);
+            SingleLayerGlass(theta, setting, ray, scene, weight, depth, fresnel, output);
+            break;
+            //DoubleLayerHeightfield(theta,setting, ray, scene, weight, depth, fresnel, output);
           }
         }
   } 
@@ -1857,7 +1907,7 @@ namespace pbrt {
 
   // 3d experiment, random incident angle
   void experiment3d(float alpha, const SampleSetting& setting,  const Scene& scene){
-        ExpOutput output(3, alpha);
+        ExpOutput output(3, alpha, 0, true, setting.channel);
         
         srand (time(NULL));
         if (setting.uniformSampleIncidentAngles) {
@@ -1876,49 +1926,57 @@ namespace pbrt {
             //uniform sample incident angle, and output direction 
             SampleSetting newsetting = setting;
             newsetting.raysPerIncidentAngle = 1;
+            
             for (int i = 0 ; i < setting.totalRays; i++) {
                 float u = ((float) rand()/(RAND_MAX));
-                float theta = M_PI * .5 * u;
-                sampleIncidentAngle(theta, newsetting, scene, output);
+                if (i % 17 == 0) {
+                    sampleIncidentAngle(0.0 + u * 0.0001 - 0.00005, newsetting, scene, output);
+                }
+                //float theta = M_PI * .5 * u;
+                float theta = (100.0 * u) - 5.0;
+                sampleIncidentAngle(Radians(theta), newsetting, scene, output);
             }
             /*
             std::default_random_engine generator;
             //std::normal_distribution<float> distribution(M_PI/4,M_PI/12);
 
             //use a gaussian distribution that is almost uniform in [0, 1]
-            std::normal_distribution<float> distribution(.5, 2);
+            //std::normal_distribution<float> distribution(.5, 2);
+            std::normal_distribution<float> distribution(.5, 1.5);
             for (int i = 0; i < setting.totalRays; i++){
                 float randnum = distribution(generator);
                 while (randnum<0 || randnum >1){
                     randnum = distribution(generator);
                 }
                 float theta = randnum * M_PI * .5;
-                sampleIncidentAngle(theta, setting, scene, output);
+                sampleIncidentAngle(Radians(theta), setting, scene, output);
             }
             */
         }
         output.closeOutput();
   }
 
-  void SingleLayerMirror(float theta, float observe, const Ray &r, const Scene& scene, int weight, int depth, int maxdepth, ExpOutput&output){
+  void SingleLayerMirror(float theta, const SampleSetting& setting, const Ray &r, const Scene& scene, 
+       int weight, int depth, Spectrum& fresnel, ExpOutput&output){
     // check intersection
     SurfaceInteraction isect;
     // if not intersect
     if (!scene.Intersect(r, &isect)){
       if (depth == 0){
+        output.addBadOutput(0);
         return;
       }else{
         // check intersection with observing sphere
-        float t = observeIntersect(r, observe);
+        float t = observeIntersect(r, setting.observe);
         Point3f inter = r.o + r.d * t;
         if (inter.z > 0) {
-            output.addOutput(inter, weight, depth, theta);
+            output.addOutput(inter, weight, depth, theta, fresnel);
         }
         return;
       }
     }
 
-    if (depth>maxdepth){
+    if (depth>setting.maxdepth){
       float random = ((float) rand() / (RAND_MAX));
       if ((random)<1./6) weight *= 6;
       else return;
@@ -1927,15 +1985,20 @@ namespace pbrt {
     Normal3f normal = isect.shading.n;
     float cos = Dot(Vector3f(normal), isect.wo);
     bool entering = cos > 0;
-    float etaA = 1.0, etaB = 1.5;
-    //hack before because dielectric has low reflectance fresnel
-    float rprob = 1.0-FrDielectric(cos, etaA, etaB);
+
+    RGBSpectrum rprob = setting.fresnel->Evaluate(cos);
+    fresnel *= rprob;
+    /*
+    Float rgbProb[3];
+    rprob.ToRGB(rgbProb);
     float rt = (float) rand() / (RAND_MAX);
-    if (rt > rprob) return;
+    //check for absorption
+    if (rt > rgbProb[setting.channel]) return;
+    */
     
     // check for bad rays
     if (Dot(isect.n, isect.wo) * Dot(isect.shading.n, isect.wo)<=0){
-      count++;
+      output.addBadOutput(0);
       return;
     }
     Normal3f nl = entering?normal:-normal;
@@ -1947,16 +2010,19 @@ namespace pbrt {
     // mirror case
     // keep track of bad rays
     if (Dot(isect.n, wi) * Dot(normal, wi)<=0) {
-    	count++;
+      output.addBadOutput(0);
       return;
     }
-    SingleLayerMirror(theta, observe, reflRay, scene, weight, depth+1, maxdepth, output);
+    SingleLayerMirror(theta, setting, reflRay, scene, weight, depth+1, fresnel, output);
     return;
   }
 
-  void SingleLayerGlass(float theta, float observe, const Ray &r, const Scene& scene, int weight, int depth, int maxdepth, ExpOutput& output) {
+  void SingleLayerGlass(float theta, const SampleSetting& setting, 
+        const Ray &r, const Scene& scene, int weight, int depth, Spectrum& fresnel, ExpOutput& output) {
     float etaA = 1;
     float etaB = 1.5;
+    //float etaA = 1.5;
+    //float etaB = 1;
 
     // check intersection
     SurfaceInteraction isect;
@@ -1966,7 +2032,7 @@ namespace pbrt {
         return;
       }else{
         // check intersection with observing sphere
-        float t = observeIntersect(r, observe);
+        float t = observeIntersect(r, setting.observe);
         Point3f inter = r.o + r.d * t;
 
         // check rays that go out
@@ -1976,12 +2042,12 @@ namespace pbrt {
           count_goout++;
           return;
         }
-        output.addOutput(inter, weight, depth, theta);
+        output.addOutput(inter, weight, depth, theta, fresnel);
         return;
       }
     }
 
-    if (depth>maxdepth){
+    if (depth>setting.maxdepth){
       float random = ((float) rand() / (RAND_MAX));
       if ((random)<1./6) weight *= 6;
       else return;
@@ -1992,7 +2058,7 @@ namespace pbrt {
 
     // check for bad rays
     if (Dot(isect.n, isect.wo) * Dot(isect.shading.n, isect.wo)<=0){
-      count++;
+      output.addBadOutput(1);
       return;
     }
     Normal3f nl = entering?normal:-normal;
@@ -2003,11 +2069,16 @@ namespace pbrt {
 
     //Float eta = entering ? (etaB / etaA) : (etaA / etaB);
     Vector3f tdir;
-    float e = entering? etaI/etaT:etaT/etaI;
+    //float e = entering? etaI/etaT:etaT/etaI;
+    float e = etaI/etaT;
     bool tr = Refract(isect.wo, nl, e, &tdir);
+    if (!tr) {
+      output.addBadOutput(1);
+      return;
+    }
     // check bad rays
     if ((Dot(isect.n, wi) * Dot(normal, wi)<=0) || Dot(isect.n, tdir) * Dot(normal, tdir)<=0){
-      count++;
+      output.addBadOutput(1);
       return;
     }
 
@@ -2018,22 +2089,32 @@ namespace pbrt {
 
     // specular reflection + specular refraction
     float cos = Dot(Vector3f(normal), isect.wo);
-    float rprob = FrDielectric(cos, etaA, etaB);
-    float rt = (float) rand() / (RAND_MAX);
+    //float rprob = FresnelDielectric(cos, etaA, etaB);
+    //float rt = (float) rand() / (RAND_MAX);
+    RGBSpectrum rprob = setting.fresnel->Evaluate(cos);
 
-    if (rt<=rprob){
+    fresnel *= rprob;
+    Spectrum transmitFresnel = fresnel * (Spectrum(1.0)-rprob);
+
+    SingleLayerGlass(theta, setting, reflRay, scene, weight, depth+1, fresnel, output);
+    if (tr==false) std::cout<<"in transmission case but transmission is impossible, error!"<<std::endl;
+    if (!tr) SingleLayerGlass(theta, setting, tranRay, scene, weight, depth+1, transmitFresnel, output);
+    return;
+    //if (rt<=rprob){
+    if (1){
       // refelctance ray
-      SingleLayerGlass(theta, observe, reflRay, scene, weight, depth+1, maxdepth, output);
+      SingleLayerGlass(theta, setting, reflRay, scene, weight, depth+1, fresnel, output);
       return;
     }else{
       // transmission ray
       if (tr==false) std::cout<<"in transmission case but transmission is impossible, error!"<<std::endl;
-      SingleLayerGlass(theta, observe, tranRay, scene, weight, depth+1, maxdepth, output);
+      SingleLayerGlass(theta, setting, tranRay, scene, weight, depth+1, transmitFresnel, output);
       return;
     }
   }
 
-  void DoubleLayerHeightfield(float theta, float observe, const Ray &r, const Scene& scene, int weight, int depth, int maxdepth, ExpOutput& output) {
+  void DoubleLayerHeightfield(float theta, const SampleSetting& setting, const Ray &r, const Scene& scene, int weight, 
+    int depth, Spectrum& fresnel, ExpOutput& output) {
     // check intersection
     SurfaceInteraction isect;
     // if not intersect
@@ -2043,7 +2124,7 @@ namespace pbrt {
       }else{
 
         // check intersection with observing sphere
-        float t = observeIntersect(r, observe);
+        float t = observeIntersect(r, setting.observe);
         Point3f inter = r.o + r.d * t;
 
         // check rays that go out
@@ -2051,12 +2132,12 @@ namespace pbrt {
           count_goout++;
           return;
         }
-        output.addOutput(inter, weight, depth, theta);
+        output.addOutput(inter, weight, depth, theta, fresnel);
         return;
       }
     }
 
-    if (depth>maxdepth){
+    if (depth>setting.maxdepth){
       float random = ((float) rand() / (RAND_MAX));
       if ((random)<1./6) weight *= 6;
       else return;
@@ -2108,12 +2189,12 @@ namespace pbrt {
 
     if (rt<=rprob){
       // refelctance ray
-      DoubleLayerHeightfield(theta, observe, reflRay, scene, weight, depth+1, maxdepth, output);
+      DoubleLayerHeightfield(theta, setting, reflRay, scene, weight, depth+1, fresnel, output);
       return;
     }else{
       // transmission ray
       if (tr==false) std::cout<<"in transmission case but transmission is impossible, error!"<<std::endl;
-      DoubleLayerHeightfield(theta, observe, tranRay, scene, weight, depth+1, maxdepth, output);
+      DoubleLayerHeightfield(theta, setting, tranRay, scene, weight, depth+1, fresnel, output);
       return;
     }
   }

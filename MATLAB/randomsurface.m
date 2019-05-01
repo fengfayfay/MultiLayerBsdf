@@ -45,7 +45,7 @@ elseif nargin == 5
     f = 2/sqrt(pi)*rL/N/sqrt(clx)/sqrt(cly)*ifft2(fft2(Z).*fft2(F));
     
 end
-cd('/Users/mandy/Github/MultiLayerBsdf/build');
+cd('/Users/fengxie/work/Github/GaussianData/heightField');
 filename = ['pz', num2str(h/clx), '.txt'];
 pz = fopen(filename,'w');
 fprintf(pz,'%5f %5f %5f %5f %5f %5f %5f %5f\n',f);
