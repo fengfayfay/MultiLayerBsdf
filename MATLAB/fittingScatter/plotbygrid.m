@@ -33,13 +33,13 @@ function [count, A] = plotbygrid(xnum,ynum,Y,...
     %disp(maxIndex);
     disp([maxX, maxY]);
     disp(count);
-     
-    figure
-    imagesc(A/sum(sum(A)))
-    colorbar()
-    ylabel('x/z')
-    xlabel('y/z')
-    title(titlestring)
-    saveas(gcf,[filename,'.jpeg'])
+
+    %figure
+    %imagesc(A/sum(sum(A)));
+    %colorbar();
+    %ylabel('x/z');
+    %xlabel('y/z'):
+    %title(titlestring);
+    %saveas(gcf,[filename,'.jpeg']);
 
 end
