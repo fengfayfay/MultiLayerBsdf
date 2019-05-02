@@ -25,6 +25,9 @@ GaussianMultiScattering* createGaussianMultiScattering(const TextureParams &mp, 
     energyRatio = mp.FindVector3f("energyRatio", energyRatio);
     
     std::string modelPrefix = mp.FindString("modelPrefix", "exported");
+    std::cout<< "path to nvp: "<< modelPrefix << "\n";
+    std::string fresnelPrefix = mp.FindString("fresnelPrefix", "None");
+    std::cout<< "path to fresnel: "<< fresnelPrefix << "\n";
     
     if (useMS) {
         std::cout << "use MultiScatter\n";
@@ -32,9 +35,9 @@ GaussianMultiScattering* createGaussianMultiScattering(const TextureParams &mp, 
             std::cout << "use real nvp\n";
             //ms->realNVPReflect = new RealNVPScatter();
             if (hasTransmission) {
-                ms->realNVPTransmit = new RealNVPScatterSpectrum(energyRatio, modelPrefix, numChannels);
+                ms->realNVPTransmit = new RealNVPScatterSpectrum(energyRatio, modelPrefix, fresnelPrefix, numChannels);
             } else {
-                ms->realNVPReflect = new RealNVPScatterSpectrum(energyRatio, modelPrefix, numChannels);
+                ms->realNVPReflect = new RealNVPScatterSpectrum(energyRatio, modelPrefix, fresnelPrefix, numChannels);
             }
         } else {
             if (hasTransmission)  {

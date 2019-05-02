@@ -13,9 +13,12 @@ void free_buffer(void* data, size_t length) { free(data); }
 
 void deallocator(void* ptr, size_t len, void* arg) { free((void*)ptr); }
 
-RealNVPScatterSpectrum::RealNVPScatterSpectrum(Vector3f& energyRatio, const std::string& pathPrefix, int numChannels):
+RealNVPScatterSpectrum::RealNVPScatterSpectrum(Vector3f& energyRatio, 
+            const std::string& modelPathPrefix, const std::string& fresnelPrefix,  int numChannels):
             energyRatio(energyRatio),
-            modelPathPrefix(pathPrefix), numChannels(numChannels) {
+            modelPathPrefix(modelPathPrefix), mlFresnel(NULL), numChannels(numChannels) {
+
+    if (fresnelPrefix.compare("None") != 0) mlFresnel = new MLFresnel(fresnelPrefix);
     nvpScatter = new RealNVPScatter[1];
     for (int i = 0; i < 1; i++) {
         nvpScatter[i].init(modelPathPrefix);
@@ -23,6 +26,8 @@ RealNVPScatterSpectrum::RealNVPScatterSpectrum(Vector3f& energyRatio, const std:
 }
 
 RealNVPScatterSpectrum::~RealNVPScatterSpectrum() {
+
+    if (mlFresnel) delete mlFresnel;
     delete [] nvpScatter;
 }
 
@@ -45,6 +50,17 @@ RealNVPScatterSpectrum::eval(float thetaI, float alpha, const Vector2f &sampleN)
     
     return Spectrum::FromRGB(value);
     */
+}
+
+Spectrum
+RealNVPScatterSpectrum::eval(Float alpha, Float muI, Float muH, Float thetaI, const Vector2f &sampleN){
+
+    Float dist = eval(thetaI, alpha, sampleN);
+    if (dist < 1e-6) return 0;
+    Spectrum F (1.0);
+    if (mlFresnel) F = mlFresnel->eval(alpha, muI, muH);
+    return F * dist;  
+
 }
 
 pbrt::Vector2f RealNVPScatterSpectrum::sample(float thetaI, float alpha) {
@@ -113,8 +129,6 @@ RealNVPScatter::loadAndRestore() {
     // ================================================================================
     TF_Operation* checkpoint_op = TF_GraphOperationByName(graph, "save/Const");
     TF_Operation* restore_op = TF_GraphOperationByName(graph, "save/restore_all");
-
-
 
 
     filePath = modelPathPrefix + "/model";
@@ -396,9 +410,6 @@ RealNVPScatter::eval(float thetaI, float alpha, const pbrt::Vector2f& sampleN) {
     float* output_data = (float*) TF_TensorData(eval_output_tensors[0]);
     if (isNaN(output_data[0])) return 0;
     float prob = expf(output_data[0]);
-    //if (prob < thresh) return 0;
-    //printf("prob: %f\n", prob);
-    //fflush(stdout);
     return prob;
 }
 
@@ -435,6 +446,220 @@ RealNVPScatter::~RealNVPScatter() {
     TF_DeleteGraph(graph);
 }
 
+
+//MLFresnel Object
+
+MLFresnel::MLFresnel(const std::string& pathPrefix, const std::string& fresnelOpName):
+            modelPathPrefix(pathPrefix), fresnelOpName(fresnelOpName){
+    std::cout<<"path to fresnel: "<< pathPrefix;
+    loadAndRestore();
+    setupEvalTensors();
+}
+
+bool 
+MLFresnel::loadAndRestore() {
+    // load graph
+    // ================================================================================
+    std::string filePath = modelPathPrefix + "/graph.pb";
+    std::cout << "path to fresnel: " << filePath;
+    graph_def = read_file(filePath.c_str());
+    graph = TF_NewGraph();
+    
+    status = TF_NewStatus();
+    TF_ImportGraphDefOptions* opts = TF_NewImportGraphDefOptions();
+    TF_GraphImportGraphDef(graph, graph_def, opts, status);
+    TF_DeleteImportGraphDefOptions(opts);
+    if (TF_GetCode(status) != TF_OK) {
+        fprintf(stderr, "ERROR: Unable to import graph %s\n", TF_Message(status));
+        return 1;
+    }
+    fprintf(stdout, "Successfully imported fresnel graph\n");
+
+    // create session
+    // ================================================================================
+    TF_SessionOptions* opt = TF_NewSessionOptions();
+    sess = TF_NewSession(graph, opt, status);
+    TF_DeleteSessionOptions(opt);
+    if (TF_GetCode(status) != TF_OK) {
+        fprintf(stderr, "ERROR: Unable to create session %s\n", TF_Message(status));
+        return 1;
+    }
+    fprintf(stdout, "Successfully created session\n");
+
+    // run init operation
+    // ================================================================================
+    const TF_Operation* init_op = TF_GraphOperationByName(graph, "init");
+    const TF_Operation* const* targets_ptr = &init_op;
+
+    TF_SessionRun(sess,
+                  /* RunOptions */ NULL,
+                  /* Input tensors */ NULL, NULL, 0,
+                  /* Output tensors */ NULL, NULL, 0,
+                  /* Target operations */ targets_ptr, 1,
+                  /* RunMetadata */ NULL,
+                  /* Output status */ status);
+    if (TF_GetCode(status) != TF_OK) {
+      fprintf(stderr, "ERROR: Unable to run init_op: %s\n", TF_Message(status));
+      return 1;
+    }
+    fprintf(stdout, "Successfully init session\n");
+
+    // run restore
+    // ================================================================================
+    TF_Operation* checkpoint_op = TF_GraphOperationByName(graph, "save/Const");
+    TF_Operation* restore_op = TF_GraphOperationByName(graph, "save/restore_all");
+
+    filePath = modelPathPrefix + "/model";
+    const char* checkpoint_path_str = filePath.c_str();
+    size_t checkpoint_path_str_len = strlen(checkpoint_path_str);
+    size_t encoded_size = TF_StringEncodedSize(checkpoint_path_str_len);
+
+    // The format for TF_STRING tensors is:
+    //   start_offset: array[uint64]
+    //   data:         byte[...]
+    size_t total_size = sizeof(int64_t) + encoded_size;
+    char* input_encoded = (char*)malloc(total_size);
+    memset(input_encoded, 0, total_size);
+    TF_StringEncode(checkpoint_path_str, checkpoint_path_str_len,
+                    input_encoded + sizeof(int64_t), encoded_size, status);
+    if (TF_GetCode(status) != TF_OK) {
+      fprintf(stderr, "ERROR: something wrong with encoding: %s",
+              TF_Message(status));
+      return 1;
+    }
+
+    TF_Tensor* path_tensor = TF_NewTensor(TF_STRING, NULL, 0, input_encoded,
+                                          total_size, &deallocator, 0);
+
+    TF_Output* run_path = (TF_Output*)malloc(1 * sizeof(TF_Output));
+    run_path[0].oper = checkpoint_op;
+    run_path[0].index = 0;
+
+    TF_Tensor** run_path_tensors = (TF_Tensor**)malloc(1 * sizeof(TF_Tensor*));
+    run_path_tensors[0] = path_tensor;
+
+    TF_SessionRun(sess,
+                  /* RunOptions */ NULL,
+                  /* Input tensors */ run_path, run_path_tensors, 1,
+                  /* Output tensors */ NULL, NULL, 0,
+                  /* Target operations */ &restore_op, 1,
+                  /* RunMetadata */ NULL,
+                  /* Output status */ status);
+    if (TF_GetCode(status) != TF_OK) {
+      fprintf(stderr, "ERROR: Unable to run restore_op: %s\n",
+              TF_Message(status));
+      return 1;
+    }
+    fprintf(stdout, "Successfully restore session\n");
+    
+    free((void*)input_encoded);
+    return true;
+}
+
+bool MLFresnel::setupEvalTensors() {
+    
+    int64_t* raw_input_dims = (int64_t*)malloc(2 * sizeof(int64_t));
+    
+    TF_Operation* input_op_prob_x = TF_GraphOperationByName(graph, "fresnel_eval_placeholder");
+    if (input_op_prob_x == NULL) {
+      printf("input_op_prob_x not found\n");
+      exit(0);
+    } else {
+      printf("input_op_prob_x has %i inputs\n", TF_OperationNumOutputs(input_op_prob_x));
+    }
+ 
+    TF_Operation* output_prob_op = TF_GraphOperationByName(graph, fresnelOpName.c_str());
+    if (output_prob_op == NULL) {
+      printf("output_prob_op not found\n");
+      exit(0);
+    } else {
+      printf("output_prob_op has %i outputs\n", TF_OperationNumOutputs(output_prob_op));
+    }
+
+    float *prob_output = (float*)malloc(3 * sizeof(float)); 
+    TF_Tensor* output_prob_tensor =
+        TF_NewTensor(TF_FLOAT, NULL, 0, prob_output,
+                     sizeof(float)*3, &deallocator, NULL);
+
+
+    eval_output_tensors[0] = output_prob_tensor;
+    float* raw_input_prob_x = (float*)malloc(2 * sizeof(float));
+    raw_input_prob_x[0] = 0.5;
+    raw_input_prob_x[1] = 0.5;
+    raw_input_dims[0] = 1;
+    raw_input_dims[1] = 2;
+    TF_Tensor* input_tensor_prob_x =
+        TF_NewTensor(TF_FLOAT, raw_input_dims, 2, raw_input_prob_x,
+                     sizeof(float)*2, &deallocator, NULL);
+
+ 
+    eval_run_outputs[0].oper = output_prob_op;
+    eval_run_outputs[0].index = 0;
+
+    eval_run_inputs[0].oper = input_op_prob_x;
+    eval_run_inputs[0].index = 0;
+
+    eval_input_tensors[0] = input_tensor_prob_x;
+
+    printf("start running prob session\n");
+    TF_SessionRun(sess,
+                  /* RunOptions */ NULL,
+                  /* Input tensors */ eval_run_inputs, eval_input_tensors, 1,
+                  /* Output tensors */ eval_run_outputs, eval_output_tensors, 1,
+                  /* Target operations */ NULL, 0,
+                  /* RunMetadata */ NULL,
+                  /* Output status */ status);
+    if (TF_GetCode(status) != TF_OK) {
+      fprintf(stderr, "ERROR: Unable to run output_op: %s\n", TF_Message(status));
+      return 1;
+    }
+    printf("finished running prob\n");
+    
+    float* output_data = (float*) TF_TensorData(eval_output_tensors[0]);
+
+    printf("fresnel output %f %f %f\n", output_data[0], output_data[1], output_data[2]);
+    printf("finished running prob\n");
+
+    return true;
+}
+
+Spectrum 
+MLFresnel::eval(Float alpha, Float muI, Float muH) {
+    //float* alphaPtr = (float*) TF_TensorData(eval_input_tensors[2]);
+    //float* thetaIPtr = (float*) TF_TensorData(eval_input_tensors[1]);
+    float* samplePtr = (float*) TF_TensorData(eval_input_tensors[0]);
+    samplePtr[0] = muI;
+    samplePtr[1] = muH;
+    //alphaPtr[0] = alpha;
+    //thetaIPtr[0] = thetaI;
+    TF_SessionRun(sess,
+                  /* RunOptions */ NULL,
+                  /* Input tensors */ eval_run_inputs, eval_input_tensors, 1,
+                  /* Output tensors */ eval_run_outputs, eval_output_tensors, 1,
+                  /* Target operations */ NULL, 0,
+                  /* RunMetadata */ NULL,
+                  /* Output status */ status);
+    if (TF_GetCode(status) != TF_OK) {
+      fprintf(stderr, "ERROR: Unable to run output_op: %s\n", TF_Message(status));
+      return 0;
+    }
+    float* output_data = (float*) TF_TensorData(eval_output_tensors[0]);
+    if (isNaN(output_data[0])) return 0;
+    //std::cout<<"ML Fresnel: "<< output_data[0] << " " << output_data[1] << " " << output_data[2] << "\n";
+    return Spectrum::FromRGB(output_data);
+}
+
+
+MLFresnel::~MLFresnel() {
+    TF_CloseSession(sess, status);
+    TF_DeleteSession(sess, status);
+
+    TF_DeleteStatus(status);
+    TF_DeleteBuffer(graph_def);
+    TF_DeleteGraph(graph);
+}
+
+///////////////end MLFresnel///////////////////////////////////
 //Required MISC functions
 
 TF_Buffer* read_file(const char* file) {
@@ -459,21 +684,3 @@ TF_Buffer* read_file(const char* file) {
     return buf;
 }
 }
-
-/*
-TF_CAPI_EXPORT extern void TF_SessionRun(
-      TF_Session* session,
-      // RunOptions
-      const TF_Buffer* run_options,
-      // Input tensors
-      const TF_Output* inputs, TF_Tensor* const* input_values, int ninputs,
-      // Output tensors
-      const TF_Output* outputs, TF_Tensor** output_values, int noutputs,
-      // Target operations
-      const TF_Operation* const* target_opers, int ntargets,
-      // RunMetadata
-      TF_Buffer* run_metadata,
-      // Output status
-      TF_Status*);
-
-*/
