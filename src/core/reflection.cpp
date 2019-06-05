@@ -417,13 +417,12 @@ Spectrum computeMultiScattering(Vector3f &wo, Vector3f &wi, Float alpha,
     const GaussianScatter* gs, RealNVPScatterSpectrum *realNVP, const MicrofacetDistribution *distribution) {
 
     //if (realNVP) {
-    /*
-    if (1) {
+    //if (1) {
+    if (0) {
         Vector3f tmp = wo;
         wo = wi;
         wi = tmp;
     }
-    */
     Float cosThetaI = AbsCosTheta(wi);
     Float cosThetaO = AbsCosTheta(wo);
 
@@ -448,9 +447,16 @@ Spectrum computeMultiScattering(Vector3f &wo, Vector3f &wi, Float alpha,
     }
 
 
+    if (wo.z < 0) {
+        wo = -wo;
+        wi = -wi;
+        //wh.x = -wh.x;
+        //wh.z = -wh.z;
+    }
     Float thetaO = acos(fabs(wo.z));
     if (thetaO < 1e-4) thetaO = 1e-4;
     if (thetaO > .5 * M_PI -1e-5) thetaO =  .5 * M_PI -1e-5;
+
     //Float thetaI = acos(fabs(wi.z));
 
     //Float phiI = atan2(wi.y, wi.x);
