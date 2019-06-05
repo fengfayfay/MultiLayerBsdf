@@ -5,7 +5,7 @@ Integrator "path" "integer maxdepth" [1]
 Sampler "halton" "integer pixelsamples" [16] 
 
 #LookAt 0 3 8  0 .8 0   0 1 0
-LookAt 0 0 8  0 0 0   0 1 0
+LookAt 0 0 6  0 0 0   0 1 0
 Camera "perspective" "float fov" [22]
 
 WorldBegin
@@ -32,6 +32,7 @@ MakeNamedMaterial "Gold"
         "bool multiscatter" "MS"
         "bool usenvp" "false"
         "string modelPrefix" "/Users/fengxie/tensor_results_ms_reflection_enhancedData/bounce_all/aALPHA/h_HIDDEN_bj_4"
+        "bool noFresnel" "true"
 
 
 AttributeBegin

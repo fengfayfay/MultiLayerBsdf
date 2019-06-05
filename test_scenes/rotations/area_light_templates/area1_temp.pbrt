@@ -31,6 +31,7 @@ MakeNamedMaterial "Gold"
         "bool multiscatter" "MS"
         "bool usenvp" "true"
         "string modelPrefix" "/Users/fengxie/tensor_results_ms_reflection/bounce_all/aALPHA/h_HIDDEN_bj_4"
+        "bool noFresnel" "true"
 
 
 AttributeBegin

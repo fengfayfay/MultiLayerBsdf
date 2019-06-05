@@ -20,12 +20,14 @@ MSs = ["true", "false"]
 NVPs = ["true", "false"]
 light_intensity = 50
 
-hidden = 30
+hidden = 200 
+hidden = 30 
 rotation_step = 20
 
 
-alphas = [9.0, 8.0, 7.0, 6.0, 5.0]
-alphas = [4.0, 3.0, 2.0, 1.0]
+alphas = [9.0, 7.0, 5.0, 3.0, 1.0]
+#alphas = [4.0, 3.0, 2.0, 1.0]
+#alphas = [5.0]
 for alpha in alphas:
     alpha_str = '{0:1.2f}'.format(alpha)
     print (alpha_str)
@@ -33,9 +35,12 @@ for alpha in alphas:
     print(actual_alpha_str)
     file_alpha_str = '{0:1.1f}'.format(alpha * 0.1)
     print(file_alpha_str)
-    alpha_dir = 'nvp_' + repr(hidden) + '_light_' + repr(light_intensity) + '/alpha' + actual_alpha_str 
+    alpha_dir = 'images_nvp_' + repr(hidden) + '_light_' + repr(light_intensity) + '/alpha' + actual_alpha_str 
     print(alpha_dir)
     os.makedirs(alpha_dir, exist_ok = True)
+    pbrt_dir = 'pbrt_nvp_' + repr(hidden) + '_light_' + repr(light_intensity) + '/alpha' + actual_alpha_str 
+    print(pbrt_dir)
+    os.makedirs(pbrt_dir, exist_ok = True)
     for rotation in range(10, 90, rotation_step):
         for ms in MSs:
             text = open(templateFile, 'r').read()
@@ -56,4 +61,4 @@ for alpha in alphas:
             #print(tmpfiles)
             for t in tmpfiles:
                 run(args = ['mv', t, alpha_dir])
-            run(args = ['mv', tempFileName, alpha_dir])
+            run(args = ['mv', tempFileName, pbrt_dir])
