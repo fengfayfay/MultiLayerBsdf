@@ -1,0 +1,55 @@
+#Integrator "path" "integer maxdepth" [4]
+Integrator "path" "integer maxdepth" [DEPTH]
+
+Sampler "halton" "integer pixelsamples" [SAMPLES]
+
+PixelFilter "gaussian"
+
+Film "image" "integer xresolution" [300] "integer yresolution" [300]
+    "string filename" "ganesha_gold_ms_MS_a_ALPHA.png"
+
+Scale -1 1 1
+LookAt 328.0 40.282 245.0 328.0 10.0 0.0 -0.00212272 0.998201 -0.0599264
+Camera "perspective" "float fov" [30.0]
+
+WorldBegin
+Shape "trianglemesh" "point P" [-672.0 -41.99995803833008 1000.0 1328.0 -41.99995803833008 1000.0 1328.0 -42.00004196166992 -1000.0 -672.0 -42.00004196166992 -1000.0] "integer indices" [0 1 2 0 2 3]
+
+AttributeBegin
+    Transform [0 0 -1 0 1 0 0 0 0 1 0 0 0 0 0 1]
+    LightSource "infinite" "string mapname" ["textures/sky.exr"] "color scale" [0.1 0.1 0.1]
+AttributeEnd
+
+AttributeBegin
+    AreaLightSource "diffuse" "color L" [15.258818626403809 12.083925247192383 9.589462280273438]
+    Shape "trianglemesh" "point P" [220.0 61.36730194091797 -343.6283264160156 400.0 61.36730194091797 -343.6283264160156 400.0 238.6326904296875 -312.3716735839844 220.0 238.6326904296875 -312.3716735839844] "integer indices" [0 1 2 0 2 3]
+AttributeEnd
+
+AttributeBegin
+    AreaLightSource "diffuse" "color L" [15.258818626403809 12.083925247192383 9.589462280273438]
+    ReverseOrientation
+    Shape "trianglemesh" "point P" [220.0 61.36730194091797 343.6283264160156 400.0 61.36730194091797 343.6283264160156 400.0 238.6326904296875 312.3716735839844 220.0 238.6326904296875 312.3716735839844] "integer indices" [0 1 2 0 2 3]
+AttributeEnd
+    
+#Texture "tmap" "color" "imagemap" "string filename" ["textures/ganesha.png"]
+MakeNamedMaterial "Gold"
+        "string type" [ "metal" ]
+        "spectrum eta" "spds/Au.eta.spd"
+        "spectrum k" "spds/Au.k.spd"
+        "float roughness" ALPHA 
+        "string modelPrefix" "NVPMODELPREFIX/aALPHA/h_HIDDENNVP_bj_4"
+        "string fresnelPrefix" "FRESNELMODELPREFIX/aALPHA/h_HIDDENFRESNEL"
+        "bool multiscatter" ["USEMS"]
+        "bool remaproughness" ["false"]
+        "bool usenvp" "USENVP"
+        "bool useBeckman" ["true"]
+        #"integer maxBounce" 5
+        #"integer minBounce" 1
+        #"bool uniform" ["false"]
+        #"bool vcavity" ["true"]
+
+AttributeBegin
+    NamedMaterial "Gold"
+    Shape "plymesh" "string filename" ["geometry/ganesha.ply"]
+AttributeEnd
+WorldEnd
