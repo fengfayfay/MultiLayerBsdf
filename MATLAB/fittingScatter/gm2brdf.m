@@ -66,12 +66,13 @@ end
 end
 
 function [jacobian] = computeJacobian(wo, wi, no, ni)
-    %{
+    
     denom = (wo(3) + wi(3));
     denom = abs(denom * denom * denom);
     jacobian = abs(wo(3)* wi(3)  + wo(2)*wi(2) + wo(1)*wi(1) + 1)/denom;
-    %} 
+     
 
+    %{
     xo = wo(1);
     yo = wo(2);
     zo = wo(3);
@@ -97,4 +98,5 @@ function [jacobian] = computeJacobian(wo, wi, no, ni)
     mu_t = sqrt(zi * zi + ni* ni- no * no)*ni/no; 
     %jacobian = abs(jacobian_xiyi * wi(3) * ni/no);
     jacobian = abs(jacobian_xiyi * wi(3));
+    %}
 end 

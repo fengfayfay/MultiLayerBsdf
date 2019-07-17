@@ -1721,6 +1721,39 @@ namespace pbrt {
     int addBadOutput() {
         return badrays++;
     }
+    
+    Float computeReciprocal(Float theta_i, const Vector3f& iwo, Vector3f& wo_recip, Vector3f& wi_recip) {
+        Vector3f wi = Vector3f(sin(theta_i), 0, cos(theta_i));
+
+        Vector3f wo(iwo);
+        Float phi = atan2(wo.y, wo.x);
+        if (fabs(phi) > 1e-6) {
+            phi = Degrees(phi);
+            Transform rotation = RotateZ(-phi);
+            wo = rotation(wo);
+            wo_recip = rotation(wi);
+            if (fabs(wo.y) > 1e-3 || fabs(wo.z) < 1e-6) {
+            std::cout << "phi: " << phi << "mu: " << wo.z << "\n";
+            std::cout<< "wo: " << wo << "\n";
+            std::cout<< "rotation:" << rotation << "\n";
+            fflush(stdout);
+            }
+            assert(fabs(wo.y) < 1e-5);
+        }
+        if (wo.z < 0) {
+            wo = -wo;
+            wo_recip = -wo_recip;
+        }
+        if (wo.z > 1.0) wo.z = 1.0;
+        if (wo.x < 0) {
+            std::cout <<"wo:" << wo << "\n";
+        }
+        
+        Float theta_o = acos(wo.z);
+        wi_recip = wo;
+        return theta_o; 
+    }
+    
     int addOutput(Point3f inter, float weight, int depth, float theta, Spectrum &fresnel) {
        
         Float rgbFresnel[3]; 
@@ -1738,14 +1771,19 @@ namespace pbrt {
         if (1) {
             Vector3f wh(0, 0, 1);
             if (computeWh(theta, wo, wh)) {
+                Vector3f wor, wir;
+                Float theta_o = computeReciprocal(theta, wo, wor, wir);
                 outputwo.write((char*)&wo, sizeof(wo));
-                outputx.write((char*)&wh.x, sizeof(wh.x));
-                outputy.write((char*)&wh.y, sizeof(wh.y));
-                outputz.write((char*)&wh.z, sizeof(wh.z));
+                outputwor.write((char*)&wor, sizeof(wor));
+                //outputwir.write((char*)&wir, sizeof(wir));
+                //outputx.write((char*)&wh.x, sizeof(wh.x));
+                //outputy.write((char*)&wh.y, sizeof(wh.y));
+                //outputz.write((char*)&wh.z, sizeof(wh.z));
                 outputweight.write((char*)&weight, sizeof(weight));
                 outputdepth.write((char*)&depth, sizeof(depth));
                 outputfresnel.write((char*)&rgbFresnel, sizeof(Float)*3);
                 if (dimension == 3) outputangle.write((char*)&theta, sizeof(theta));
+                outputangler.write((char*)&theta_o, sizeof(theta_o));
                 depthG1++;
                 outputCount++;
             }
@@ -1788,14 +1826,17 @@ namespace pbrt {
     } 
 
     void init3D(float alpha) {
-        openStream(outputx, "3d_outputx_", alpha);
-        openStream(outputy, "3d_outputy_", alpha);
-        openStream(outputz, "3d_outputz_", alpha);
+        //openStream(outputx, "3d_outputx_", alpha);
+        //openStream(outputy, "3d_outputy_", alpha);
+        //openStream(outputz, "3d_outputz_", alpha);
         openStream(outputweight, "3d_outputweight_", alpha);
         openStream(outputdepth, "3d_outputdepth_", alpha);
         openStream(outputangle, "3d_outputangle_", alpha);
+        openStream(outputangler, "3d_outputangle_recip_", alpha);
         openStream(outputenergy, "3d_outputenergy_", alpha);
         openStream(outputwo, "3d_outputwo_", alpha);
+        openStream(outputwor, "3d_outputwo_recip_", alpha);
+        //openStream(outputwir, "3d_outputwi_recip_", alpha);
 
         if (hasFresnel) {
             openStream(outputfresnel, "3d_outputfresnel_", alpha);
@@ -1804,23 +1845,23 @@ namespace pbrt {
     }
 
     void closeOutput() {
-        outputx.close();
-        outputy.close();
-        outputz.close();
+
         outputwo.close();
+        outputwor.close();
         outputfresnel.close();
         outputweight.close();
         outputdepth.close();
         if (dimension == 3) {
             outputangle.close();
+            outputangler.close();
             outputenergy << badrays << " " << outputCount << " " << depthG1 << "\n"; 
             outputenergy.close();
         }
     }
 
     void setTransform(Transform& w2l) {l2w = Inverse(w2l); hasXform = true;}
-    std::ofstream outputx, outputy, outputz, outputweight, outputdepth, outputangle, outputenergy;
-    std::ofstream  outputwo;
+    std::ofstream outputx, outputy, outputz, outputweight, outputdepth, outputangle, outputangler, outputenergy;
+    std::ofstream  outputwo, outputwor, outputwir;
     std::ofstream  outputfresnel;
     int badrays, outputCount, dimension, depthG1;
     Transform l2w;
@@ -1930,11 +1971,13 @@ namespace pbrt {
             for (int i = 0 ; i < setting.totalRays; i++) {
                 float u = ((float) rand()/(RAND_MAX));
                 if (i % 17 == 0) {
-                    sampleIncidentAngle(0.0 + u * 0.0001 - 0.00005, newsetting, scene, output);
+                    sampleIncidentAngle(u * 0.0001, newsetting, scene, output);
                 }
-                //float theta = M_PI * .5 * u;
-                float theta = (100.0 * u) - 5.0;
-                sampleIncidentAngle(Radians(theta), newsetting, scene, output);
+                Float theta = (M_PI * .49999)  * u;
+                //Float theta = 89.999*u;
+                //sampleIncidentAngle(Radians(theta), newsetting, scene, output);
+                //sampleIncidentAngle(Radians(theta), newsetting, scene, output);
+                sampleIncidentAngle(theta, newsetting, scene, output);
             }
             /*
             std::default_random_engine generator;

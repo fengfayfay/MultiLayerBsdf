@@ -17,7 +17,7 @@ function [mean_0, mean_1, cv_0, cv_1, energyRatios, anglevalues, errs, mus] =  O
     %clc
 
     %datadir = '/Users/fengxie/work/Github/GaussianData/HeightfieldData/singleLayerGlassSlice/';
-    datadir = '/Users/fengxie/work/Github/GaussianData/singleLayerGlassSlice/';
+    datadir = '/Users/fengxie/work/Github/GaussianData/singleLayerMirrorSlice/';
     %datadir = '/Users/fengxie/work/Github/GaussianData/singleLayerGlassWaterSlice/';
     %
     %datadir = '/Users/fengxie/work/Github/GaussianData/singleLayerGlassFresnel/';
@@ -179,7 +179,7 @@ function [ox, oangle, x, y, z, angle] = read_data(datadir, alpha, bounce)
         prefix = 'reflection_';
         %prefix = 'refraction_';
         prefix = strcat('refraction_0_', '3d_output');
-        %prefix = strcat('reflection_0_', '3d_output');
+        prefix = strcat('reflection_0_', '3d_output');
         filename = [prefix, 'x_',  num2str(alpha),'.p'];
         fileID = fopen(filename);
         C1 = fread(fileID, 'float');
