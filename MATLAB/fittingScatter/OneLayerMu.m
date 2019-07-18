@@ -149,7 +149,12 @@ end
     
        
 function createFit(alpha, polyDegree, anglevalues, energyRatios, fitting_data, targetNames, targetFileNames, resultdir, isMu)
-    filename = [resultdir, 'scatter_', num2str(alpha), '.txt'];
+    if (isMu)
+        filename = [resultdir, 'scatter_', num2str(alpha), '.txt'];
+    else
+        filename = [resultdir, 'scatter_theta_', num2str(alpha), '.txt'];
+    end
+
     file = fopen(filename, 'w');
     coefCount = polyDegree + 1;
     fprintf(file, "%d\n", coefCount);
