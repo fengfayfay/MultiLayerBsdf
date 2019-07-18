@@ -289,6 +289,3 @@ function [fitting_data] = prep_for_fitting(obj, start, angleindex, anglecount, f
     fitting_data(i, 3) = cov(1, 1);
     fitting_data(i, 4) = cov(2, 2);
 end
-
-        
-
