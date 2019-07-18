@@ -29,10 +29,11 @@ boundary_ratio = 99/100;
     boundary_ratio,xnum,ynum,trainnum,generatenum);
 
 % plot the input data
-titlestring = ['Gaussian heightfield slope distribution, alpha=', num2str(alpha),' angle=',num2str(rad2deg(angle))];
+titlestring = ['\fontsize{16} Gaussian heightfield slope distribution, \alpha=', num2str(alpha), ', \theta_i=',num2str(rad2deg(angle))];
 filename = [dir,'slope_',num2str(rad2deg(angle)),'_alpha_',num2str(alpha), '_sim'];
 
-range = 1.5 * clampvalue;
+%range = 1.5 * clampvalue;
+range = 0.5 * clampvalue;
 %[~,result] = plotbygrid(xnum,ynum,test,range,titlestring,filename, energyRatio);
 [~,result] = plotbygrid(xnum,ynum,train,range,titlestring,filename, energyRatio);
 result = result/sum(result(:));
@@ -66,7 +67,7 @@ for j = 1:length(gaussiannumvec)
     Y = random(obj,generatenum);
     % plot gmm generated data
     
-    titlestring = ['Slope distribution generated using GMM, alpha=', num2str(alpha),' angle=',num2str(rad2deg(angle)),' #G=',num2str(numGaussian)];
+    titlestring = ['\fontsize{16} GMM modeled slope distribution, \alpha=', num2str(alpha),', \theta_i=',num2str(rad2deg(angle))];
     filename = [dir,'slope_',num2str(rad2deg(angle)),'_alpha_',num2str(alpha), '_gmm'];
     [count,predict] = plotbygrid(xnum,ynum,Y,range, titlestring,filename, energyRatio);
     

@@ -1,4 +1,4 @@
-function [fitresult, gof] = plot_error(anglevalues, errs, resultDir)
+function [fitresult, gof] = plot_error(anglevalues, errs, resultDir, isMu)
 %CREATEFIT1(ANGLEVALUES,ERRS)
 %  Create a fit.
 %
@@ -15,6 +15,7 @@ function [fitresult, gof] = plot_error(anglevalues, errs, resultDir)
 
 
 %% Fit: 'L2 error of gaussian fit'.
+mu = cos(anglevalues)
 [xData, yData] = prepareCurveData( anglevalues, errs );
 
 % Set up fittype and options.
@@ -24,17 +25,25 @@ ft = 'linearinterp';
 [fitresult, gof] = fit( xData, yData, ft, 'Normalize', 'on' );
 
 % Plot fit with data.
-figure( 'Name', 'L2 error of Gaussian fit' );
+myFig = figure( 'Name', 'L2 error of Gaussian fit' );
 h = plot( fitresult, xData, yData );
-legend( h, 'L2 Error Samples', 'Linear Interpolation of L2 error', 'Location', 'NorthEast' );
-title('L2 error of slope domain Gaussian fit');
+title('\fontsize{20} L2 Error of Gaussian Model');
 
 % Label axes
-xlabel 'theta I'
-ylabel 'L2 error'
-grid on
 
-filename = [resultDir, 'gaussian_error'];
+if isMu
+    xlabel ('\mu', 'FontSize', 20)
+    legend( h, 'L2 Error Samples', 'Linear Interpolation of L2 error', 'Location', 'NorthEast' );
+    filename = [resultDir, 'gaussian_error_mu'];
+else
+    xlabel ('\theta_i', 'FontSize', 20)
+    legend( h, 'L2 Error Samples', 'Linear Interpolation of L2 error', 'Location', 'SouthEast' );
+    filename = [resultDir, 'gaussian_error_theta'];
+end
+ylabel ('L2 error', 'FontSize', 20)
+set(findall(myFig, 'Type', 'Text'),'FontWeight', 'Normal')
+
+grid on
 saveas(gcf,[filename,'.jpeg'])
 
 

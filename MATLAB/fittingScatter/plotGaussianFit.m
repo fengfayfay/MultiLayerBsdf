@@ -1,4 +1,4 @@
-function [fitresult, gof] = plotGaussianFit(polyDegree, anglevalues, target, targetName, resultDir)
+function [fitresult, gof] = plotGaussianFit(polyDegree, anglevalues, target, targetName, targetFileName, resultDir, isMu)
 %CREATEFIT(ANGLEVALUES,CV1)
 %  Create a fit.
 %
@@ -26,17 +26,23 @@ ft = fittype( fitname );
 
 % Plot fit with data.
 figname = [targetName, ' fit']; 
-figure( 'Name', 'Poly Fit');
+myFig = figure( 'Name', 'Poly Fit');
 h = plot( fitresult, xData, yData );
 % Label axes
-xlabel('cos (theta I)')
-ylabel(targetName)
+if isMu
+    xlabel('\mu', 'FontSize', 20)
+    filename = [resultDir, 'polyfit_mu_', targetFileName]
+else
+    xlabel('\theta_i', 'FontSize', 20)
+    filename = [resultDir, 'polyfit_', targetFileName]
+end
+ylabel(targetName, 'FontSize', 20)
 grid on
 
 legend('data', ['fit RMSE ', num2str(gof.rmse)] );
-title(['Slope domain  ', targetName, ' fit']);
+title(['\fontsize{20}', 'Polynomial Fit of ', targetName]);
+set(findall(myFig, 'Type', 'Text'),'FontWeight', 'Normal')
 
-filename = [resultDir, 'polyfit_', targetName]
 saveas(gcf,[filename,'.jpeg']);
 
 end

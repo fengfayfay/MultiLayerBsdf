@@ -54,11 +54,17 @@ for k = 1:length(anglevec)
     end
    
     figure
-    imagesc(brdfcos)
-    colorbar()
-    xlabel('mu')
-    ylabel('phi')
-    title(['Reflectance from fitted Gaussian,  angle=',num2str(angle), ' alpha=', num2str(alpha)])
+    imagesc(brdfcos);
+    colorbar();
+    xticklabels = 0:0.1:1.0;
+    xticks = linspace(1, size(brdfcos, 2), numel(xticklabels));
+    set(gca, 'XTick', xticks, 'XTickLabel', xticklabels);
+    yticklabels = 0:36:360;
+    yticks = linspace(1, size(brdfcos, 1), numel(yticklabels));
+    set(gca, 'YTick', yticks, 'YTickLabel', flipud(yticklabels(:)));
+    xlabel('\mu', 'FontSize', 16)
+    ylabel('\phi', 'FontSize', 16)
+    title(['\fontsize{16} GMM Modeled MS Reflectance, \alpha=', num2str(alpha), ', \theta_i=',num2str(angle)])
     saveas(gcf,[filename,'.jpeg'])
     
     fprintf('at angle %2d, %4.4f energy is perserved\n',angle,sum(brdfcos(:)));

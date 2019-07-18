@@ -17,7 +17,7 @@ function [mean_0, mean_1, cv_0, cv_1, energyRatios, anglevalues, errs, mus] =  O
     %clc
 
     %datadir = '/Users/fengxie/work/Github/GaussianData/HeightfieldData/singleLayerGlassSlice/';
-    datadir = '/Users/fengxie/work/Github/GaussianData/singleLayerGlassSlice/';
+    datadir = '/Users/fengxie/work/Github/GaussianData/singleLayerMirrorSlice/';
     %datadir = '/Users/fengxie/work/Github/GaussianData/singleLayerGlassWaterSlice/';
     %
     %datadir = '/Users/fengxie/work/Github/GaussianData/singleLayerGlassFresnel/';
@@ -44,7 +44,8 @@ function [mean_0, mean_1, cv_0, cv_1, energyRatios, anglevalues, errs, mus] =  O
     maxiter = 1000;
     tol = 1e-5;
 
-    targetNames = ["energyRatio", "Xmean", "Ymean", "Xcovariance", "Ycovariance"]; 
+    targetNames = ["energy ratio", "mean_x", "mean_y", "\Sigma_x", "\Sigma_y"]; 
+    targetFileNames = ["energyRatio", "mean_x", "mean_y", "cov_x", "cov_y"]; 
     %targetName = targetNames{1}
     %filename = [resultdir, 'polyfit_', targetName]
 
@@ -88,7 +89,8 @@ function [mean_0, mean_1, cv_0, cv_1, energyRatios, anglevalues, errs, mus] =  O
         errs(j) = err;
     end
 
-    plot_error(anglevalues, errs, resultdir);
+    plot_error(rad2deg(anglevalues), errs, resultdir, false);
+    plot_error(mus, errs, resultdir, true);
 
     mean_0 = fitting_data(:,1)
     assert(length(mean_0) == anglecount);
@@ -99,8 +101,8 @@ function [mean_0, mean_1, cv_0, cv_1, energyRatios, anglevalues, errs, mus] =  O
     cv_1 = fitting_data(:,4)
     assert(length(cv_1) == anglecount);
     
-    %createFit(alpha, anglevalues, energyRatios, fitting_data, targetNames, resultdir);
-    createFit(alpha, polyDegree, mus, energyRatios, fitting_data, targetNames, resultdir);
+    createFit(alpha, polyDegree, rad2deg(anglevalues), energyRatios, fitting_data, targetNames, targetFileNames, resultdir, false);
+    createFit(alpha, polyDegree, mus, energyRatios, fitting_data, targetNames, targetFileNames, resultdir, true);
         
 end %function end
 
@@ -146,7 +148,7 @@ function [anglevalues, energyRatios, mus] = selectValidAnglesForFitting(ox, oang
 end
     
        
-function createFit(alpha, polyDegree, anglevalues, energyRatios, fitting_data, targetNames, resultdir)        
+function createFit(alpha, polyDegree, anglevalues, energyRatios, fitting_data, targetNames, targetFileNames, resultdir, isMu)
     filename = [resultdir, 'scatter_', num2str(alpha), '.txt'];
     file = fopen(filename, 'w');
     coefCount = polyDegree + 1;
@@ -155,7 +157,7 @@ function createFit(alpha, polyDegree, anglevalues, energyRatios, fitting_data, t
     p = polyfit(anglevalues, energyRatios, polyDegree)
 
     exportPolyFit(file, p);    
-    plotGaussianFit(polyDegree, anglevalues, energyRatios, targetNames{1}, resultdir); 
+    plotGaussianFit(polyDegree, anglevalues, energyRatios, targetNames{1}, targetFileNames{1}, resultdir, isMu); 
     anglecount = length(anglevalues);
     %assert(length(energyRatios) == anglecount);
 
@@ -165,7 +167,7 @@ function createFit(alpha, polyDegree, anglevalues, energyRatios, fitting_data, t
         p = polyfit(anglevalues, f, polyDegree)
 
         exportPolyFit(file, p);    
-        plotGaussianFit(polyDegree, anglevalues, f, targetNames{i+1}, resultdir); 
+        plotGaussianFit(polyDegree, anglevalues, f, targetNames{i+1}, targetFileNames{i+1}, resultdir, isMu); 
     end
     fclose(file);
 end
@@ -179,7 +181,7 @@ function [ox, oangle, x, y, z, angle] = read_data(datadir, alpha, bounce)
         prefix = 'reflection_';
         %prefix = 'refraction_';
         prefix = strcat('refraction_0_', '3d_output');
-        %prefix = strcat('reflection_0_', '3d_output');
+        prefix = strcat('reflection_0_', '3d_output');
         filename = [prefix, 'x_',  num2str(alpha),'.p'];
         fileID = fopen(filename);
         C1 = fread(fileID, 'float');
