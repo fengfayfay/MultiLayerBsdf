@@ -8,6 +8,7 @@ GaussianMultiScattering* createGaussianMultiScattering(const TextureParams &mp, 
     bool useMS = mp.FindBool("multiscatter", false);
     bool energyOnly = mp.FindBool("energyonly", false);
     ms->noFresnel = mp.FindBool("noFresnel", false);
+    ms ->useBeckmann = mp.FindBool("useBeckman", true);
 
     //add find string to nvp model path
     //add find string to nvp model path

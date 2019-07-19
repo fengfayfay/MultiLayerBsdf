@@ -75,12 +75,17 @@ void MetalMaterial::ComputeScatteringFunctions(SurfaceInteraction *si,
         vRough = TrowbridgeReitzDistribution::RoughnessToAlpha(vRough);
     }
 
-    MicrofacetDistribution *distrib =
-          ARENA_ALLOC(arena, BeckmannDistribution)(uRough, vRough, false);
+    MicrofacetDistribution *distrib = NULL;
+    if (ms->useBeckmann) {
+        distrib = 
+            ARENA_ALLOC(arena, BeckmannDistribution)(uRough, vRough, false);
+    } else {
+        distrib =
+        ARENA_ALLOC(arena, TrowbridgeReitzDistribution)(uRough, vRough, false);
+    }
+
     Fresnel *frMf = ms->noFresnel ? NULL : ARENA_ALLOC(arena, FresnelConductor)(1., eta->Evaluate(*si),
                                                          k->Evaluate(*si));
-    //MicrofacetDistribution *distrib =
-    //    ARENA_ALLOC(arena, TrowbridgeReitzDistribution)(uRough, vRough);
 
     if (ms->gsReflect == NULL && ms->realNVPReflect == NULL) {
         si->bsdf->Add(ARENA_ALLOC(arena, MicrofacetReflection)(1., distrib, frMf));

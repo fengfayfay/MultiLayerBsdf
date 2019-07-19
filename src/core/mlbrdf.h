@@ -16,7 +16,7 @@ public:
     bool loadAndRestore();
     bool setupEvalTensors();
     
-    Spectrum eval(float alpha, float muI, float muH);
+    Spectrum eval(float alpha, float thetaI, float thetaH, float phiH);
 
 private:
     std::string modelPathPrefix;

@@ -14,6 +14,7 @@ public:
     RealNVPScatterSpectrum* realNVPReflect;
     RealNVPScatterSpectrum* realNVPTransmit;
     bool noFresnel;
+    bool useBeckmann;
 };
 
 GaussianMultiScattering *createGaussianMultiScattering(const TextureParams &mp, const std::string& roughness = "roughness", bool hasTransmission = false);

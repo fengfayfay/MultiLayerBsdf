@@ -37,7 +37,7 @@ RealNVPScatterSpectrum::eval(float thetaI, float alpha, const Vector2f &sampleN)
     
     Float value[3];
     value[0] = nvpScatter[0].eval(thetaI, alpha, sampleN);
-    if (isnan(value[0])) value[0] = 0;
+    if (std::isnan(value[0])) value[0] = 0;
     return value[0] * energyRatio[0];
 
     /*
@@ -53,12 +53,12 @@ RealNVPScatterSpectrum::eval(float thetaI, float alpha, const Vector2f &sampleN)
 }
 
 Spectrum
-RealNVPScatterSpectrum::eval(Float alpha, Float muI, Float muH, Float thetaI, const Vector2f &sampleN){
+RealNVPScatterSpectrum::eval(Float alpha,  Float thetaI, Float thetaH, Float phiH, const Vector2f &sampleN){
 
     Float dist = eval(thetaI, alpha, sampleN);
     if (dist < 1e-6) return 0;
     Spectrum F (1.0);
-    if (mlFresnel) F = mlFresnel->eval(alpha, muI, muH);
+    if (mlFresnel) F = mlFresnel->eval(alpha, thetaI, thetaH, phiH);
     return F * dist;  
 
 }
@@ -408,7 +408,7 @@ RealNVPScatter::eval(float thetaI, float alpha, const pbrt::Vector2f& sampleN) {
       return 0;
     }
     float* output_data = (float*) TF_TensorData(eval_output_tensors[0]);
-    if (isNaN(output_data[0])) return 0;
+    if (std::isnan(output_data[0])) return 0;
     float prob = expf(output_data[0]);
     return prob;
 }
@@ -583,14 +583,15 @@ bool MLFresnel::setupEvalTensors() {
 
 
     eval_output_tensors[0] = output_prob_tensor;
-    float* raw_input_prob_x = (float*)malloc(2 * sizeof(float));
+    float* raw_input_prob_x = (float*)malloc(3 * sizeof(float));
     raw_input_prob_x[0] = 0.5;
     raw_input_prob_x[1] = 0.5;
+    raw_input_prob_x[2] = 0.5;
     raw_input_dims[0] = 1;
-    raw_input_dims[1] = 2;
+    raw_input_dims[1] = 3;
     TF_Tensor* input_tensor_prob_x =
         TF_NewTensor(TF_FLOAT, raw_input_dims, 2, raw_input_prob_x,
-                     sizeof(float)*2, &deallocator, NULL);
+                     sizeof(float)*3, &deallocator, NULL);
 
  
     eval_run_outputs[0].oper = output_prob_op;
@@ -623,13 +624,20 @@ bool MLFresnel::setupEvalTensors() {
     return true;
 }
 
+void clampToZero(Float *output_data) {
+    for (int i = 0; i < 3; i++) {
+        if (std::isnan(output_data[i]) || output_data[i] < 0) output_data[i] = 0;
+    }
+}
+
 Spectrum 
-MLFresnel::eval(Float alpha, Float muI, Float muH) {
+MLFresnel::eval(Float alpha, Float thetaI, Float thetaH, Float phiH) {
     //float* alphaPtr = (float*) TF_TensorData(eval_input_tensors[2]);
     //float* thetaIPtr = (float*) TF_TensorData(eval_input_tensors[1]);
     float* samplePtr = (float*) TF_TensorData(eval_input_tensors[0]);
-    samplePtr[0] = muI;
-    samplePtr[1] = muH;
+    samplePtr[0] = thetaI;
+    samplePtr[1] = thetaH;
+    samplePtr[2] = phiH;
     //alphaPtr[0] = alpha;
     //thetaIPtr[0] = thetaI;
     TF_SessionRun(sess,
@@ -644,7 +652,7 @@ MLFresnel::eval(Float alpha, Float muI, Float muH) {
       return 0;
     }
     float* output_data = (float*) TF_TensorData(eval_output_tensors[0]);
-    if (isNaN(output_data[0])) return 0;
+    clampToZero(output_data);
     //std::cout<<"ML Fresnel: "<< output_data[0] << " " << output_data[1] << " " << output_data[2] << "\n";
     return Spectrum::FromRGB(output_data);
 }

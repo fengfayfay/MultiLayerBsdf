@@ -416,9 +416,7 @@ Spectrum computeMultiScattering(Vector3f &wo, Vector3f &wi, Float alpha,
     Float etaO, Float etaI, 
     const GaussianScatter* gs, RealNVPScatterSpectrum *realNVP, const MicrofacetDistribution *distribution) {
 
-    //if (realNVP) {
-    //if (1) {
-    if (0) {
+    if (realNVP) {
         Vector3f tmp = wo;
         wo = wi;
         wi = tmp;
@@ -439,7 +437,7 @@ Spectrum computeMultiScattering(Vector3f &wo, Vector3f &wi, Float alpha,
         if (fabs(wo.y) > 1e-3 || fabs(wo.z) < 1e-6) {
             std::cout << "phi: " << phi << "mu: " << cosThetaO << "\n";
             std::cout<< "wo: " << wo << "\n";
-            std::cout<< "rotation:" << rotation << "\n";
+            //std::cout<< "rotation:" << rotation << "\n";
             fflush(stdout);
         }
         assert(fabs(wo.y) < 1e-5);
@@ -479,17 +477,27 @@ Spectrum computeMultiScattering(Vector3f &wo, Vector3f &wi, Float alpha,
     Float p = 0;
 
     if (realNVP!=NULL) {
-        Spectrum p = realNVP->eval(alpha, fabs(wo.z), fabs(Dot(wo, wh)), thetaO, Vector2f(x, y)); 
+        Float thetaH = acos(wh.z);
+        Float phiH = atan2(wh.y, wh.x);
+        if (phiH < -M_PI) {
+            phiH += 2.0 * M_PI;
+        } else {
+            if (phiH > M_PI) phiH -= 2.0 * M_PI;
+        }
+        Spectrum p = realNVP->eval(alpha, thetaO, thetaH, phiH, Vector2f(x, y)); 
         Spectrum multiS =  p *  J  / cosThetaI; 
         //std::cout << "MSBRDF: " << multiS << " SBRDF: " << sbrdf <<"\n";
         return multiS;
 
     } else {
-        Float zo = abs(wo.z);
+        Float zo = fabs(wo.z);
         zo = zo > 1? 1: zo;
-        Float zi = abs(wi.z);
+        Float zi = fabs(wi.z);
         zi = zi > 1? 1: zi;
-        if (gs != NULL) p = gs->prob(x,y, zo, zi);
+        if (gs != NULL) {
+            p = gs->prob(x,y, zo, zi);
+            //std::cout<<"MSGS: " << p << "\n";
+        }
         Float multi = 0;
         if (gs->isEnergyOnly()) {
             multi = p /cosThetaI;
@@ -524,7 +532,18 @@ Spectrum MultiScatterReflection::f(const Vector3f &woO, const Vector3f &wiO) con
         auto F2 = F * F;
         auto F3 = F2 * F;
         auto F4 = F2 * F2;
-        MF =  F2 * 0.8 + F3 * 0.18 +  F4 * .02;
+        //auto c0 = alpha;
+        //auto a2 = 1.f/alpha * alpha;
+        //a2 = exp(-a2) * a2;
+        //auto a2 = alpha * alpha;
+        auto a2 = alpha;
+        auto nw = 1.f/(1.0 + a2 + a2 * a2);
+        auto c1 = nw;
+        auto c2 = a2 * nw;
+        auto c3 = a2 * a2 * nw;
+         
+        //MF =  F2 * 0.8 + F3 * 0.18  +  F4 * .02;
+        MF =  F2 * c1 + F3 * c2  +  F4 * c3;
 
         //Vector3f energyRatio(0.9575, 0.780155, 0.314);
         //Float values[3] = {0.9575, 0.780155, 0.314};

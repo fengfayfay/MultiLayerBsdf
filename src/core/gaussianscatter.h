@@ -87,7 +87,7 @@ class GaussianScatter{
         if (!validScatter) return 0;
         
         Float energy = penergy.eval(z);
-        if (energy < .01 || energyAve < 1e-3) return 0;
+        if (energy < 1e-3 || energyAve < 1e-4) return 0;
         if (energyOnly) {
             Float e_i = penergy.eval(z_i);
             if (e_i < 0) e_i = 0;
