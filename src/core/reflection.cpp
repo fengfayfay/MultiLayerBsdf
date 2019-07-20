@@ -416,7 +416,8 @@ Spectrum computeMultiScattering(Vector3f &wo, Vector3f &wi, Float alpha,
     Float etaO, Float etaI, 
     const GaussianScatter* gs, RealNVPScatterSpectrum *realNVP, const MicrofacetDistribution *distribution) {
 
-    if (realNVP) {
+    //if (realNVP) {
+    if (0) {
         Vector3f tmp = wo;
         wo = wi;
         wi = tmp;
@@ -435,10 +436,10 @@ Spectrum computeMultiScattering(Vector3f &wo, Vector3f &wi, Float alpha,
         Transform rotation = RotateZ(-phi);
         wo = rotation(wo);
         if (fabs(wo.y) > 1e-3 || fabs(wo.z) < 1e-6) {
-            std::cout << "phi: " << phi << "mu: " << cosThetaO << "\n";
-            std::cout<< "wo: " << wo << "\n";
+            //std::cout << "phi: " << phi << "mu: " << cosThetaO << "\n";
+            //std::cout<< "wo: " << wo << "\n";
             //std::cout<< "rotation:" << rotation << "\n";
-            fflush(stdout);
+            //fflush(stdout);
         }
         assert(fabs(wo.y) < 1e-5);
         wi = rotation(wi);
@@ -528,10 +529,12 @@ Spectrum MultiScatterReflection::f(const Vector3f &woO, const Vector3f &wiO) con
     Spectrum F(1.0);
     Spectrum MF(1.0);
     if (getFresnel() && !realNVP) {
-        F = getFresnel()->Evaluate(Dot(wi, wh));
-        auto F2 = F * F;
-        auto F3 = F2 * F;
-        auto F4 = F2 * F2;
+        //F = getFresnel()->Evaluate(Dot(wi, wh));
+        F = getFresnel()->Evaluate(0.1);
+        //auto F2 = F * F * F;
+        auto F2 = F * F * F * F;
+        auto F3 = F2 * F2;
+        auto F4 = F3 * F3;
         //auto c0 = alpha;
         //auto a2 = 1.f/alpha * alpha;
         //a2 = exp(-a2) * a2;
