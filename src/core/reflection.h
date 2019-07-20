@@ -49,6 +49,7 @@
 #include "gaussianmixture.h"
 #include "gaussianscatter.h"
 #include "mlbrdf.h"
+#include "brdf_lut.h"
 
 #include <fstream>
 #include <string>
@@ -561,11 +562,12 @@ class MultiScatterReflection : public MicrofacetReflection {
     // GaussianBSDF Public Methods
     MultiScatterReflection(const Spectrum &R, MicrofacetDistribution *distribution, Fresnel *fresnel, 
                            const GaussianScatter *gs,
-                           Float alpha = 0.5,
-                           RealNVPScatterSpectrum* realNVP = NULL):
+                           Float alpha = 0.5,  
+                           RealNVPScatterSpectrum* realNVP = NULL,
+                           BrdfLUT* brdfLutAll = NULL, BrdfLUT* brdfLutMs = NULL):
                            MicrofacetReflection(R, distribution, fresnel), 
                            gs(gs),
-                           alpha(alpha), realNVP(realNVP){}
+                           alpha(alpha), brdfLutAll(brdfLutAll), brdfLutMs(brdfLutMs), realNVP(realNVP){}
 
     Spectrum f(const Vector3f &wo, const Vector3f &wi) const;
     /*
@@ -579,6 +581,8 @@ class MultiScatterReflection : public MicrofacetReflection {
     const GaussianScatter *gs;
     Float alpha;
     RealNVPScatterSpectrum* realNVP;
+    BrdfLUT* brdfLutAll;
+    BrdfLUT* brdfLutMs;
 };
 
 //Microfacet BSDF with fitted multiscattering components (Feng)

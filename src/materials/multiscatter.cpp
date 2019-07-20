@@ -16,8 +16,16 @@ GaussianMultiScattering* createGaussianMultiScattering(const TextureParams &mp, 
     ms->gsReflect = NULL;
     ms->realNVPTransmit = NULL;
     ms->gsTransmit = NULL;
+    ms->brdfLutAll = NULL;
+    ms->brdfLutMs = NULL;
 
-    Float alpha = mp.FindFloat(roughness, 0.7f);
+    ms->alpha = mp.FindFloat(roughness, 0.7f);
+    
+    std::string brdfPrefix = mp.FindString("brdfPrefix", "None");
+    if (brdfPrefix != "None"){
+        ms->brdfLutAll = new BrdfLUT(brdfPrefix, ms->alpha, 1);
+        ms->brdfLutMs = new BrdfLUT(brdfPrefix, ms->alpha, 2);
+    }
     bool useNVP = mp.FindBool("usenvp", false);
     int numChannels = mp.FindInt("numChannels", 3);
     int nfloats = 0;
@@ -42,9 +50,9 @@ GaussianMultiScattering* createGaussianMultiScattering(const TextureParams &mp, 
             }
         } else {
             if (hasTransmission)  {
-                ms->gsTransmit = new GaussianScatter(alpha, energyOnly, true); 
+                ms->gsTransmit = new GaussianScatter(ms->alpha, energyOnly, true); 
             } else {
-                ms->gsReflect = new GaussianScatter(alpha, energyOnly);
+                ms->gsReflect = new GaussianScatter(ms->alpha, energyOnly);
             }
         }
     }

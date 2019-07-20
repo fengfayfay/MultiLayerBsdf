@@ -43,10 +43,27 @@ void BrdfLUT::load(const std::string& filename) {
     output.read((char*) &totalSamples, sizeof(totalSamples)); 
     output.read((char*) &rayDepth, sizeof(rayDepth)); 
     output.read((char*) &dim, sizeof(dim)); 
+    std::cout << "dim "<< dim << "\n";
     tsize = dim * dim * dim;
+    std::cout << "tsize "<< tsize << "\n";
+    pdf = new Float [tsize];
     output.read((char*) pdf, sizeof(Float)* tsize);
+    std::cout << "read pdf\n";
+    int pdfvalid = 0;
+    for (int i = 0; i < tsize; i++) {
+        if (pdf[i] > 0) pdfvalid++;
+    }
+    std::cout << "valid pdfs: " << pdfvalid << "\n";
+
+    fresnel = new Float[tsize * 3];
     output.read((char*) fresnel, sizeof(Float)* tsize * 3);
     output.close();
+    computeUnits();
+    int fresnelvalid = 0;
+    for (int i = 0; i < tsize * 3; i++) {
+        if (fresnel[i] > 0) fresnelvalid++;
+    }
+    std::cout << "valid fresnels: " << fresnelvalid << "\n";
 }
 
 } //end namespace
