@@ -44,7 +44,7 @@ function [mean_0, mean_1, cv_0, cv_1, energyRatios, anglevalues, errs, mus] =  O
     maxiter = 1000;
     tol = 1e-5;
 
-    targetNames = ["energy ratio", "mean_x", "mean_y", "\Sigma_x", "\Sigma_y"]; 
+    targetNames = ["MS Energy", "\mu_x", "\mu_y", "\sigma_x", "\sigma_y"]; 
     targetFileNames = ["energyRatio", "mean_x", "mean_y", "cov_x", "cov_y"]; 
     %targetName = targetNames{1}
     %filename = [resultdir, 'polyfit_', targetName]
