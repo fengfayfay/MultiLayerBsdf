@@ -399,6 +399,7 @@ SET ( PBRT_CORE_SOURCE
   src/core/quaternion.cpp
   src/core/reflection.cpp
   src/core/brdf_lut.cpp
+  src/core/multiscatter.cpp
   src/core/sampler.cpp
   src/core/sampling.cpp
   src/core/scene.cpp
@@ -444,6 +445,7 @@ SET ( PBRT_CORE_HEADERS
   src/core/progressreporter.h
   src/core/quaternion.h
   src/core/brdf_lut.h
+  src/core/multiscatter.h
   src/core/reflection.h
   src/core/rng.h
   src/core/sampler.h
@@ -477,7 +479,7 @@ FILE ( GLOB PBRT_SOURCE
 
 INCLUDE_DIRECTORIES ( src )
 INCLUDE_DIRECTORIES ( src/core )
-INCLUDE_DIRECTORIES (  /home/fengxie/work/tensorflow_c_api/tensorflow/include )
+INCLUDE_DIRECTORIES (  /Users/fengxie/work/tensorflow_c_api/tensorflow/include )
 
 ###########################################################################
 # pbrt libraries and executables
@@ -515,7 +517,7 @@ SET(ALL_PBRT_LIBS
   glog
   Ptex_static
   ${ZLIB_LIBRARY}
-  /home/fengxie/work/tensorflow_c_api/tensorflow/lib/libtensorflow.so
+  /Users/fengxie/work/tensorflow_c_api/tensorflow/lib/libtensorflow.so
 )
 
 # Main renderer

@@ -135,7 +135,7 @@ UberMaterial *CreateUberMaterial(const TextureParams &mp) {
         mp.GetFloatTextureOrNull("bumpmap");
     bool remapRoughness = mp.FindBool("remaproughness", false);
 
-    GaussianMultiScattering *ms = createGaussianMultiScattering(mp);
+    MultiScattering *ms = createMultiScattering(mp);
     
     return new UberMaterial(Kd, Ks, Kr, Kt, roughness, uroughness, vroughness,
                             opacity, eta, bumpMap, remapRoughness, ms);

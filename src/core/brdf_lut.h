@@ -62,6 +62,10 @@ public:
         auto phi = atan2(wh.y, wh.x);
         if (phi < 0) phi += 2 * M_PI;
         if (phi > 2 * M_PI) phi -= 2 *M_PI;
+        if (phi < 0 || phi > 2* M_PI) {
+            std::cout<<"phi out of range: " << phi << "\n";
+        }
+        return phi;
     } 
 
     uint computeIndex(Float muI, Float muH, Float phiH) {

@@ -2,8 +2,8 @@
 #include "paramset.h"
 
 namespace pbrt {
-GaussianMultiScattering* createGaussianMultiScattering(const TextureParams &mp, const std::string& roughness, bool hasTransmission) {
-    GaussianMultiScattering *ms = new GaussianMultiScattering;
+MultiScattering* createMultiScattering(const TextureParams &mp, const std::string& roughness, bool hasTransmission) {
+    MultiScattering *ms = new MultiScattering;
 
     bool useMS = mp.FindBool("multiscatter", false);
     bool energyOnly = mp.FindBool("energyonly", false);
@@ -20,6 +20,7 @@ GaussianMultiScattering* createGaussianMultiScattering(const TextureParams &mp, 
     ms->brdfLutMs = NULL;
 
     ms->alpha = mp.FindFloat(roughness, 0.7f);
+    ms->useLUTMs = mp.FindBool("useLUTMs", false);
     
     std::string brdfPrefix = mp.FindString("brdfPrefix", "None");
     if (brdfPrefix != "None"){

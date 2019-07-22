@@ -6,9 +6,9 @@
 #include "brdf_lut.h"
 
 namespace pbrt{
-class GaussianMultiScattering{
+class MultiScattering{
 public:
-    GaussianMultiScattering(): gsReflect(NULL), gsTransmit(NULL), realNVPReflect(NULL), alpha(0.5) {}
+    MultiScattering(): gsReflect(NULL), gsTransmit(NULL), realNVPReflect(NULL), alpha(0.5) {}
    
     Float alpha; 
     GaussianScatter* gsReflect;
@@ -17,11 +17,13 @@ public:
     RealNVPScatterSpectrum* realNVPTransmit;
     bool noFresnel;
     bool useBeckmann;
+    bool useLUTAll;
+    bool useLUTMs;
     BrdfLUT *brdfLutAll;
     BrdfLUT *brdfLutMs; 
 };
 
-GaussianMultiScattering *createGaussianMultiScattering(const TextureParams &mp, const std::string& roughness = "roughness", bool hasTransmission = false);
+MultiScattering *createMultiScattering(const TextureParams &mp, const std::string& roughness = "roughness", bool hasTransmission = false);
 
 } //end namespace
 #endif

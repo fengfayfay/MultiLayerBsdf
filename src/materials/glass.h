@@ -56,7 +56,7 @@ class GlassMaterial : public Material {
                   const std::shared_ptr<Texture<Float>> &index,
                   const std::shared_ptr<Texture<Float>> &bumpMap,
                   bool remapRoughness,
-                  GaussianMultiScattering* ms=NULL)
+                  MultiScattering* ms=NULL)
         : Kr(Kr),
           Kt(Kt),
           uRoughness(uRoughness),
@@ -76,7 +76,7 @@ class GlassMaterial : public Material {
     std::shared_ptr<Texture<Float>> index;
     std::shared_ptr<Texture<Float>> bumpMap;
     bool remapRoughness;
-    GaussianMultiScattering* ms;
+    MultiScattering* ms;
 };
 
 GlassMaterial *CreateGlassMaterial(const TextureParams &mp);

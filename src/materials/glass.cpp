@@ -119,7 +119,7 @@ GlassMaterial *CreateGlassMaterial(const TextureParams &mp) {
     bool remapRoughness = mp.FindBool("remaproughness", false);
 
     bool mstransmit = mp.FindBool("mstransmit", false);
-    GaussianMultiScattering *ms = createGaussianMultiScattering(mp, "uroughness", mstransmit);
+    MultiScattering *ms = createMultiScattering(mp, "uroughness", mstransmit);
 
     return new GlassMaterial(Kr, Kt, roughu, roughv, eta, bumpMap,
                              remapRoughness, ms);

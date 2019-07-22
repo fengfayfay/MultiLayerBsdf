@@ -61,7 +61,7 @@ class UberMaterial : public Material {
                  const std::shared_ptr<Texture<Float>> &eta,
                  const std::shared_ptr<Texture<Float>> &bumpMap,
                  bool remapRoughness,
-                 GaussianMultiScattering *ms = NULL)
+                 MultiScattering *ms = NULL)
         : Kd(Kd),
           Ks(Ks),
           Kr(Kr),
@@ -85,7 +85,7 @@ class UberMaterial : public Material {
         bumpMap;
     bool remapRoughness;
     
-    GaussianMultiScattering* ms;
+    MultiScattering* ms;
     
 };
 

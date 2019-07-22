@@ -48,7 +48,7 @@ MetalMaterial::MetalMaterial(const std::shared_ptr<Texture<Spectrum>> &eta,
                              const std::shared_ptr<Texture<Float>> &vRoughness,
                              const std::shared_ptr<Texture<Float>> &bumpMap,
                              bool remapRoughness,
-                             GaussianMultiScattering *ms)
+                             MultiScattering *ms)
     : eta(eta),
       k(k),
       roughness(roughness),
@@ -149,7 +149,7 @@ MetalMaterial *CreateMetalMaterial(const TextureParams &mp) {
         mp.GetFloatTextureOrNull("bumpmap");
     bool remapRoughness = mp.FindBool("remaproughness", false);
     bool smartFresne = mp.FindBool("smartFresnel", false);
-    GaussianMultiScattering *ms = createGaussianMultiScattering(mp);
+    MultiScattering *ms = createMultiScattering(mp);
     return new MetalMaterial(eta, k, roughness, uRoughness, vRoughness, bumpMap,
                              remapRoughness, ms);
 }

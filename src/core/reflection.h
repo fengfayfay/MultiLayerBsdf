@@ -50,6 +50,7 @@
 #include "gaussianscatter.h"
 #include "mlbrdf.h"
 #include "brdf_lut.h"
+#include "multiscatter.h"
 
 #include <fstream>
 #include <string>
@@ -567,7 +568,10 @@ class MultiScatterReflection : public MicrofacetReflection {
                            BrdfLUT* brdfLutAll = NULL, BrdfLUT* brdfLutMs = NULL):
                            MicrofacetReflection(R, distribution, fresnel), 
                            gs(gs),
-                           alpha(alpha), brdfLutAll(brdfLutAll), brdfLutMs(brdfLutMs), realNVP(realNVP){}
+                           alpha(alpha), 
+                           brdfLutAll(brdfLutAll), 
+                           brdfLutMs(brdfLutMs), 
+                           realNVP(realNVP){}
 
     Spectrum f(const Vector3f &wo, const Vector3f &wi) const;
     /*
@@ -581,6 +585,7 @@ class MultiScatterReflection : public MicrofacetReflection {
     const GaussianScatter *gs;
     Float alpha;
     RealNVPScatterSpectrum* realNVP;
+    bool lookupMS;
     BrdfLUT* brdfLutAll;
     BrdfLUT* brdfLutMs;
 };
