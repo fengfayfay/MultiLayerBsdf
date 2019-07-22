@@ -90,12 +90,12 @@ void UberMaterial::ComputeScatteringFunctions(SurfaceInteraction *si,
             ARENA_ALLOC(arena, TrowbridgeReitzDistribution)(roughu, roughv, false);
         }
 
-        if (ms == NULL || (ms->gsReflect == NULL && ms->realNVPReflect == NULL)) {
+        if (ms == NULL || !ms->useMS) {
             BxDF *spec =
                 ARENA_ALLOC(arena, MicrofacetReflection)(ks, distrib, fresnel);
             si->bsdf->Add(spec);
         } else {
-            BxDF *spec = ARENA_ALLOC(arena, MultiScatterReflection)(ks, distrib, fresnel, ms->gsReflect, roughu, ms->realNVPReflect);
+            BxDF *spec = ARENA_ALLOC(arena, MultiScatterReflection)(ks, distrib, fresnel, ms);
             si->bsdf->Add(spec);
         }
     }

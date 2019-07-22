@@ -33,6 +33,7 @@
 // core/reflection.cpp*
 #include "reflection.h"
 #include "brdf_lut.h"
+#include "multiscatter.h"
 #include "spectrum.h"
 #include "sampler.h"
 #include "sampling.h"
@@ -413,14 +414,11 @@ Float computeJacobian(const Vector3f &wo, const Vector3f &wi, Float etaO, Float 
     return jacobian;
 }
 
-Spectrum computeMultiScattering(Vector3f &wo, Vector3f &wi, Float alpha, 
-    Float etaO, Float etaI, 
-    const GaussianScatter* gs, RealNVPScatterSpectrum *realNVP, 
-    const MicrofacetDistribution *distribution,
-    BrdfLUT* brdfLutMs = NULL) {
+Spectrum computeMultiScattering(Vector3f &wo, Vector3f &wi, 
+    Float etaO, Float etaI, const MultiScattering *ms,
+    const MicrofacetDistribution *distribution) {
 
-    //if (realNVP) {
-    if (0) {
+    if (ms->flip && !ms->useLUTMs  && !ms->useLUTAll) {
         Vector3f tmp = wo;
         wo = wi;
         wi = tmp;
@@ -457,28 +455,38 @@ Spectrum computeMultiScattering(Vector3f &wo, Vector3f &wi, Float alpha,
     if (thetaO < 1e-4) thetaO = 1e-4;
     if (thetaO > .5 * M_PI -1e-5) thetaO =  .5 * M_PI -1e-5;
 
-    //Float thetaI = acos(fabs(wi.z));
-
-    //Float phiI = atan2(wi.y, wi.x);
-
-    //std::cout << "thetaO: "<< Degrees(thetaO) << " phiO: "<< phi <<  " thetaI: "<< Degrees(thetaI) << " phiI: "<< Degrees(phiI) << "\n";
     
     Vector3f wh = Normalize(etaI * wi + etaO*wo);
     if (fabs(wh.z) < 1e-5) return 0;
     if (fabs(cosThetaO - 1) < 1e-5 and cosThetaI < 1e-5) return 0;
+    Float J = computeJacobian(wo, wi, etaO, etaI); 
+
+    Float lutThetaI = cosThetaO;
+    if (ms->useLUTAll) {
+        //std::cout<<"use lut all\n";
+        Float pdf = ms->brdfLutAll->evalPdf(lutThetaI, wh) * J / cosThetaI;
+        pdf *= 200 * 200/(M_PI * 2);
+        Vector3f brdf = ms->brdfLutAll->evalFresnel(lutThetaI, wh) * pdf;
+        return SpectrumFromVector3f(brdf);
+    }
+
+    if (ms->useLUTMs) {
+        //std::cout<<"use lut ms\n";
+        Float pdf = ms->brdfLutMs->evalPdf(lutThetaI, wh) * J/cosThetaI;
+        Vector3f brdf = ms->brdfLutAll->evalFresnel(lutThetaI, wh) * pdf;
+        return SpectrumFromVector3f(brdf);
+    }
+
     
     // calculate probability in slope domain using fitted GMM
     Float x = wh.x/wh.z;
     Float y = wh.y/wh.z;
 
-    Float J = computeJacobian(wo, wi, etaO, etaI); 
     Float sbrdf =  (distribution->D(wh) * distribution->G(wo, wi) /
            (4 * cosThetaI * cosThetaO)) ;
-    
-    //if (Degrees(thetaO) > 85.0 || Degrees(thetaI) > 85.0) return sbrdf;
-    Float p = 0;
 
-    if (realNVP!=NULL) {
+    if (ms->realNVPReflect) {
+        //std::cout<<"use nvp\n";
         Float thetaH = acos(wh.z);
         Float phiH = atan2(wh.y, wh.x);
         if (phiH < -M_PI) {
@@ -486,37 +494,38 @@ Spectrum computeMultiScattering(Vector3f &wo, Vector3f &wi, Float alpha,
         } else {
             if (phiH > M_PI) phiH -= 2.0 * M_PI;
         }
-        Spectrum p = realNVP->eval(alpha, thetaO, thetaH, phiH, Vector2f(x, y)); 
-        Spectrum multiS =  p *  J  / cosThetaI; 
-        //std::cout << "MSBRDF: " << multiS << " SBRDF: " << sbrdf <<"\n";
+        Spectrum p = ms->realNVPReflect->eval(ms->alpha, thetaO, thetaH, phiH, Vector2f(x, y)); 
+        Spectrum f = SpectrumFromVector3f(ms->brdfLutAll->evalFresnel(lutThetaI, wh));
+        Spectrum multiS =  p * f *  J  / cosThetaI; 
         return multiS;
 
     } else {
+
+        //std::cout<<"use gs\n";
         Float zo = fabs(wo.z);
         zo = zo > 1? 1: zo;
         Float zi = fabs(wi.z);
         zi = zi > 1? 1: zi;
-        if (gs != NULL) {
-            p = gs->prob(x,y, zo, zi);
+        Float p = 0;
+        if (ms->gsReflect != NULL) {
+            p = ms->gsReflect->prob(x,y, zo, zi);
         }
         Float multi = 0;
-        if (gs->isEnergyOnly()) {
+        if (ms->gsReflect->isEnergyOnly()) {
             multi = p /cosThetaI;
         } else { 
             multi =  p * J / cosThetaI;
         }
 
-        if (brdfLutMs) {
-            Vector3f f = brdfLutMs->evalFresnel(zo, wh);
-            Float fLut[3];
-            fLut[0] = f[0];
-            fLut[1] = f[1];
-            fLut[2] = f[2];
-            Spectrum fl = Spectrum::FromRGB(fLut);
-            return fl * multi;
+        if (ms->brdfLutMs) {
+            auto f = ms->brdfLutMs->evalFresnel(lutThetaI, wh);
+            //std::cout << "lut fresnel: " << f << "\n";
+            Spectrum fn = SpectrumFromVector3f(f);
+            return fn * multi;
         }
         return  multi;
     }
+    return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -524,21 +533,18 @@ Spectrum computeMultiScattering(Vector3f &wo, Vector3f &wi, Float alpha,
 ////////////////////////////////////////////////////////////////////////////////////////////
 Spectrum MultiScatterReflection::f(const Vector3f &woO, const Vector3f &wiO) const {
     Spectrum singleScatter (0);
-    if (!realNVP) singleScatter = MicrofacetReflection::f(woO, wiO);
+    if (!ms->realNVPReflect || ms->useLUTMs) singleScatter = MicrofacetReflection::f(woO, wiO);
 
     Vector3f wo = Normalize(woO);
     Vector3f wi = Normalize(wiO);
     Vector3f wh = Normalize(wo + wi);
     
-    //if (wh.z < 1e-6) return singleScatter;
     if (wo.z * wi.z < 0) return 0;
 
-    //printf("reached multi scattering eval\n");
-    //fflush(stdout);
-
-    Spectrum F(1.0);
     Spectrum MF(1.0);
-    if (getFresnel() && !realNVP) {
+    /*
+    Spectrum F(1.0);
+    if (getFresnel() && !ms->realNVPReflect) {
         if (!brdfLutMs) {
         //F = getFresnel()->Evaluate(Dot(wi, wh));
         F = getFresnel()->Evaluate(0.1);
@@ -559,26 +565,17 @@ Spectrum MultiScatterReflection::f(const Vector3f &woO, const Vector3f &wiO) con
         //MF =  F2 * 0.8 + F3 * 0.18  +  F4 * .02;
         MF =  F2 * c1 + F3 * c2  +  F4 * c3;
         }
-
     }
+    */
 
     if (wo.z * wi.z < 0) { 
         return singleScatter; 
     }
 
-    /*
-    if (wo.z < 1e-6 || wi.z < 1e-6) {
-        return singleScatter;
-    }
-    */
+    Spectrum multi = computeMultiScattering(wo, wi, 1, 1, ms, distribution);
 
-    Float MFValues[3];
-    MF.ToRGB(MFValues);
-    //std::cout << "MF: "<< MFValues[0] << " " << MFValues[1] << " " << MFValues[2] << "\n";
-    Spectrum multi = computeMultiScattering(wo, wi, alpha, 1, 1, gs, realNVP, distribution, brdfLutMs);
-
-    if (realNVP) return multi;
-    else return  singleScatter + R * MF * multi;
+    if (ms->realNVPReflect || ms->useLUTAll) return multi;
+    else return  singleScatter +  MF * multi;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -623,10 +620,10 @@ Spectrum MultiScatterTransmission::f(const Vector3f &woO, const Vector3f &wiO) c
     //factor term cancel out eta * eta in the single scatter evaluation function
     //original equation from walter paper is FDG * absdot(wi, wh) * absdot(wo, wh) / {dot(wi,n) * dot(wo, n) * sqrtDenom^2}
 
-    Spectrum ms =  F * T *  
-        computeMultiScattering(entering? wo:wi, entering? wi: wo, alpha, etaI, etaT, gs, realNVP, 
-            distribution, NULL);
-    Spectrum multi(ms);
+    Spectrum msBrdf =  F * T *  
+        computeMultiScattering(entering? wo:wi, entering? wi: wo, etaI, etaT, ms, 
+            distribution);
+    Spectrum multi(msBrdf);
     return multi;
 }
 

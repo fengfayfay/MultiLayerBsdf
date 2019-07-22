@@ -8,7 +8,7 @@
 namespace pbrt{
 class MultiScattering{
 public:
-    MultiScattering(): gsReflect(NULL), gsTransmit(NULL), realNVPReflect(NULL), alpha(0.5) {}
+    MultiScattering(): gsReflect(NULL), gsTransmit(NULL), realNVPReflect(NULL), alpha(0.5), useMS(false), useLUTAll(false), useLUTMs(false) {}
    
     Float alpha; 
     GaussianScatter* gsReflect;
@@ -17,8 +17,10 @@ public:
     RealNVPScatterSpectrum* realNVPTransmit;
     bool noFresnel;
     bool useBeckmann;
+    bool useMS;
     bool useLUTAll;
     bool useLUTMs;
+    bool flip;
     BrdfLUT *brdfLutAll;
     BrdfLUT *brdfLutMs; 
 };

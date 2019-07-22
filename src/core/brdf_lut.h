@@ -3,9 +3,18 @@
 
 #include "pbrt.h"
 #include "geometry.h"
+#include "spectrum.h"
 
 
 namespace pbrt{
+
+inline Spectrum SpectrumFromVector3f(const Vector3f& v) {
+    Float rgb[3];
+    rgb[0] = v[0];
+    rgb[1] = v[1];
+    rgb[2] = v[2];
+    return Spectrum::FromRGB(rgb);
+}
 
 class BrdfLUT {
 public:
@@ -13,7 +22,7 @@ public:
     BrdfLUT(const std::string& filePrefix, Float alpha, uint rayDepth);
     
     BrdfLUT (Float alpha, uint dim, uint rayDepth) : 
-        dim(dim), rayDepth(rayDepth), totalSamples (0), 
+        dim(dim+1), rayDepth(rayDepth), totalSamples (0), unitVolume(1), 
         alpha(alpha), normed(false) {
         tsize = dim * dim * dim;
         pdf = new Float[tsize];
@@ -28,8 +37,12 @@ public:
     }
 
     void computeUnits() {
-        units[0] = units[1] = 1.0f/(dim-1);
+        //units[0] = 0.5 * M_PI/(dim-1);
+        
+        units[0] = 1.0f/(dim-1);
+        units[1] = 1.0f/(dim-1);
         units[2] = 2.0f * M_PI/(dim-1);
+        unitVolume = units[0] * units[1] * units[2];
         std::cout <<"units: "<< units << "\n";
     }
     
@@ -40,9 +53,9 @@ public:
             if (s > 0) {
                 pdfvalid ++;
                 for (auto j = 0; j < 3; j++) {
-                    if (s > 0) fresnel[i*3 + j] /= s; 
+                    fresnel[i*3 + j] /= s; 
                 }
-                pdf[i] /= totalSamples;
+                //pdf[i] /= totalSamples;
             }
             
         }
@@ -116,8 +129,10 @@ public:
 
     Vector3f evaluateBRDF(Float muI, const Vector3f& wh){
         auto i = computeIndex(muI, wh);
-        return Vector3f(fresnel[i * 3], fresnel[i*3 + 1], 
-            fresnel[i*3 +2]) * pdf[i];
+        Vector3f f(fresnel[i * 3], fresnel[i*3 + 1], 
+            fresnel[i*3 +2]);
+        Float  p =  pdf[i];
+        return f * p;
     }
    
     void save(const std::string &fname);
@@ -131,7 +146,7 @@ private:
     Float *fresnel;
     uint dim, rayDepth, totalSamples, tsize;
     Vector3f units;
-    Float energyRatio, alpha;
+    Float energyRatio, alpha, unitVolume;
     bool normed;
 };
 

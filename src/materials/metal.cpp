@@ -87,13 +87,10 @@ void MetalMaterial::ComputeScatteringFunctions(SurfaceInteraction *si,
     Fresnel *frMf = ms->noFresnel ? NULL : ARENA_ALLOC(arena, FresnelConductor)(1., eta->Evaluate(*si),
                                                          k->Evaluate(*si));
 
-    if (ms->gsReflect == NULL && ms->realNVPReflect == NULL) {
+    if (!ms->useMS) {
         si->bsdf->Add(ARENA_ALLOC(arena, MicrofacetReflection)(1., distrib, frMf));
     } else {
-        BxDF *spec = ARENA_ALLOC(arena, MultiScatterReflection)(1., distrib, frMf, 
-            ms->gsReflect, uRough, 
-            ms->realNVPReflect,
-            ms->brdfLutAll, ms->brdfLutMs);
+        BxDF *spec = ARENA_ALLOC(arena, MultiScatterReflection)(1., distrib, frMf, ms);
         si->bsdf->Add(spec);
     }
 }

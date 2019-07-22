@@ -5,7 +5,7 @@ namespace pbrt {
 MultiScattering* createMultiScattering(const TextureParams &mp, const std::string& roughness, bool hasTransmission) {
     MultiScattering *ms = new MultiScattering;
 
-    bool useMS = mp.FindBool("multiscatter", false);
+    ms->useMS = mp.FindBool("multiscatter", false);
     bool energyOnly = mp.FindBool("energyonly", false);
     ms->noFresnel = mp.FindBool("noFresnel", false);
     ms ->useBeckmann = mp.FindBool("useBeckman", true);
@@ -21,7 +21,10 @@ MultiScattering* createMultiScattering(const TextureParams &mp, const std::strin
 
     ms->alpha = mp.FindFloat(roughness, 0.7f);
     ms->useLUTMs = mp.FindBool("useLUTMs", false);
+    ms->useLUTAll = mp.FindBool("useLUTAll", false);
     
+    ms->flip = mp.FindBool("flip", false);
+
     std::string brdfPrefix = mp.FindString("brdfPrefix", "None");
     if (brdfPrefix != "None"){
         ms->brdfLutAll = new BrdfLUT(brdfPrefix, ms->alpha, 1);
@@ -39,7 +42,7 @@ MultiScattering* createMultiScattering(const TextureParams &mp, const std::strin
     std::string fresnelPrefix = mp.FindString("fresnelPrefix", "None");
     std::cout<< "path to fresnel: "<< fresnelPrefix << "\n";
     
-    if (useMS) {
+    if (ms->useMS) {
         std::cout << "use MultiScatter\n";
         if (useNVP) {
             std::cout << "use real nvp\n";

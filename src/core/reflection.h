@@ -49,8 +49,6 @@
 #include "gaussianmixture.h"
 #include "gaussianscatter.h"
 #include "mlbrdf.h"
-#include "brdf_lut.h"
-#include "multiscatter.h"
 
 #include <fstream>
 #include <string>
@@ -557,21 +555,13 @@ class GaussianBSDF : public MicrofacetReflection {
     const Gaussianmixture *gm;
 };
 
+class MultiScattering;
 //Microfacet BSDF with fitted multiscattering components (Feng)
 class MultiScatterReflection : public MicrofacetReflection {
  public:
     // GaussianBSDF Public Methods
-    MultiScatterReflection(const Spectrum &R, MicrofacetDistribution *distribution, Fresnel *fresnel, 
-                           const GaussianScatter *gs,
-                           Float alpha = 0.5,  
-                           RealNVPScatterSpectrum* realNVP = NULL,
-                           BrdfLUT* brdfLutAll = NULL, BrdfLUT* brdfLutMs = NULL):
-                           MicrofacetReflection(R, distribution, fresnel), 
-                           gs(gs),
-                           alpha(alpha), 
-                           brdfLutAll(brdfLutAll), 
-                           brdfLutMs(brdfLutMs), 
-                           realNVP(realNVP){}
+    MultiScatterReflection(const Spectrum &R, MicrofacetDistribution *distribution, Fresnel *fresnel, MultiScattering *ms) : 
+        MicrofacetReflection(R, distribution, fresnel),ms(ms){}
 
     Spectrum f(const Vector3f &wo, const Vector3f &wi) const;
     /*
@@ -582,12 +572,7 @@ class MultiScatterReflection : public MicrofacetReflection {
     */
 
  private:
-    const GaussianScatter *gs;
-    Float alpha;
-    RealNVPScatterSpectrum* realNVP;
-    bool lookupMS;
-    BrdfLUT* brdfLutAll;
-    BrdfLUT* brdfLutMs;
+    MultiScattering *ms;
 };
 
 //Microfacet BSDF with fitted multiscattering components (Feng)
@@ -596,13 +581,9 @@ class MultiScatterTransmission : public MicrofacetTransmission {
     // GaussianBSDF Public Methods
     MultiScatterTransmission(const Spectrum &T, MicrofacetDistribution *distribution,
                            Float etaA,
-                           Float etaB, TransportMode mode, bool noFresnel,
-                           const GaussianScatter *gs,
-                           Float alpha = 0,
-                           RealNVPScatterSpectrum* realNVP = NULL):
-                           MicrofacetTransmission(T, distribution, etaA, etaB, mode, noFresnel), 
-                           gs(gs),
-                           alpha(alpha), realNVP(realNVP){}
+                           Float etaB, TransportMode mode, MultiScattering *ms):
+                           MicrofacetTransmission(T, distribution, etaA, etaB, mode, false), 
+                           ms(ms){}
 
     Spectrum f(const Vector3f &wo, const Vector3f &wi) const;
     /*
@@ -613,9 +594,7 @@ class MultiScatterTransmission : public MicrofacetTransmission {
     */
 
  private:
-    const GaussianScatter *gs;
-    Float alpha;
-    RealNVPScatterSpectrum* realNVP;
+    MultiScattering *ms;
 };
 
 }  // namespace pbrt

@@ -18,7 +18,7 @@ RealNVPScatterSpectrum::RealNVPScatterSpectrum(Vector3f& energyRatio,
             energyRatio(energyRatio),
             modelPathPrefix(modelPathPrefix), mlFresnel(NULL), numChannels(numChannels) {
 
-    if (fresnelPrefix.compare("None") != 0) mlFresnel = new MLFresnel(fresnelPrefix);
+    //if (fresnelPrefix.compare("None") != 0) mlFresnel = new MLFresnel(fresnelPrefix);
     nvpScatter = new RealNVPScatter[1];
     for (int i = 0; i < 1; i++) {
         nvpScatter[i].init(modelPathPrefix);
@@ -58,7 +58,7 @@ RealNVPScatterSpectrum::eval(Float alpha,  Float thetaI, Float thetaH, Float phi
     Float dist = eval(thetaI, alpha, sampleN);
     if (dist < 1e-6) return 0;
     Spectrum F (1.0);
-    if (mlFresnel) F = mlFresnel->eval(alpha, thetaI, thetaH, phiH);
+    //if (mlFresnel) F = mlFresnel->eval(alpha, thetaI, thetaH, phiH);
     return F * dist;  
 
 }
