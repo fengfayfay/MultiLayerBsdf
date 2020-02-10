@@ -398,6 +398,7 @@ SET ( PBRT_CORE_SOURCE
   src/core/progressreporter.cpp
   src/core/quaternion.cpp
   src/core/reflection.cpp
+  src/core/brdf_lut.cpp
   src/core/sampler.cpp
   src/core/sampling.cpp
   src/core/scene.cpp
@@ -438,6 +439,7 @@ SET ( PBRT_CORE_HEADERS
   src/core/primitive.h
   src/core/progressreporter.h
   src/core/quaternion.h
+  src/core/brdf_lut.h
   src/core/reflection.h
   src/core/rng.h
   src/core/sampler.h

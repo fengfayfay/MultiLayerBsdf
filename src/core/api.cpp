@@ -45,6 +45,7 @@
 #include "film.h"
 #include "medium.h"
 #include "stats.h"
+#include "brdf_lut.h"
 
 // API Additional Headers
 #include "accelerators/bvh.h"
@@ -1641,6 +1642,8 @@ namespace pbrt {
 
       std::cout<<"bad rays "<<count<<std::endl;
       std::cout<<"rays that go out: "<<count_goout<<std::endl;
+
+      exit(1);
       }
 
       // original rendering process
@@ -1692,7 +1695,7 @@ namespace pbrt {
              hasXform(false),
              hasFresnel(hasFresnel),
              prefix(prefix),
-             channel(channel) {
+             channel(channel), brdfLutAll(alpha, 200, 1), brdfLutMS(alpha, 100, 2) {
         if (dimension == 3) {
             init3D(alpha);
         } else {
@@ -1722,7 +1725,8 @@ namespace pbrt {
         return badrays++;
     }
     int addOutput(Point3f inter, float weight, int depth, float theta, Spectrum &fresnel) {
-       
+      
+        Float mu = cos(theta); 
         Float rgbFresnel[3]; 
         fresnel.ToRGB(rgbFresnel);
         float observe = 6000.0;
@@ -1746,6 +1750,8 @@ namespace pbrt {
                 outputdepth.write((char*)&depth, sizeof(depth));
                 outputfresnel.write((char*)&rgbFresnel, sizeof(Float)*3);
                 if (dimension == 3) outputangle.write((char*)&theta, sizeof(theta));
+                brdfLutAll.addSample(mu, wh, rgbFresnel);
+                if (depth > 1) brdfLutMS.addSample(mu, wh, rgbFresnel);
                 depthG1++;
                 outputCount++;
             }
@@ -1816,6 +1822,10 @@ namespace pbrt {
             outputenergy << badrays << " " << outputCount << " " << depthG1 << "\n"; 
             outputenergy.close();
         }
+        brdfLutAll.setTotalRayCount(outputCount);
+        brdfLutMS.setTotalRayCount(outputCount);
+        if (outputCount) brdfLutAll.save("brdf_lut");
+        if (outputCount) brdfLutMS.save("brdf_lut");
     }
 
     void setTransform(Transform& w2l) {l2w = Inverse(w2l); hasXform = true;}
@@ -1827,6 +1837,8 @@ namespace pbrt {
     bool hasXform, hasFresnel;
     std::string prefix;
     int channel;
+
+    BrdfLUT brdfLutAll, brdfLutMS;
   };
 
   struct ExpOutput {
