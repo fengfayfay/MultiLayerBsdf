@@ -495,7 +495,10 @@ Spectrum computeMultiScattering(Vector3f &wo, Vector3f &wi,
             if (phiH > M_PI) phiH -= 2.0 * M_PI;
         }
         Spectrum p = ms->realNVPReflect->eval(ms->alpha, thetaO, thetaH, phiH, Vector2f(x, y)); 
-        Spectrum f = SpectrumFromVector3f(ms->brdfLutAll->evalFresnel(lutThetaI, wh));
+        Spectrum f(1.0);
+        if (ms->brdfLutAll) {
+            f = SpectrumFromVector3f(ms->brdfLutAll->evalFresnel(lutThetaI, wh));
+        }
         Spectrum multiS =  p * f *  J  / cosThetaI; 
         return multiS;
 
