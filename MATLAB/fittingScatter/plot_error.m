@@ -25,9 +25,9 @@ ft = 'linearinterp';
 [fitresult, gof] = fit( xData, yData, ft, 'Normalize', 'on' );
 
 % Plot fit with data.
-myFig = figure( 'Name', 'L2 error of Gaussian fit' );
+myFig = figure( 'Name', 'Gaussian Fitting Quality' );
 h = plot( fitresult, xData, yData );
-title('\fontsize{20} L2 Error of Gaussian Model');
+title('\fontsize{24} Gaussian Fitting Quality');
 
 % Label axes
 
@@ -40,7 +40,7 @@ else
     legend( h, 'L2 Error Samples', 'Linear Interpolation of L2 error', 'Location', 'SouthEast' );
     filename = [resultDir, 'gaussian_error_theta'];
 end
-ylabel ('L2 error', 'FontSize', 20)
+ylabel ('L2 Error', 'FontSize', 20)
 set(findall(myFig, 'Type', 'Text'),'FontWeight', 'Normal')
 
 grid on

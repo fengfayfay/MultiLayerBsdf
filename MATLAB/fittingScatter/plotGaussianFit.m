@@ -40,7 +40,8 @@ ylabel(targetName, 'FontSize', 20)
 grid on
 
 legend('data', ['fit RMSE ', num2str(gof.rmse)] );
-title(['\fontsize{20}', 'Polynomial Fit of ', targetName]);
+%title(['\fontsize{24}', 'Polynomial Fit of ', targetName]);
+title(['\fontsize{24}', targetName]);
 set(findall(myFig, 'Type', 'Text'),'FontWeight', 'Normal')
 
 saveas(gcf,[filename,'.jpeg']);
